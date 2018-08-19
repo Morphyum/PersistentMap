@@ -1,12 +1,12 @@
 ﻿using System.ServiceModel;
 using System.ServiceModel.Web;
 
-namespace WarTechAPI
-{
+namespace WarTechAPI {
     [ServiceContract(Name = "WarServices")]
-    public interface IWarServices {
+    interface IWarServices {
+
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetClientRoute, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        WarModel GetClientNameById(string Id);
+        StarMap GetStarmap();
     }
 }
