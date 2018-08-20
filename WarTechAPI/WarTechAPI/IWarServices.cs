@@ -6,11 +6,11 @@ namespace WarTechAPI {
     interface IWarServices {
 
         [OperationContract]
-        [WebGet(UriTemplate = Routing.GetClientRoute, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        StarMap GetStarmap(string id);
+        [WebGet(UriTemplate = Routing.GetStarMap, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        StarMap GetStarmap();
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = Routing.GetClientRoute, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        StarMap PostStarmap(string id);
+        [WebInvoke(Method = "POST", UriTemplate = Routing.PostMissionResult, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        System PostMissionResult(MissionResult postedResult);
     }
 }

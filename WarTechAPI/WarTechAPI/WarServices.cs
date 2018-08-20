@@ -1,42 +1,56 @@
-﻿using BattleTech;
-using System.Collections.Generic;
+﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
 
 namespace WarTechAPI {
 
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single,ConcurrencyMode = ConcurrencyMode.Single, IncludeExceptionDetailInFaults = true)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single, IncludeExceptionDetailInFaults = true)]
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : IWarServices {
-        public StarMap GetStarmap(string id) {
-            StarMap map = new StarMap();
-            return map;
+        public StarMap GetStarmap() {
+            return Helper.LoadCurrentMap();
         }
 
-        public StarMap PostStarmap(string id) {
-            StarMap map = new StarMap();
-            map.systems = new List<System>();
-            map.systems.Add(new System());
-            map.systems[0].controlList = new List<FactionControl>();
-            map.systems[0].name = id;
-            map.systems[0].controlList.Add(new FactionControl());
-            map.systems[0].controlList[0].faction = Faction.NoFaction;
-            map.systems[0].controlList[0].percentage = 50;
-            map.systems[0].controlList.Add(new FactionControl());
-            map.systems[0].controlList[1].faction = Faction.Locals;
-            map.systems[0].controlList[1].percentage = 25;
+        public System PostMissionResult(MissionResult postedResult) {
+            try {
+                Console.WriteLine("New Result Posted");
+                StarMap map = Helper.LoadCurrentMap();
+                System system = map.FindSystemByName(postedResult.systemName);
+                FactionControl employerControl = system.FindFactionControlByFaction(postedResult.employer);
+                FactionControl targetControl = system.FindFactionControlByFaction(postedResult.target);
 
-            map.systems.Add(new System());
-            map.systems[1].controlList = new List<FactionControl>();
-            map.systems[1].name = id;
-            map.systems[1].controlList.Add(new FactionControl());
-            map.systems[1].controlList[0].faction = Faction.NoFaction;
-            map.systems[1].controlList[0].percentage = 50;
-            map.systems[1].controlList.Add(new FactionControl());
-            map.systems[1].controlList[1].faction = Faction.Locals;
-            map.systems[1].controlList[1].percentage = 25;
+                if (postedResult.result == BattleTech.MissionResult.Victory) {
+                    Console.WriteLine("Victory Result");
+                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().percentageForWin);
+                    employerControl.percentage += realChange;
+                    targetControl.percentage -= realChange;
+                    Console.WriteLine(realChange + " Points traded");
+                    if (targetControl.percentage < 0) {
+                        int leftoverChange = Math.Abs(targetControl.percentage);
+                        Console.WriteLine(leftoverChange + " Leftover Points");
+                        targetControl.percentage = 0;
+                        int debugcounter = leftoverChange;
+                        while (leftoverChange > 0 && debugcounter != 0) {
+                            foreach (FactionControl leftOverFaction in system.controlList) {
+                                if (leftOverFaction.faction != postedResult.employer && leftOverFaction.faction != postedResult.target && leftOverFaction.percentage > 0
+                                    && leftoverChange > 0) {
+                                    leftOverFaction.percentage--;
+                                    leftoverChange--;
+                                    Console.WriteLine("Points deducted");
+                                }
+                            }
+                            debugcounter--;
+                        }
+                    }
+                }
 
-            return map;
+
+
+                return system;
+            } catch(Exception e) {
+                Console.WriteLine(e);
+                return null;
+            }
         }
     }
 }
