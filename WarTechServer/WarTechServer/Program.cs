@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel.Web;
-using System.Text;
-using System.Threading.Tasks;
 using WarTechAPI;
 
 namespace WarTechServer {
@@ -18,6 +14,7 @@ namespace WarTechServer {
                 _serviceHost.Close();
             } catch (Exception e) {
                 Console.WriteLine(e);
+                Console.ReadKey();
             }
         }
     }
