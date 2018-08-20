@@ -43,6 +43,12 @@ namespace WarTechAPI {
                             debugcounter--;
                         }
                     }
+                } else {
+                    Console.WriteLine("Loss Result");
+                    int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().percentageForLoss);
+                    employerControl.percentage -= realChange;
+                    targetControl.percentage += realChange;
+                    Console.WriteLine(realChange + " Points traded");
                 }
                 Helper.SaveCurrentMap(map);
                 return system;
