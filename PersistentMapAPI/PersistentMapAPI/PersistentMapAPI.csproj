@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{501FC87B-F8C7-4604-8AF7-489A88E715D5}</ProjectGuid>
+    <ProjectGuid>{6099FF18-F83E-42F6-B83C-AAC37ED19594}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WarTechAPI</RootNamespace>
-    <AssemblyName>WarTechAPI</AssemblyName>
+    <RootNamespace>PersistentMapAPI</RootNamespace>
+    <AssemblyName>PersistentMapAPI</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

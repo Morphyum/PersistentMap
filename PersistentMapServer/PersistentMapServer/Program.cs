@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ServiceModel.Web;
-using WarTechAPI;
+using PersistentMapAPI;
 
-namespace WarTechServer {
+namespace PersistentMapServer {
     class Program {
         static void Main(string[] args) {
             try {

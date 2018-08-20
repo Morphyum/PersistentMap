@@ -1,7 +1,7 @@
 ﻿using System.ServiceModel;
 using System.ServiceModel.Web;
 
-namespace WarTechAPI {
+namespace PersistentMapAPI {
     [ServiceContract(Name = "WarServices")]
     interface IWarServices {
 

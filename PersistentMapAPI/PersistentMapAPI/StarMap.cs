@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace WarTechAPI {
+namespace PersistentMapAPI {
     public class StarMap {
         public List<System> systems = new List<System>();
 

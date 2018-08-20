@@ -2,7 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Activation;
 
-namespace WarTechAPI {
+namespace PersistentMapAPI {
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single, IncludeExceptionDetailInFaults = true)]
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WarTechAPI {
+namespace PersistentMapAPI {
     public static class Holder {
         public static StarMap currentMap;
     }

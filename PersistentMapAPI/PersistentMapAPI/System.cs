@@ -1,7 +1,7 @@
 ﻿using BattleTech;
 using System.Collections.Generic;
 
-namespace WarTechAPI {
+namespace PersistentMapAPI {
     public class System {
         Faction owner;
         public List<FactionControl> controlList;

@@ -1,6 +1,6 @@
 ﻿using BattleTech;
 
-namespace WarTechAPI {
+namespace PersistentMapAPI {
     public class MissionResult {
         public Faction employer;
         public Faction target;

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarTechAPI", "WarTechAPI\WarTechAPI.csproj", "{501FC87B-F8C7-4604-8AF7-489A88E715D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentMapAPI", "PersistentMapAPI\PersistentMapAPI.csproj", "{6099FF18-F83E-42F6-B83C-AAC37ED19594}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{501FC87B-F8C7-4604-8AF7-489A88E715D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{501FC87B-F8C7-4604-8AF7-489A88E715D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{501FC87B-F8C7-4604-8AF7-489A88E715D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{501FC87B-F8C7-4604-8AF7-489A88E715D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6099FF18-F83E-42F6-B83C-AAC37ED19594}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6099FF18-F83E-42F6-B83C-AAC37ED19594}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6099FF18-F83E-42F6-B83C-AAC37ED19594}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6099FF18-F83E-42F6-B83C-AAC37ED19594}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
