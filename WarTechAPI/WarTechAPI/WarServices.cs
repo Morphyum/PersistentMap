@@ -8,6 +8,7 @@ namespace WarTechAPI {
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : IWarServices {
         public StarMap GetStarmap() {
+            Console.WriteLine("Map retreived");
             return Helper.LoadCurrentMap();
         }
 
@@ -43,9 +44,7 @@ namespace WarTechAPI {
                         }
                     }
                 }
-
-
-
+                Helper.SaveCurrentMap(map);
                 return system;
             } catch(Exception e) {
                 Console.WriteLine(e);

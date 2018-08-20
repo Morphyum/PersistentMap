@@ -1,31 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 
 namespace WarTechAPI {
     public static class Helper {
+        public static string currentMapFilePath = $"../Map/current.json";
+        public static string settingsFilePath = $"../Settings/settings.json";
+
+        public static StarMap initializeNewMap() {
+            //TODO: Load all Data from Preset
+            Console.WriteLine("Map Initialized");
+            return new StarMap();
+        }
 
         public static StarMap LoadCurrentMap() {
             if (Holder.currentMap == null) {
-                //TODO: Load from existing data
-                Holder.currentMap = new StarMap();
+                if (File.Exists(currentMapFilePath)) {
+                    using (StreamReader r = new StreamReader(currentMapFilePath)) {
+                        string json = r.ReadToEnd();
+                        Holder.currentMap = JsonConvert.DeserializeObject<StarMap>(json);
+                    }
+                }
+                else {
+                    Holder.currentMap = initializeNewMap();
+                }
             }
-
             StarMap result = Holder.currentMap;
             Console.WriteLine("Map Loaded");
             return result;
         }
 
-        public static void SaveCurrentMap() {
-            //TODO: Save new data
+        public static void SaveCurrentMap(StarMap map) {
+            (new FileInfo(currentMapFilePath)).Directory.Create();
+            using (StreamWriter writer = new StreamWriter(currentMapFilePath, false)) {
+                string json = JsonConvert.SerializeObject(map);
+                writer.Write(json);
+            }
+            Console.WriteLine("Map Saved");
         }
 
         public static Settings LoadSettings() {
-            //TODO: Load from existing data
+            Settings settings;
+            if (File.Exists(settingsFilePath)) {
+                using (StreamReader r = new StreamReader(settingsFilePath)) {
+                    string json = r.ReadToEnd();
+                    settings = JsonConvert.DeserializeObject<Settings>(json);
+                }
+            }
+            else {
+                settings = new Settings();
+                (new FileInfo(settingsFilePath)).Directory.Create();
+                using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
+                    string json = JsonConvert.SerializeObject(settings);
+                    writer.Write(json);
+                }
+            }
             Console.WriteLine("Settings Loaded");
-            return new Settings();
+            return settings;
         }
     }
 }
