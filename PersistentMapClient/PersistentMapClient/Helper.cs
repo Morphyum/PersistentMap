@@ -42,7 +42,6 @@ namespace PersistentMapClient {
                     StreamReader reader = new StreamReader(responseStream);
                     string mapstring = reader.ReadToEnd();
                     map = JsonConvert.DeserializeObject<StarMap>(mapstring);
-                    Logger.LogLine(mapstring);
                 }
                 return map;
             }
