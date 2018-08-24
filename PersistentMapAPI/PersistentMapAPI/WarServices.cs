@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BattleTech;
+using Newtonsoft.Json;
+using System;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
 
@@ -29,15 +31,19 @@ namespace PersistentMapAPI {
             return "Reset Sucessfull";
         }
 
-        public System PostMissionResult(MissionResult postedResult) {
+        public System PostMissionResult(string employer, string target, string systemName, string mresult) {
             try {
                 Console.WriteLine("New Result Posted");
+                Console.WriteLine("employer: " + employer);
+                Console.WriteLine("target: " + target);
+                Console.WriteLine("systemName: " + systemName);
+                Console.WriteLine("mresult: " + mresult);
                 StarMap map = Helper.LoadCurrentMap();
-                System system = map.FindSystemByName(postedResult.systemName);
-                FactionControl employerControl = system.FindFactionControlByFaction(postedResult.employer);
-                FactionControl targetControl = system.FindFactionControlByFaction(postedResult.target);
+                System system = map.FindSystemByName(systemName);
+                FactionControl employerControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), employer));
+                FactionControl targetControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), target));
 
-                if (postedResult.result == BattleTech.MissionResult.Victory) {
+                if (mresult == "Victory") {
                     Console.WriteLine("Victory Result");
                     int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().percentageForWin);
                     employerControl.percentage += realChange;
@@ -50,7 +56,8 @@ namespace PersistentMapAPI {
                         int debugcounter = leftoverChange;
                         while (leftoverChange > 0 && debugcounter != 0) {
                             foreach (FactionControl leftOverFaction in system.controlList) {
-                                if (leftOverFaction.faction != postedResult.employer && leftOverFaction.faction != postedResult.target && leftOverFaction.percentage > 0
+                                if (leftOverFaction.faction != (Faction)Enum.Parse(typeof(Faction), employer) &&
+                                    leftOverFaction.faction != (Faction)Enum.Parse(typeof(Faction), target) && leftOverFaction.percentage > 0
                                     && leftoverChange > 0) {
                                     leftOverFaction.percentage--;
                                     leftoverChange--;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace PersistentMapAPI {
     public class StarMap {
@@ -6,15 +7,9 @@ namespace PersistentMapAPI {
 
 
         public System FindSystemByName(string name) {
-            if(systems == null) {
-                systems = new List<System>();
-            }
-            System result = systems.Find(x => x.name.Equals(name));
-            if(result == null) {
-                result = new System();
-                result.name = name;
-                result.controlList = new List<FactionControl>();
-                systems.Add(result);
+            System result = null;
+            if (systems != null && systems.Count > 0) {
+                result = systems.FirstOrDefault(x => x.name.Equals(name));
             }
             return result;
         }

@@ -34,7 +34,9 @@ namespace PersistentMapClient {
                 mresult.employer = __instance.Override.employerTeam.faction;
                 mresult.target = __instance.Override.targetTeam.faction;
                 mresult.result = result;
-                mresult.systemName = __instance.TargetSystem;
+                GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
+                StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
+                mresult.systemName = system.Name;
                 Helper.PostMissionResult(mresult);
             }
             catch (Exception e) {

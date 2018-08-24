@@ -14,8 +14,8 @@ namespace PersistentMapAPI {
         System GetSystem(string name);
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = Routing.PostMissionResult, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        System PostMissionResult(MissionResult postedResult);
+        [WebGet(UriTemplate = Routing.PostMissionResult, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        System PostMissionResult(string employer, string target, string systemName, string mresult);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = Routing.ResetStarMap, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
