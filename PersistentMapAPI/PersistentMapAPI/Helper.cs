@@ -20,10 +20,14 @@ namespace PersistentMapAPI {
                 string originalJson = File.ReadAllText(filePaths);
                 JObject originalJObject = JObject.Parse(originalJson);
                 Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);
-
+                
                 FactionControl ownerControl = new FactionControl();
                 ownerControl.faction = owner;
-                ownerControl.percentage = 100;
+                if (owner != Faction.NoFaction) {
+                    ownerControl.percentage = 100;
+                } else {
+                    ownerControl.percentage = 0;
+                }
 
                 System system = new System();
                 system.controlList = new List<FactionControl>();
