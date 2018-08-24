@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ServiceModel.Web;
 using PersistentMapAPI;
+using System.ServiceModel.Description;
 
 namespace PersistentMapServer {
     class Program {

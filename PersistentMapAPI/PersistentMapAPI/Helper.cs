@@ -1,16 +1,38 @@
-﻿using Newtonsoft.Json;
+﻿using BattleTech;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace PersistentMapAPI {
     public static class Helper {
         public static string currentMapFilePath = $"../Map/current.json";
         public static string settingsFilePath = $"../Settings/settings.json";
+        public static string systemDataFilePath = $"../StarSystems/";
 
+        
         public static StarMap initializeNewMap() {
-            //TODO: Load all Data from Preset
-            Console.WriteLine("Map Initialized");
-            return new StarMap();
+            Console.WriteLine("Map Init Started");
+            StarMap map = new StarMap();
+            map.systems = new List<System>();
+            foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
+                string originalJson = File.ReadAllText(filePaths);
+                JObject originalJObject = JObject.Parse(originalJson);
+                Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);
+
+                FactionControl ownerControl = new FactionControl();
+                ownerControl.faction = owner;
+                ownerControl.percentage = 100;
+
+                System system = new System();
+                system.controlList = new List<FactionControl>();
+                system.name = (string)originalJObject["Description"]["Name"];
+                system.controlList.Add(ownerControl);
+                
+                map.systems.Add(system);
+            }
+            return map;
         }
 
         public static StarMap LoadCurrentMap() {

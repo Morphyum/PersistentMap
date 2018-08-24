@@ -7,9 +7,26 @@ namespace PersistentMapAPI {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single, IncludeExceptionDetailInFaults = true)]
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : IWarServices {
+
         public StarMap GetStarmap() {
             Console.WriteLine("Map retreived");
             return Helper.LoadCurrentMap();
+        }
+
+        public System GetSystem(string name) {
+            StarMap map = Helper.LoadCurrentMap();
+            Console.WriteLine("System retreived");
+            return map.FindSystemByName(name); ;
+        }
+
+        public string ResetStarMap() {
+            Console.WriteLine("Init new Map");
+            StarMap map = Helper.initializeNewMap();
+            Holder.currentMap = map;
+            Console.WriteLine("Save new Map");
+            Helper.SaveCurrentMap(map);
+            Console.WriteLine("Map reset Sucessfull");
+            return "Reset Sucessfull";
         }
 
         public System PostMissionResult(MissionResult postedResult) {
@@ -43,7 +60,8 @@ namespace PersistentMapAPI {
                             debugcounter--;
                         }
                     }
-                } else {
+                }
+                else {
                     Console.WriteLine("Loss Result");
                     int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().percentageForLoss);
                     employerControl.percentage -= realChange;
@@ -52,7 +70,8 @@ namespace PersistentMapAPI {
                 }
                 Helper.SaveCurrentMap(map);
                 return system;
-            } catch(Exception e) {
+            }
+            catch (Exception e) {
                 Console.WriteLine(e);
                 return null;
             }
