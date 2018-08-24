@@ -5,7 +5,6 @@ namespace PersistentMapAPI {
     public class StarMap {
         public List<System> systems = new List<System>();
 
-
         public System FindSystemByName(string name) {
             System result = null;
             if (systems != null && systems.Count > 0) {

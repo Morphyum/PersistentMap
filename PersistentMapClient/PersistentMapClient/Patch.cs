@@ -15,8 +15,12 @@ namespace PersistentMapClient {
                 foreach (PersistentMapAPI.System system in map.systems) {
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
+                        Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
+                        Faction oldOwner = system2.Owner;
                         AccessTools.Method(typeof(StarSystemDef), "set_Owner").Invoke(system2.Def, new object[] {
-                            system.controlList.OrderByDescending(x => x.percentage).First().faction });
+                            newOwner });
+                        system2.Tags.Remove(Helper.GetFactionTag(oldOwner));
+                        system2.Tags.Add(Helper.GetFactionTag(newOwner));
                     }
                 }
             }
