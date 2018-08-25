@@ -1,5 +1,6 @@
 ﻿using BattleTech;
 using BattleTech.Framework;
+using BattleTech.UI;
 using Harmony;
 using HBS;
 using PersistentMapAPI;
@@ -14,7 +15,12 @@ namespace PersistentMapClient {
     public static class Starmap_PopulateMap_Patch {
         static void Postfix(SimGameState simGame) {
             try {
-                StarMap map = Helper.GetStarMap();
+                StarMap map = Web.GetStarMap();
+                if(map == null) {
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
+                    interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
+                    return;
+                }
                 foreach (PersistentMapAPI.System system in map.systems) {
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
@@ -40,7 +46,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                    Logger.LogError(e);
             }
         }
     }
@@ -56,7 +62,12 @@ namespace PersistentMapClient {
                 GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                 StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                 mresult.systemName = system.Name;
-                Helper.PostMissionResult(mresult);
+                bool postSuccessfull = Web.PostMissionResult(mresult);
+                if (!postSuccessfull) {
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                    interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                }
+                return;
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -97,7 +108,7 @@ namespace PersistentMapClient {
                         }
                         if (numberOfContracts > 0) {
                             List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
-                            foreach(PersistentMapAPI.System potentialTarget in Helper.GetStarMap().systems) {
+                            foreach(PersistentMapAPI.System potentialTarget in Web.GetStarMap().systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
                                 if (control != null && control.percentage < 100) {
                                     targets.Add(potentialTarget);
