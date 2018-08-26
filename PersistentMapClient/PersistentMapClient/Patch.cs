@@ -130,7 +130,16 @@ namespace PersistentMapClient {
                             for (int i = 0; i < numberOfContracts; i++) {
                                 StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
                                 if (realSystem != null) {
-                                    Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.Difficulty, pair.Key, realSystem.Owner, realSystem);
+                                    Faction target = realSystem.Owner;
+                                    if (pair.Key == target) {
+                                        List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
+                                        if(ownerlist.Count > 1) {
+                                            target = ownerlist[1].faction;
+                                        } else {
+                                            target = Faction.Locals;
+                                        }
+                                    }
+                                    Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.Difficulty, pair.Key, target, realSystem);
                                     contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
                                     contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
                                     int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
