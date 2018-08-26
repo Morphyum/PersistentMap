@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace PersistentMapAPI {
     public class System {
-        Faction owner;
         public List<FactionControl> controlList;
         public string name;
 

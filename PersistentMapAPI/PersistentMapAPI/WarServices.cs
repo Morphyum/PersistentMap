@@ -66,7 +66,7 @@ namespace PersistentMapAPI {
                                     && leftoverChange > 0) {
                                     leftOverFaction.percentage--;
                                     leftoverChange--;
-                                    Console.WriteLine(leftOverFaction.ToString() + " Points deducted");
+                                    Console.WriteLine(leftOverFaction.faction.ToString() + " Points deducted");
                                 }
                             }
                             debugcounter--;

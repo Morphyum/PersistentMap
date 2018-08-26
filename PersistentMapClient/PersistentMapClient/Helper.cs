@@ -17,6 +17,17 @@ namespace PersistentMapClient {
     }
 
     public class Helper {
+
+        public static string GetFactionShortName(Faction faction, DataManager manager) {
+            try {
+                return FactionDef.GetFactionDefByEnum(manager, faction).ShortName.Replace("the ", "").Replace("The ", "");
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex);
+                return null;
+            }
+        }
+
         public static Settings LoadSettings() {
             try {
                 using (StreamReader r = new StreamReader($"{ PersistentMapClient.ModDirectory}/settings.json")) {

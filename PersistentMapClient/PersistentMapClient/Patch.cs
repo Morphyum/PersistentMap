@@ -16,11 +16,12 @@ namespace PersistentMapClient {
         static void Postfix(SimGameState simGame) {
             try {
                 StarMap map = Web.GetStarMap();
-                if(map == null) {
+                if (map == null) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
                     return;
                 }
+                List<string> changes = new List<string>();
                 foreach (PersistentMapAPI.System system in map.systems) {
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
@@ -34,6 +35,7 @@ namespace PersistentMapClient {
                             Helper.GetTargets(system2, simGame) });
                         system2.Tags.Remove(Helper.GetFactionTag(oldOwner));
                         system2.Tags.Add(Helper.GetFactionTag(newOwner));
+
                         if (Helper.IsBorder(system2, simGame) && simGame.Starmap != null) {
                             system2.Tags.Add("planet_other_battlefield");
                         }
@@ -41,12 +43,18 @@ namespace PersistentMapClient {
                             system2.Tags.Remove("planet_other_battlefield");
                         }
                         system2 = Helper.ChangeWarDescription(system2, simGame, system);
-                        
+                        if (newOwner != oldOwner) {
+                            changes.Add(Helper.GetFactionShortName(newOwner, simGame.DataManager) + " took " + system2.Name + " from " + Helper.GetFactionShortName(oldOwner, simGame.DataManager));
+                        }
                     }
+                }
+                if (changes.Count > 0) {
+                    SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
+                    interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changes.ToArray()), true);
                 }
             }
             catch (Exception e) {
-                    Logger.LogError(e);
+                Logger.LogError(e);
             }
         }
     }
@@ -108,7 +116,7 @@ namespace PersistentMapClient {
                         }
                         if (numberOfContracts > 0) {
                             List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
-                            foreach(PersistentMapAPI.System potentialTarget in Web.GetStarMap().systems) {
+                            foreach (PersistentMapAPI.System potentialTarget in Web.GetStarMap().systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
                                 if (control != null && control.percentage < 100) {
                                     targets.Add(potentialTarget);
@@ -130,8 +138,8 @@ namespace PersistentMapClient {
                             }
                         }
 
-                       
-                        
+
+
                     }
                 }
             }
