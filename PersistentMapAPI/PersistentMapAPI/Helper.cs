@@ -4,6 +4,8 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 
 namespace PersistentMapAPI {
     public static class Helper {
@@ -13,7 +15,7 @@ namespace PersistentMapAPI {
 
         
         public static StarMap initializeNewMap() {
-            Logger.LogLine("Map Init Started");
+            Console.WriteLine("Map Init Started");
             StarMap map = new StarMap();
             map.systems = new List<System>();
             foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
@@ -52,7 +54,7 @@ namespace PersistentMapAPI {
                 }
             }
             StarMap result = Holder.currentMap;
-            Logger.LogLine("Map Loaded");
+            Console.WriteLine("Map Loaded");
             return result;
         }
 
@@ -62,7 +64,7 @@ namespace PersistentMapAPI {
                 string json = JsonConvert.SerializeObject(map);
                 writer.Write(json);
             }
-            Logger.LogLine("Map Saved");
+            Console.WriteLine("Map Saved");
         }
 
         public static Settings LoadSettings() {
@@ -81,8 +83,33 @@ namespace PersistentMapAPI {
                     writer.Write(json);
                 }
             }
-            Logger.LogLine("Settings Loaded");
+            Console.WriteLine("Settings Loaded");
             return settings;
+        }
+
+        public static string GetIP() {
+            OperationContext context = OperationContext.Current;
+            MessageProperties prop = context.IncomingMessageProperties;
+            RemoteEndpointMessageProperty endpoint =
+               prop[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
+            string ip = endpoint.Address;
+
+            return ip;
+
+        }
+
+        public static bool IsSpam(string ip) {
+            if (Holder.connectionStore.ContainsKey(ip)) {
+                if(Holder.connectionStore[ip].AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.Now) {
+                    return true;
+                } else {
+                    Holder.connectionStore[ip] = DateTime.Now;
+                }
+            } else {
+                Holder.connectionStore.Add(ip, DateTime.Now);
+            }
+            return false;
+
         }
     }
 }

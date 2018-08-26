@@ -25,33 +25,38 @@ namespace PersistentMapAPI {
             Logger.LogLine("Init new Map");
             StarMap map = Helper.initializeNewMap();
             Holder.currentMap = map;
-            Logger.LogLine("Save new Map");
+            Console.WriteLine("Save new Map");
             Helper.SaveCurrentMap(map);
-            Logger.LogLine("Map reset Sucessfull");
+            Console.WriteLine("Map reset Sucessfull");
             return "Reset Sucessfull";
         }
 
         public System PostMissionResult(string employer, string target, string systemName, string mresult) {
             try {
+                string ip = Helper.GetIP();
+                if (Helper.IsSpam(ip)) {
+                    Logger.LogLine(ip + " trys to send Missions to fast");
+                    return null;
+                }
                 Logger.LogLine("New Result Posted");
-                Logger.LogLine("employer: " + employer);
-                Logger.LogLine("target: " + target);
-                Logger.LogLine("systemName: " + systemName);
-                Logger.LogLine("mresult: " + mresult);
+                Console.WriteLine("employer: " + employer);
+                Console.WriteLine("target: " + target);
+                Console.WriteLine("systemName: " + systemName);
+                Console.WriteLine("mresult: " + mresult);
                 StarMap map = Helper.LoadCurrentMap();
                 System system = map.FindSystemByName(systemName);
                 FactionControl employerControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), employer));
                 FactionControl targetControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), target));
 
                 if (mresult == "Victory") {
-                    Logger.LogLine("Victory Result");
+                    Console.WriteLine("Victory Result");
                     int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().percentageForWin);
                     employerControl.percentage += realChange;
                     targetControl.percentage -= realChange;
-                    Logger.LogLine(realChange + " Points traded");
+                    Console.WriteLine(realChange + " Points traded");
                     if (targetControl.percentage < 0) {
                         int leftoverChange = Math.Abs(targetControl.percentage);
-                        Logger.LogLine(leftoverChange + " Leftover Points");
+                        Console.WriteLine(leftoverChange + " Leftover Points");
                         targetControl.percentage = 0;
                         int debugcounter = leftoverChange;
                         while (leftoverChange > 0 && debugcounter != 0) {
@@ -61,7 +66,7 @@ namespace PersistentMapAPI {
                                     && leftoverChange > 0) {
                                     leftOverFaction.percentage--;
                                     leftoverChange--;
-                                    Logger.LogLine("Points deducted");
+                                    Console.WriteLine(leftOverFaction.ToString() + " Points deducted");
                                 }
                             }
                             debugcounter--;
@@ -69,11 +74,11 @@ namespace PersistentMapAPI {
                     }
                 }
                 else {
-                    Logger.LogLine("Loss Result");
+                    Console.WriteLine("Loss Result");
                     int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().percentageForLoss);
                     employerControl.percentage -= realChange;
                     targetControl.percentage += realChange;
-                    Logger.LogLine(realChange + " Points traded");
+                    Console.WriteLine(realChange + " Points traded");
                 }
                 Helper.SaveCurrentMap(map);
                 return system;
