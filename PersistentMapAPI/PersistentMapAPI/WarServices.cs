@@ -11,47 +11,47 @@ namespace PersistentMapAPI {
     public class WarServices : IWarServices {
 
         public StarMap GetStarmap() {
-            Console.WriteLine("Map retreived");
+            Logger.LogLine("Map retreived");
             return Helper.LoadCurrentMap();
         }
 
         public System GetSystem(string name) {
             StarMap map = Helper.LoadCurrentMap();
-            Console.WriteLine("System retreived");
+            Logger.LogLine("System retreived");
             return map.FindSystemByName(name); ;
         }
 
         public string ResetStarMap() {
-            Console.WriteLine("Init new Map");
+            Logger.LogLine("Init new Map");
             StarMap map = Helper.initializeNewMap();
             Holder.currentMap = map;
-            Console.WriteLine("Save new Map");
+            Logger.LogLine("Save new Map");
             Helper.SaveCurrentMap(map);
-            Console.WriteLine("Map reset Sucessfull");
+            Logger.LogLine("Map reset Sucessfull");
             return "Reset Sucessfull";
         }
 
         public System PostMissionResult(string employer, string target, string systemName, string mresult) {
             try {
-                Console.WriteLine("New Result Posted");
-                Console.WriteLine("employer: " + employer);
-                Console.WriteLine("target: " + target);
-                Console.WriteLine("systemName: " + systemName);
-                Console.WriteLine("mresult: " + mresult);
+                Logger.LogLine("New Result Posted");
+                Logger.LogLine("employer: " + employer);
+                Logger.LogLine("target: " + target);
+                Logger.LogLine("systemName: " + systemName);
+                Logger.LogLine("mresult: " + mresult);
                 StarMap map = Helper.LoadCurrentMap();
                 System system = map.FindSystemByName(systemName);
                 FactionControl employerControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), employer));
                 FactionControl targetControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), target));
 
                 if (mresult == "Victory") {
-                    Console.WriteLine("Victory Result");
+                    Logger.LogLine("Victory Result");
                     int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().percentageForWin);
                     employerControl.percentage += realChange;
                     targetControl.percentage -= realChange;
-                    Console.WriteLine(realChange + " Points traded");
+                    Logger.LogLine(realChange + " Points traded");
                     if (targetControl.percentage < 0) {
                         int leftoverChange = Math.Abs(targetControl.percentage);
-                        Console.WriteLine(leftoverChange + " Leftover Points");
+                        Logger.LogLine(leftoverChange + " Leftover Points");
                         targetControl.percentage = 0;
                         int debugcounter = leftoverChange;
                         while (leftoverChange > 0 && debugcounter != 0) {
@@ -61,7 +61,7 @@ namespace PersistentMapAPI {
                                     && leftoverChange > 0) {
                                     leftOverFaction.percentage--;
                                     leftoverChange--;
-                                    Console.WriteLine("Points deducted");
+                                    Logger.LogLine("Points deducted");
                                 }
                             }
                             debugcounter--;
@@ -69,17 +69,17 @@ namespace PersistentMapAPI {
                     }
                 }
                 else {
-                    Console.WriteLine("Loss Result");
+                    Logger.LogLine("Loss Result");
                     int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().percentageForLoss);
                     employerControl.percentage -= realChange;
                     targetControl.percentage += realChange;
-                    Console.WriteLine(realChange + " Points traded");
+                    Logger.LogLine(realChange + " Points traded");
                 }
                 Helper.SaveCurrentMap(map);
                 return system;
             }
             catch (Exception e) {
-                Console.WriteLine(e);
+                Logger.LogError(e);
                 return null;
             }
         }

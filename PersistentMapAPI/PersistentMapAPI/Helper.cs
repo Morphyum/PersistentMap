@@ -13,7 +13,7 @@ namespace PersistentMapAPI {
 
         
         public static StarMap initializeNewMap() {
-            Console.WriteLine("Map Init Started");
+            Logger.LogLine("Map Init Started");
             StarMap map = new StarMap();
             map.systems = new List<System>();
             foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
@@ -52,7 +52,7 @@ namespace PersistentMapAPI {
                 }
             }
             StarMap result = Holder.currentMap;
-            Console.WriteLine("Map Loaded");
+            Logger.LogLine("Map Loaded");
             return result;
         }
 
@@ -62,7 +62,7 @@ namespace PersistentMapAPI {
                 string json = JsonConvert.SerializeObject(map);
                 writer.Write(json);
             }
-            Console.WriteLine("Map Saved");
+            Logger.LogLine("Map Saved");
         }
 
         public static Settings LoadSettings() {
@@ -81,7 +81,7 @@ namespace PersistentMapAPI {
                     writer.Write(json);
                 }
             }
-            Console.WriteLine("Settings Loaded");
+            Logger.LogLine("Settings Loaded");
             return settings;
         }
     }
