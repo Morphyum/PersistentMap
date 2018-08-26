@@ -12,6 +12,7 @@ namespace PersistentMapClient {
     public static class Fields {
         public static Settings settings;
         public static Dictionary<string, string> FluffDescriptions = new Dictionary<string, string>();
+        public static bool firstpass = true;
     }
 
     public struct PotentialContract {

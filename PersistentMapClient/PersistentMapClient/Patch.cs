@@ -48,9 +48,11 @@ namespace PersistentMapClient {
                         }
                     }
                 }
-                if (changes.Count > 0) {
+                if (changes.Count > 0 && !Fields.firstpass) {
                     SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
                     interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changes.ToArray()), true);
+                } else {
+                    Fields.firstpass = false;
                 }
             }
             catch (Exception e) {
