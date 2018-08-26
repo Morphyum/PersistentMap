@@ -15,7 +15,11 @@ namespace PersistentMapAPI {
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.PostMissionResult, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        System PostMissionResult(string employer, string target, string systemName, string mresult);
+        System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty);
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.PostMissionResultDepricated, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult);
 
         /*[OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = Routing.ResetStarMap, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]

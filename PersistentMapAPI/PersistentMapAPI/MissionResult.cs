@@ -6,5 +6,6 @@ namespace PersistentMapAPI {
         public Faction target;
         public BattleTech.MissionResult result;
         public string systemName;
+        public int difficulty;
     }
 }

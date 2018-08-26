@@ -11,13 +11,11 @@ namespace PersistentMapAPI {
     public class WarServices : IWarServices {
 
         public StarMap GetStarmap() {
-            Logger.LogLine("Map retreived");
             return Helper.LoadCurrentMap();
         }
 
         public System GetSystem(string name) {
             StarMap map = Helper.LoadCurrentMap();
-            Logger.LogLine("System retreived");
             return map.FindSystemByName(name); ;
         }
 
@@ -31,7 +29,17 @@ namespace PersistentMapAPI {
             return "Reset Sucessfull";
         }
 
-        public System PostMissionResult(string employer, string target, string systemName, string mresult) {
+        public System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult) {
+            try {
+                return PostMissionResult(employer, target, systemName, mresult, "5");
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return null;
+            }
+        }
+
+        public System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty) {
             try {
                 string ip = Helper.GetIP();
                 if (Helper.IsSpam(ip)) {
@@ -50,7 +58,7 @@ namespace PersistentMapAPI {
 
                 if (mresult == "Victory") {
                     Console.WriteLine("Victory Result");
-                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().percentageForWin);
+                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().HalfSkullPercentageForWin * int.Parse(difficulty));
                     employerControl.percentage += realChange;
                     targetControl.percentage -= realChange;
                     Console.WriteLine(realChange + " Points traded");
@@ -75,7 +83,7 @@ namespace PersistentMapAPI {
                 }
                 else {
                     Console.WriteLine("Loss Result");
-                    int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().percentageForLoss);
+                    int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().HalfSkullPercentageForLoss * int.Parse(difficulty));
                     employerControl.percentage -= realChange;
                     targetControl.percentage += realChange;
                     Console.WriteLine(realChange + " Points traded");

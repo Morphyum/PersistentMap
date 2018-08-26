@@ -54,7 +54,6 @@ namespace PersistentMapAPI {
                 }
             }
             StarMap result = Holder.currentMap;
-            Console.WriteLine("Map Loaded");
             return result;
         }
 

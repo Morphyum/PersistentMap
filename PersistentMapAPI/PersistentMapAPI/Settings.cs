@@ -1,7 +1,7 @@
 ﻿namespace PersistentMapAPI {
     public class Settings {
-        public int percentageForWin = 10;
-        public int percentageForLoss = 10;
-        public int minMinutesBetweenPost = 15;
+        public int HalfSkullPercentageForWin = 2;
+        public int HalfSkullPercentageForLoss = 1;
+        public int minMinutesBetweenPost = 10;
     }
 }
