@@ -11,6 +11,50 @@ using UnityEngine;
 
 namespace PersistentMapClient {
 
+    [HarmonyPatch(typeof(StarSystem), "ResetContracts")]
+    public static class StarSystem_ResetContracts_Patch {
+        static void Postfix(StarSystem __instance) {
+            try {
+                AccessTools.Field(typeof(SimGameState), "globalContracts").SetValue(__instance.Sim, new List<Contract>());
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGameState), "PrepareBreadcrumb")]
+    public static class SimGameState_PrepareBreadcrumb_Patch {
+        static void Postfix(SimGameState __instance, ref Contract contract) {
+            try {
+                if (contract.IsPriorityContract) {
+                    Fields.warmission = true;
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGameState), "AddPredefinedContract")]
+    public static class SimGameState_AddPredefinedContract_Patch {
+        static void Postfix(SimGameState __instance, Contract __result) {
+            try {
+                if (Fields.warmission) {
+                    __result.SetInitialReward(Mathf.RoundToInt(__result.InitialContractValue * Fields.settings.priorityContactPayPercentage));
+                    int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
+                    __result.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(__result.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
+                    AccessTools.Method(typeof(Contract), "set_SalvagePotential").Invoke(__result, new object[] { __result.Override.salvagePotential });
+                    Fields.warmission = false;
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
         static void Postfix(SimGameState simGame) {

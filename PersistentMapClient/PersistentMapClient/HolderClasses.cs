@@ -13,6 +13,7 @@ namespace PersistentMapClient {
         public static Settings settings;
         public static Dictionary<string, string> FluffDescriptions = new Dictionary<string, string>();
         public static bool firstpass = true;
+        public static bool warmission = false;
     }
 
     public struct PotentialContract {
