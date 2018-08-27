@@ -11,6 +11,30 @@ using UnityEngine;
 
 namespace PersistentMapClient {
 
+    [HarmonyPatch(typeof(SimGameState), "DeductQuarterlyFunds")]
+    public static class SimGameState_DeductQuarterlyFunds_Patch {
+        static bool Prefix(SimGameState __instance, int quarterPassed) {
+            try {
+                int expenditures = __instance.GetExpenditures(false);
+                if (Fields.warmission) {
+                    expenditures /= 2;
+                }
+                __instance.AddFunds(-expenditures * quarterPassed, "SimGame_Monthly", false);
+                if (!__instance.IsGameOverCondition(false)) {
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
+                    interruptQueue.QueueFinancialReport();
+                }
+                __instance.RoomManager.RefreshDisplay();
+                AccessTools.Method(typeof(SimGameState), "OnNewQuarterBegin").Invoke(__instance, new object[] { });
+                return false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(StarSystem), "ResetContracts")]
     public static class StarSystem_ResetContracts_Patch {
         static void Postfix(StarSystem __instance) {
@@ -193,9 +217,6 @@ namespace PersistentMapClient {
                                 }
                             }
                         }
-
-
-
                     }
                 }
             }
