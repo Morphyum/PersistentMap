@@ -41,6 +41,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty) {
             try {
+                int realDifficulty = Math.Min(10,int.Parse(difficulty));
                 string ip = Helper.GetIP();
                 if (Helper.IsSpam(ip)) {
                     Logger.LogLine(ip + " trys to send Missions to fast");
@@ -58,7 +59,7 @@ namespace PersistentMapAPI {
 
                 if (mresult == "Victory") {
                     Console.WriteLine("Victory Result");
-                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().HalfSkullPercentageForWin * int.Parse(difficulty));
+                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty);
                     employerControl.percentage += realChange;
                     targetControl.percentage -= realChange;
                     Console.WriteLine(realChange + " Points traded");
@@ -83,7 +84,7 @@ namespace PersistentMapAPI {
                 }
                 else {
                     Console.WriteLine("Loss Result");
-                    int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().HalfSkullPercentageForLoss * int.Parse(difficulty));
+                    int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty);
                     employerControl.percentage -= realChange;
                     targetControl.percentage += realChange;
                     Console.WriteLine(realChange + " Points traded");
