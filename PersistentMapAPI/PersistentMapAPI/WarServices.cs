@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
+using System.ServiceModel.Web;
 
 namespace PersistentMapAPI {
 
@@ -11,6 +12,7 @@ namespace PersistentMapAPI {
     public class WarServices : IWarServices {
 
         public StarMap GetStarmap() {
+            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Helper.LoadCurrentMap();
         }
 

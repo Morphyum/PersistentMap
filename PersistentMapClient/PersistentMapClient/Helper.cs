@@ -109,6 +109,18 @@ namespace PersistentMapClient {
             }
         }
 
+        public static double GetDistanceInLY(StarSystem currPosition, PersistentMapAPI.System target, List<StarSystem> allSystems) {
+            try {
+                StarSystem targetSystem = allSystems.FirstOrDefault(x => x.Name.Equals(target.name));
+                Logger.LogLine(target.name + " " + Math.Sqrt(Math.Pow(targetSystem.Position.x - currPosition.Position.x, 2) + Math.Pow(targetSystem.Position.y - currPosition.Position.y, 2)));    
+                return Math.Sqrt(Math.Pow(targetSystem.Position.x - currPosition.Position.x, 2) + Math.Pow(targetSystem.Position.y - currPosition.Position.y, 2)); 
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex);
+                return 0;
+            }
+        }
+        
         public static List<Faction> GetEmployees(StarSystem system, SimGameState Sim) {
             try {
                 List<Faction> employees = new List<Faction>();

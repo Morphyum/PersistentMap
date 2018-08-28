@@ -189,11 +189,11 @@ namespace PersistentMapClient {
                             List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
                             foreach (PersistentMapAPI.System potentialTarget in Web.GetStarMap().systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
-                                if (control != null && control.percentage < 100) {
+                                if (control != null && control.percentage < 100 && control.percentage != 0) {
                                     targets.Add(potentialTarget);
                                 }
                             }
-                            targets.Shuffle();
+                            targets =  targets.OrderBy(x => Helper.GetDistanceInLY(__instance.Sim.CurSystem,x, __instance.Sim.StarSystems)).ToList();
                             numberOfContracts = Mathf.Min(numberOfContracts, targets.Count);
                             for (int i = 0; i < numberOfContracts; i++) {
                                 StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));

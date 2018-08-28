@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PersistentMapClient {
     public class Logger {
-        static string filePath = $"{ PersistentMapClient.ModDirectory}/Log.txt";
+        static string filePath = $"{PersistentMapClient.ModDirectory}/Log.txt";
         public static void LogError(Exception ex) {
             (new FileInfo(filePath)).Directory.Create();
             using (StreamWriter writer = new StreamWriter(filePath, true)) {
