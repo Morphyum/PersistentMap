@@ -1,5 +1,6 @@
 ﻿using BattleTech;
 using BattleTech.Framework;
+using BattleTech.Save;
 using BattleTech.UI;
 using Harmony;
 using HBS;
@@ -10,6 +11,24 @@ using System.Linq;
 using UnityEngine;
 
 namespace PersistentMapClient {
+
+    [HarmonyBefore(new string[] { "de.morphyum.MercDeployments" })]
+    [HarmonyPatch(typeof(SimGameState), "Rehydrate")]
+    public static class SimGameState_Rehydrate_Patch {
+        static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
+            try {
+                foreach (Contract contract in __instance.GlobalContracts) {
+                    contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
+                    int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
+                    contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.SalvagePotential * Fields.settings.priorityContactPayPercentage));
+                    contract.Override.negotiatedSalvage = 1f;
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(SimGameState), "DeductQuarterlyFunds")]
     public static class SimGameState_DeductQuarterlyFunds_Patch {
@@ -39,6 +58,7 @@ namespace PersistentMapClient {
     public static class StarSystem_ResetContracts_Patch {
         static void Postfix(StarSystem __instance) {
             try {
+                Logger.LogLine("called");
                 AccessTools.Field(typeof(SimGameState), "globalContracts").SetValue(__instance.Sim, new List<Contract>());
             }
             catch (Exception e) {
@@ -193,27 +213,30 @@ namespace PersistentMapClient {
                                     targets.Add(potentialTarget);
                                 }
                             }
-                            targets =  targets.OrderBy(x => Helper.GetDistanceInLY(__instance.Sim.CurSystem,x, __instance.Sim.StarSystems)).ToList();
-                            numberOfContracts = Mathf.Min(numberOfContracts, targets.Count);
-                            for (int i = 0; i < numberOfContracts; i++) {
-                                StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
-                                if (realSystem != null) {
-                                    Faction target = realSystem.Owner;
-                                    if (pair.Key == target) {
-                                        List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
-                                        if(ownerlist.Count > 1) {
-                                            target = ownerlist[1].faction;
-                                        } else {
-                                            target = Faction.Locals;
+                            if (targets.Count() > 0) {
+                                targets = targets.OrderBy(x => Helper.GetDistanceInLY(__instance.Sim.CurSystem, x, __instance.Sim.StarSystems)).ToList();
+                                numberOfContracts = Mathf.Min(numberOfContracts, targets.Count);
+                                for (int i = 0; i < numberOfContracts; i++) {
+                                    StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
+                                    if (realSystem != null) {
+                                        Faction target = realSystem.Owner;
+                                        if (pair.Key == target) {
+                                            List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
+                                            if (ownerlist.Count > 1) {
+                                                target = ownerlist[1].faction;
+                                            }
+                                            else {
+                                                target = Faction.Locals;
+                                            }
                                         }
+                                        Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.Difficulty, pair.Key, target, realSystem);
+                                        contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
+                                        contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
+                                        int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
+                                        contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
+                                        contract.Override.negotiatedSalvage = 1f;
+                                        __instance.Sim.GlobalContracts.Add(contract);
                                     }
-                                    Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.Difficulty, pair.Key, target, realSystem);
-                                    contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
-                                    contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
-                                    int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
-                                    contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
-                                    contract.Override.negotiatedSalvage = 1f;
-                                    __instance.Sim.GlobalContracts.Add(contract);
                                 }
                             }
                         }
