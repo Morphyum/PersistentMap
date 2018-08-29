@@ -184,7 +184,7 @@ namespace PersistentMapClient {
                 }
                 __instance.Sim.GlobalContracts.Clear();
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
-                    if (pair.Key != Faction.NoFaction) {
+                    if (pair.Key != Faction.NoFaction && pair.Key != Faction.MercenaryReviewBoard) {
                         SimGameReputation rep = __instance.Sim.GetReputation(pair.Key);
                         int numberOfContracts;
                         switch (rep) {
