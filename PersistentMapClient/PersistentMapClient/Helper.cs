@@ -155,8 +155,8 @@ namespace PersistentMapClient {
                     targets.Add(Faction.AuriganPirates);
                     if (system.Owner != Faction.NoFaction) {
                         targets.Add(system.Owner);
+                        targets.Add(Faction.Locals);
                     }
-                    targets.Add(Faction.Locals);
                     foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
                         if (system.Owner != neigbourSystem.Owner && !targets.Contains(neigbourSystem.Owner)) {
                             targets.Add(neigbourSystem.Owner);
