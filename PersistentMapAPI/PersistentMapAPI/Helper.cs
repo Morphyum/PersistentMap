@@ -82,7 +82,6 @@ namespace PersistentMapAPI {
                     writer.Write(json);
                 }
             }
-            Console.WriteLine("Settings Loaded");
             return settings;
         }
 
@@ -97,15 +96,19 @@ namespace PersistentMapAPI {
 
         }
 
-        public static bool IsSpam(string ip) {
+        public static bool CheckUserInfo(string ip, string systemname) {
             if (Holder.connectionStore.ContainsKey(ip)) {
-                if(Holder.connectionStore[ip].AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.Now) {
+                if(Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.Now) {
                     return true;
                 } else {
-                    Holder.connectionStore[ip] = DateTime.Now;
+                    Holder.connectionStore[ip].LastDataSend = DateTime.UtcNow;
+                    Holder.connectionStore[ip].lastSystemFoughtAt = systemname;
                 }
             } else {
-                Holder.connectionStore.Add(ip, DateTime.Now);
+                UserInfo info = new UserInfo();
+                info.LastDataSend = DateTime.UtcNow;
+                info.lastSystemFoughtAt = systemname;
+                Holder.connectionStore.Add(ip, info);
             }
             return false;
 

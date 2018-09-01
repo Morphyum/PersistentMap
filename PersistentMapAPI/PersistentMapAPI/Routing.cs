@@ -5,5 +5,6 @@
         public const string ResetStarMap = "/StarMap/Reset";
         public const string PostMissionResultDepricated = "/Mission/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}";
         public const string PostMissionResult = "/Mission/V2/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}";
+        public const string GetMissionResults = "/Mission/Results/{NumberOfResults}";
     }
 }

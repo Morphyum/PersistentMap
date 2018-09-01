@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="FactionControl.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="HistoryResult.cs" />
     <Compile Include="Holder.cs" />
     <Compile Include="IWarServices.cs" />
     <Compile Include="Logger.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="StarMap.cs" />
     <Compile Include="System.cs" />
+    <Compile Include="UserInfo.cs" />
     <Compile Include="WarServices.cs" />
   </ItemGroup>
   <ItemGroup>
