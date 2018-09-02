@@ -133,11 +133,13 @@ namespace PersistentMapClient {
                             employees.Add(neigbourSystem.Owner);
                         }
                     }
-
-                }
-                else {
-                    foreach (KeyValuePair<Faction, FactionDef> pair in Sim.FactionsDict) {
-                        employees.Add(pair.Key);
+                    foreach(Faction capitalFaction in Sim.FactionsDict.Keys) {
+                        if (!employees.Contains(capitalFaction)) {
+                            if(IsCapital(system, capitalFaction)) {
+                                employees.Add(capitalFaction);
+                                break;
+                            }
+                        }
                     }
                 }
                 return employees;
@@ -174,6 +176,110 @@ namespace PersistentMapClient {
             catch (Exception ex) {
                 Logger.LogError(ex);
                 return null;
+            }
+        }
+
+        public static bool IsCapital(StarSystem system, Faction faction) {
+            try {
+                switch (system.Name) {
+                    case "Luthien": {
+                            if (faction == Faction.Kurita)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "New Avalon": {
+                            if (faction == Faction.Davion)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Sian": {
+                            if (faction == Faction.Liao)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Atreus (FWL)": {
+                            if (faction == Faction.Marik)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Rasalhague": {
+                            if (faction == Faction.AuriganMercenaries)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "St. Ives": {
+                            if (faction == Faction.ComStar)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Oberon": {
+                            if (faction == Faction.MagistracyCentrella)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Taurus": {
+                            if (faction == Faction.TaurianConcordat)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Canopus": {
+                            if (faction == Faction.MagistracyOfCanopus)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Alpheratz": {
+                            if (faction == Faction.Betrayers)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Circinus": {
+                            if (faction == Faction.Nautilus)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Alphard (MH)": {
+                            if (faction == Faction.AuriganDirectorate)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Lothario": {
+                            if (faction == Faction.MajestyMetals)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Coromodir": {
+                            if (faction == Faction.AuriganRestoration)
+                                return true;
+                            else
+                                return false;
+                        }
+                    case "Tharkad": {
+                            if (faction == Faction.Steiner)
+                                return true;
+                            else
+                                return false;
+                        }
+                    default: {
+                            return false;
+                        }
+                }
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex);
+                return false;
             }
         }
 

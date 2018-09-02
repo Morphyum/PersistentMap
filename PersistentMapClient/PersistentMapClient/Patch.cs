@@ -58,7 +58,6 @@ namespace PersistentMapClient {
     public static class StarSystem_ResetContracts_Patch {
         static void Postfix(StarSystem __instance) {
             try {
-                Logger.LogLine("called");
                 AccessTools.Field(typeof(SimGameState), "globalContracts").SetValue(__instance.Sim, new List<Contract>());
             }
             catch (Exception e) {
