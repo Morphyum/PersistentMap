@@ -6,5 +6,6 @@ namespace PersistentMapAPI {
         public static StarMap currentMap;
         public static Dictionary<string, UserInfo> connectionStore = new Dictionary<string, UserInfo>();
         public static List<HistoryResult> resultHistory = new List<HistoryResult>();
+        public static DateTime startupTime = DateTime.UtcNow;
     }
 }

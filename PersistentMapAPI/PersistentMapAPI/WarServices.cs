@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
@@ -36,7 +37,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult) {
             try {
-                return PostMissionResult(employer, target, systemName, mresult, "5");
+                return PostMissionResult(employer, target, systemName, mresult, "5", "0", "0");
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -44,11 +45,31 @@ namespace PersistentMapAPI {
             }
         }
 
-        public System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty) {
+        public System PostMissionResultDeprecated2(string employer, string target, string systemName, string mresult, string difficulty) {
+            try {
+                return PostMissionResult(employer, target, systemName, mresult, difficulty, "0", "0");
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return null;
+            }
+        }
+
+        public System PostMissionResultDeprecated3(string employer, string target, string systemName, string mresult, string difficulty, string rep) {
+            try {
+                return PostMissionResult(employer, target, systemName, mresult, difficulty, rep, "0");
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return null;
+            }
+        }
+
+        public System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty, string rep, string planetSupport) {
             try {
                 HistoryResult hresult = new HistoryResult();
                 hresult.date = DateTime.UtcNow;
-                int realDifficulty = Math.Min(10,int.Parse(difficulty));
+                int realDifficulty = Math.Min(10, int.Parse(difficulty));
                 string ip = Helper.GetIP();
                 if (Helper.CheckUserInfo(ip, systemName)) {
                     Logger.LogLine("One ip trys to send Missions to fast");
@@ -63,7 +84,7 @@ namespace PersistentMapAPI {
                 System system = map.FindSystemByName(systemName);
                 FactionControl oldOwnerControl = system.FindHighestControl();
                 Faction oldOwner = Faction.INVALID_UNSET;
-                if(oldOwnerControl != null) {
+                if (oldOwnerControl != null) {
                     oldOwner = oldOwnerControl.faction;
                 }
                 FactionControl employerControl = system.FindFactionControlByFaction((Faction)Enum.Parse(typeof(Faction), employer));
@@ -71,7 +92,7 @@ namespace PersistentMapAPI {
 
                 if (mresult == "Victory") {
                     Console.WriteLine("Victory Result");
-                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty);
+                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + int.Parse(rep) + int.Parse(planetSupport)));
                     hresult.winner = employerControl.faction;
                     hresult.loser = targetControl.faction;
                     hresult.pointsTraded = realChange;
@@ -99,7 +120,7 @@ namespace PersistentMapAPI {
                 }
                 else {
                     Console.WriteLine("Loss Result");
-                    int realChange = Math.Min(employerControl.percentage, Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty);
+                    int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + int.Parse(rep) / 2 + int.Parse(planetSupport) / 2));
                     hresult.winner = targetControl.faction;
                     hresult.loser = employerControl.faction;
                     hresult.pointsTraded = realChange;
@@ -110,9 +131,10 @@ namespace PersistentMapAPI {
                 Helper.SaveCurrentMap(map);
                 FactionControl afterBattleOwnerControl = system.FindHighestControl();
                 Faction newOwner = afterBattleOwnerControl.faction;
-                if(oldOwner != newOwner) {
+                if (oldOwner != newOwner) {
                     hresult.planetSwitched = true;
-                } else {
+                }
+                else {
                     hresult.planetSwitched = false;
                 }
                 hresult.system = systemName;
@@ -134,6 +156,11 @@ namespace PersistentMapAPI {
         public int GetActivePlayers(string MinutesBack) {
             WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Holder.connectionStore.Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow).Count();
+        }
+
+        public string GetStartupTime() {
+            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
+            return Holder.startupTime.ToString("o", CultureInfo.InvariantCulture);
         }
     }
 }

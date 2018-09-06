@@ -16,11 +16,7 @@ namespace PersistentMapAPI {
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.PostMissionResult, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty);
-
-        [OperationContract]
-        [WebGet(UriTemplate = Routing.PostMissionResultDepricated, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult);
+        System PostMissionResult(string employer, string target, string systemName, string mresult, string difficulty, string rep, string planetSupport);
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetMissionResults, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
@@ -29,9 +25,27 @@ namespace PersistentMapAPI {
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetActivePlayers, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         int GetActivePlayers(string MinutesBack);
-        
-        /*[OperationContract]
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.GetStartupTime, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        string GetStartupTime();
+
+        //DEPRECATED
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.PostMissionResultDepricated3, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        System PostMissionResultDeprecated3(string employer, string target, string systemName, string mresult, string difficulty, string rep);
+
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.PostMissionResultDepricated2, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        System PostMissionResultDeprecated2(string employer, string target, string systemName, string mresult, string difficulty);
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.PostMissionResultDepricated, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult);
+
+        [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = Routing.ResetStarMap, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string ResetStarMap();*/
+        string ResetStarMap();
     }
 }

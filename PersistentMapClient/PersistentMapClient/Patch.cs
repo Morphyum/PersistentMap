@@ -152,14 +152,10 @@ namespace PersistentMapClient {
     public static class Contract_CompleteContract_Patch {
         static void Postfix(Contract __instance, BattleTech.MissionResult result) {
             try {
-                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult();
-                mresult.employer = __instance.Override.employerTeam.faction;
-                mresult.target = __instance.Override.targetTeam.faction;
-                mresult.result = result;
-                mresult.difficulty = __instance.Difficulty;
                 GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                 StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
-                mresult.systemName = system.Name;
+                int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
+                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.InitialContractReputation * __instance.PercentageContractReputation), planetSupport);
                 bool postSuccessfull = Web.PostMissionResult(mresult);
                 if (!postSuccessfull) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
