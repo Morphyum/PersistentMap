@@ -72,7 +72,7 @@ namespace PersistentMapClient {
             }
         }
 
-        public static StarSystem ChangeWarDescription(StarSystem system, SimGameState Sim, PersistentMapAPI.System warsystem) {
+        public static StarSystem ChangeWarDescription(StarSystem system, SimGameState Sim, ParseSystem warsystem) {
             try {
                 if (IsBorder(system, Sim)) {
                     List<string> factionList = new List<string>();
@@ -109,7 +109,7 @@ namespace PersistentMapClient {
             }
         }
 
-        public static double GetDistanceInLY(StarSystem currPosition, PersistentMapAPI.System target, List<StarSystem> allSystems) {
+        public static double GetDistanceInLY(StarSystem currPosition, ParseSystem target, List<StarSystem> allSystems) {
             try {
                 StarSystem targetSystem = allSystems.FirstOrDefault(x => x.Name.Equals(target.name));
                 return Math.Sqrt(Math.Pow(targetSystem.Position.x - currPosition.Position.x, 2) + Math.Pow(targetSystem.Position.y - currPosition.Position.y, 2));

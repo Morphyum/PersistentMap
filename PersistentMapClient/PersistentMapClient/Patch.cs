@@ -8,6 +8,7 @@ using PersistentMapAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 namespace PersistentMapClient {
@@ -98,18 +99,37 @@ namespace PersistentMapClient {
         }
     }
 
+
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
-        static void Postfix(SimGameState simGame) {
+        static void Postfix(Starmap __instance, SimGameState simGame) {
             try {
-                StarMap map = Web.GetStarMap();
+                ParseMap map = Web.GetStarMap();
                 if (map == null) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
                     return;
                 }
                 List<string> changes = new List<string>();
-                foreach (PersistentMapAPI.System system in map.systems) {
+                foreach (ParseSystem system in map.systems) {
+                    if(system.activePlayers > 0) {
+                        GameObject starObject = GameObject.Find(system.name);
+                        Transform argoMarker = starObject.transform.Find("ArgoMarker");
+                        argoMarker.gameObject.SetActive(true);
+                        argoMarker.localScale = new Vector3(4f, 4f, 4f);
+                        argoMarker.GetComponent<MeshRenderer>().material.color = Color.grey;
+                        GameObject playerNumber = new GameObject();
+                        playerNumber.transform.parent = argoMarker;
+                        playerNumber.name = "PlayerNumberText";
+                        playerNumber.layer = 25;
+                        TextMeshPro textComponent = playerNumber.AddComponent<TextMeshPro>();
+                        textComponent.SetText(system.activePlayers.ToString());
+                        textComponent.transform.localPosition = new Vector3(0, -0.35f, -0.05f);
+                        textComponent.fontSize = 6;
+                        textComponent.alignment = TextAlignmentOptions.Center;
+                        textComponent.faceColor = Color.black;
+                        textComponent.fontStyle = FontStyles.Bold;
+                    }
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
                         Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
@@ -201,8 +221,8 @@ namespace PersistentMapClient {
                                 }
                         }
                         if (numberOfContracts > 0) {
-                            List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
-                            foreach (PersistentMapAPI.System potentialTarget in Web.GetStarMap().systems) {
+                            List<ParseSystem> targets = new List<ParseSystem>();
+                            foreach (ParseSystem potentialTarget in Web.GetStarMap().systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
                                 if (control != null && control.percentage < 100 && control.percentage != 0) {
                                     targets.Add(potentialTarget);

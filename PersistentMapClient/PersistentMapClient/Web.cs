@@ -7,18 +7,18 @@ using System.Net;
 namespace PersistentMapClient {
     public static class Web {
 
-        public static StarMap GetStarMap() {
+        public static ParseMap GetStarMap() {
             try {
                 string URL = Fields.settings.ServerURL + "warServices/StarMap";
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "GET";
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                StarMap map;
+                ParseMap map;
                 using (Stream responseStream = response.GetResponseStream()) {
                     StreamReader reader = new StreamReader(responseStream);
                     string mapstring = reader.ReadToEnd();
-                    map = JsonConvert.DeserializeObject<StarMap>(mapstring);
+                    map = JsonConvert.DeserializeObject<ParseMap>(mapstring);
                 }
                 return map;
             }
