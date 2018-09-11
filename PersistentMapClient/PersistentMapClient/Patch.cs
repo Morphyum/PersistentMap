@@ -105,6 +105,7 @@ namespace PersistentMapClient {
         static void Postfix(Starmap __instance, SimGameState simGame) {
             try {
                 ParseMap map = Web.GetStarMap();
+                List<StarSystem> needUpdates = new List<StarSystem>();
                 if (map == null) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
@@ -152,8 +153,19 @@ namespace PersistentMapClient {
                         system2 = Helper.ChangeWarDescription(system2, simGame, system);
                         if (newOwner != oldOwner) {
                             changes.Add(Helper.GetFactionShortName(newOwner, simGame.DataManager) + " took " + system2.Name + " from " + Helper.GetFactionShortName(oldOwner, simGame.DataManager));
+                            foreach(StarSystem changedSystem in simGame.Starmap.GetAvailableNeighborSystem(system2)) {
+                                if (!needUpdates.Contains(changedSystem)) {
+                                    needUpdates.Add(changedSystem);
+                                }
+                            }
                         }
                     }
+                }
+                foreach (StarSystem changedSystem in needUpdates) {
+                        AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers").Invoke(changedSystem.Def, new object[] {
+                            Helper.GetEmployees(changedSystem, simGame) });
+                        AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(changedSystem.Def, new object[] {
+                            Helper.GetTargets(changedSystem, simGame) });
                 }
                 if (changes.Count > 0 && !Fields.firstpass) {
                     SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
@@ -239,6 +251,9 @@ namespace PersistentMapClient {
                                             List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
                                             if (ownerlist.Count > 1) {
                                                 target = ownerlist[1].faction;
+                                                if(target == Faction.NoFaction) {
+                                                    target = Faction.AuriganPirates;
+                                                }
                                             }
                                             else {
                                                 target = Faction.Locals;

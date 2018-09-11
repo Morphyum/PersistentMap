@@ -170,7 +170,7 @@ namespace PersistentMapClient {
                         targets.Add(Faction.Locals);
                     }
                     foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
-                        if (system.Owner != neigbourSystem.Owner && !targets.Contains(neigbourSystem.Owner)) {
+                        if (system.Owner != neigbourSystem.Owner && !targets.Contains(neigbourSystem.Owner) && neigbourSystem.Owner != Faction.NoFaction) {
                             targets.Add(neigbourSystem.Owner);
                         }
                     }
