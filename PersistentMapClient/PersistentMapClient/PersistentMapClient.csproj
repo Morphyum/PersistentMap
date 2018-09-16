@@ -64,7 +64,8 @@
     <Compile Include="Logger.cs" />
     <Compile Include="ParseMap.cs" />
     <Compile Include="ParseSystem.cs" />
-    <Compile Include="Patch.cs" />
+    <Compile Include="PatchShop.cs" />
+    <Compile Include="PatchWar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PersistentMapClient.cs" />
     <Compile Include="Web.cs" />

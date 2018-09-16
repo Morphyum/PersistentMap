@@ -113,7 +113,7 @@ namespace PersistentMapClient {
                 }
                 List<string> changes = new List<string>();
                 foreach (ParseSystem system in map.systems) {
-                    if(system.activePlayers > 0) {
+                    if (system.activePlayers > 0) {
                         GameObject starObject = GameObject.Find(system.name);
                         Transform argoMarker = starObject.transform.Find("ArgoMarker");
                         argoMarker.gameObject.SetActive(true);
@@ -153,7 +153,7 @@ namespace PersistentMapClient {
                         system2 = Helper.ChangeWarDescription(system2, simGame, system);
                         if (newOwner != oldOwner) {
                             changes.Add(Helper.GetFactionShortName(newOwner, simGame.DataManager) + " took " + system2.Name + " from " + Helper.GetFactionShortName(oldOwner, simGame.DataManager));
-                            foreach(StarSystem changedSystem in simGame.Starmap.GetAvailableNeighborSystem(system2)) {
+                            foreach (StarSystem changedSystem in simGame.Starmap.GetAvailableNeighborSystem(system2)) {
                                 if (!needUpdates.Contains(changedSystem)) {
                                     needUpdates.Add(changedSystem);
                                 }
@@ -162,15 +162,21 @@ namespace PersistentMapClient {
                     }
                 }
                 foreach (StarSystem changedSystem in needUpdates) {
-                        AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers").Invoke(changedSystem.Def, new object[] {
+                    AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers").Invoke(changedSystem.Def, new object[] {
                             Helper.GetEmployees(changedSystem, simGame) });
-                        AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(changedSystem.Def, new object[] {
+                    AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(changedSystem.Def, new object[] {
                             Helper.GetTargets(changedSystem, simGame) });
+                    ParseSystem system = map.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
+                    if (system != null) {
+                        AccessTools.Method(typeof(StarSystemDef), "set_Description").Invoke(changedSystem.Def, new object[] {
+                            Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description});
+                    }
                 }
                 if (changes.Count > 0 && !Fields.firstpass) {
                     SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
                     interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changes.ToArray()), true);
-                } else {
+                }
+                else {
                     Fields.firstpass = false;
                 }
             }
@@ -247,16 +253,16 @@ namespace PersistentMapClient {
                                     StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
                                     if (realSystem != null) {
                                         Faction target = realSystem.Owner;
-                                        if (pair.Key == target) {
+                                        if (pair.Key == target || target == Faction.NoFaction) {
                                             List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
                                             if (ownerlist.Count > 1) {
                                                 target = ownerlist[1].faction;
-                                                if(target == Faction.NoFaction) {
+                                                if (target == Faction.NoFaction) {
                                                     target = Faction.AuriganPirates;
                                                 }
                                             }
                                             else {
-                                                target = Faction.Locals;
+                                                target = Faction.AuriganPirates;
                                             }
                                         }
                                         Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.Difficulty, pair.Key, target, realSystem);
