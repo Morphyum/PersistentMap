@@ -13,24 +13,65 @@ using TMPro;
 using UnityEngine;
 
 namespace PersistentMapClient {
-    
-   /*[HarmonyPatch(typeof(Shop), "UpdateShop")]
-    public static class Shop_UpdateShop_Patch {
-        static void Postfix(Shop __instance) {
+
+    [HarmonyPatch(typeof(SimGameState), "SetSimRoomState")]
+    public static class SimGameState_SetSimRoomState_Patch {
+        static void Prefix(SimGameState __instance, DropshipLocation state) {
             try {
-                ShopDefItem temp = new ShopDefItem();
-                temp.ID = "Weapon_Laser_MediumLaser_0-STOCK";
-                temp.Type = ShopItemType.Weapon;
-                temp.DiscountModifier = 0.0001f;
-                temp.Count = 2;
-                //__instance.ActiveSpecials.Clear();
-                __instance.ActiveSpecials.Add(temp);
+                if(state == DropshipLocation.SHOP) {
+                    Web.TestPost();
+                    if (__instance.CurSystem.Shop == null) {
+                        __instance.CurSystem.InitializeShop();
+                    }
+                    else {
+                        __instance.CurSystem.Shop.UpdateShop(true);
+                    }
+                }
             }
             catch (Exception e) {
                 Logger.LogError(e);
             }
         }
     }
+
+    [HarmonyPatch(typeof(Shop), "UpdateShop")]
+    public static class Shop_UpdateShop_Patch {
+        static void Postfix(Shop __instance, StarSystem ___system) {
+            try {
+                foreach (ShopDefItem item in Web.GetShopForFaction(___system.Owner)) {
+                    __instance.ActiveSpecials.Add(item);
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+    [HarmonyPatch(typeof(StarSystem), "OnSystemChange")]
+    public static class StarSystem_OnSystemChange_Patch {
+        static bool Prefix() {
+            try {
+                return false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(StarSystem), "SetNewStarSystemDef")]
+    public static class StarSystem_SetNewStarSystemDef_Patch {
+        static void Prefix(ref bool resetShops) {
+            try {
+                resetShops = false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+    
 
     [HarmonyPatch(typeof(StarSystem), "InitializeShop")]
     public static class StarSystem_InitializeShop {
@@ -60,6 +101,23 @@ namespace PersistentMapClient {
         }
     }
 
+    [HarmonyPatch(typeof(StarSystem), "RefreshSystem")]
+    public static class StarSystem_RefreshSystem_Patch {
+        static bool Prefix(StarSystem __instance) {
+            try {
+                __instance.GeneratePilots(__instance.Sim.Constants.Story.DefaultPilotsPerSystem);
+                __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMechTechsPerSystem, true);
+                __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMedTechsPerSystem, false);
+                __instance.RefreshBreadcrumbs();
+                return false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(Shop), "GetPrice")]
     public static class Shop_GetPrice_Patch {
         static void Prefix(ref Shop.PurchaseType purchaseType) {
@@ -74,20 +132,27 @@ namespace PersistentMapClient {
 
     [HarmonyPatch(typeof(SGLocationWidget), "ManageShopButtonState")]
     public static class SGLocationWidget_ManageShopButtonState_Patch {
-        static void Postfix(SGLocationWidget __instance, HBSDOTweenButton ___storeButton, StarSystem currSystem, GameObject ___NothingToBuyStoreOverlay, GameObject ___LowRepStoreOverlay) {
+        static bool Prefix(SGLocationWidget __instance, SimGameState ___simState,HBSDOTweenButton ___storeButton, StarSystem currSystem, GameObject ___NothingToBuyStoreOverlay, GameObject ___LowRepStoreOverlay) {
             try {
-                if(___storeButton.State == ButtonState.Disabled) {
-                    if (currSystem.Shop != null && currSystem.Shop.ActiveSpecials.Count >= 0) {
-                        ___LowRepStoreOverlay.SetActive(false);
-                        ___NothingToBuyStoreOverlay.SetActive(false);
-                        ___storeButton.SetState(ButtonState.Enabled, false);
-                    }
+                Faction owner = currSystem.Owner;
+                SimGameReputation reputation = ___simState.GetReputation(owner);
+                if (reputation <= SimGameReputation.LOATHED) {
+                    ___LowRepStoreOverlay.SetActive(true);
+                    ___NothingToBuyStoreOverlay.SetActive(false);
+                    ___storeButton.SetState(ButtonState.Disabled, false);
                 }
+                else {
+                    ___LowRepStoreOverlay.SetActive(false);
+                    ___NothingToBuyStoreOverlay.SetActive(false);
+                    ___storeButton.SetState(ButtonState.Enabled, false);
+                }
+                return false;
             }
             catch (Exception e) {
                 Logger.LogError(e);
+                return true;
             }
         }
-    }*/
+    }
 
 }

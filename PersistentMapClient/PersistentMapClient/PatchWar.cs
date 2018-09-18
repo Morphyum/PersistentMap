@@ -217,7 +217,7 @@ namespace PersistentMapClient {
                 }
                 __instance.Sim.GlobalContracts.Clear();
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
-                    if (pair.Key != Faction.NoFaction && pair.Key != Faction.MercenaryReviewBoard) {
+                    if (!Fields.excludedFactions.Contains(pair.Key)) {
                         SimGameReputation rep = __instance.Sim.GetReputation(pair.Key);
                         int numberOfContracts;
                         switch (rep) {
@@ -253,11 +253,11 @@ namespace PersistentMapClient {
                                     StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
                                     if (realSystem != null) {
                                         Faction target = realSystem.Owner;
-                                        if (pair.Key == target || target == Faction.NoFaction) {
+                                        if (pair.Key == target || Fields.excludedFactions.Contains(target)) {
                                             List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
                                             if (ownerlist.Count > 1) {
                                                 target = ownerlist[1].faction;
-                                                if (target == Faction.NoFaction) {
+                                                if (Fields.excludedFactions.Contains(target)) {
                                                     target = Faction.AuriganPirates;
                                                 }
                                             }

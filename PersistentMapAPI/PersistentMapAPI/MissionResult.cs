@@ -19,5 +19,8 @@ namespace PersistentMapAPI {
             this.target = target;
             this.planetSupport = planetSupport;
         }
+
+        public MissionResult() {
+        }
     }
 }

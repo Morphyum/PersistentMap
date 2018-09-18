@@ -60,6 +60,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="StarMap.cs" />
     <Compile Include="System.cs" />
+    <Compile Include="TestObject.cs" />
     <Compile Include="UserInfo.cs" />
     <Compile Include="WarServices.cs" />
   </ItemGroup>

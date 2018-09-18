@@ -15,6 +15,7 @@ namespace PersistentMapClient {
         public static bool firstpass = true;
         public static bool warmission = false;
         public static string ShopFileTag = "rt_economy";
+        public static List<Faction> excludedFactions = new List<Faction>() { Faction.AuriganMercenaries, Faction.Betrayers, Faction.MagistracyCentrella, Faction.MajestyMetals, Faction.MercenaryReviewBoard, Faction.Nautilus, Faction.NoFaction };
     }
 
     public struct PotentialContract {
