@@ -177,21 +177,55 @@ namespace PersistentMapAPI {
         }
 
         public List<ShopDefItem> GetShopForFaction(string Faction) {
-            //TODO
-            List<ShopDefItem> items = new List<ShopDefItem>();
-            ShopDefItem temp = new ShopDefItem();
-            temp.ID = "Weapon_Laser_MediumLaser_0-STOCK";
-            temp.Type = ShopItemType.Weapon;
-            temp.DiscountModifier = 0.0001f;
-            temp.Count = 1;
-            items.Add(temp);
-            temp = new ShopDefItem();
-            temp.ID = "Weapon_LRM_LRM5_0-STOCK";
-            temp.Type = ShopItemType.Weapon;
-            temp.DiscountModifier = 0.0001f;
-            temp.Count = 2;
-            items.Add(temp);
-            return items;
+            try {
+                Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
+                if (Holder.factionShops == null) {
+                    Holder.factionShops = new List<FactionShop>();
+                }
+                if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction) == null) {
+                    Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.UtcNow));
+                }
+                if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) > DateTime.UtcNow) {
+                    List<ShopDefItem> newShop = Helper.GenerateNewShop(realFaction);
+                    Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.Clear();
+                    Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems = newShop;
+                    Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate = DateTime.UtcNow;
+                }
+                return Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems;
+            }catch(Exception e) {
+                Console.WriteLine(e);
+                return null;
+            }
+        }
+
+        public string PostSalvageForFaction(List<ShopDefItem> salvage, string Faction) {
+            Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
+            if (Holder.factionInventories == null) {
+                Helper.LoadCurrentInventories();
+            }
+            if (!Holder.factionInventories.ContainsKey(realFaction)) {
+                Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());
+            }
+            foreach (ShopDefItem item in salvage) {
+                if(Holder.factionInventories[realFaction].FirstOrDefault(x => x.ID.Equals(item.ID)) == null) {
+                    Holder.factionInventories[realFaction].Add(item);
+                } else {
+                    int index = Holder.factionInventories[realFaction].FindIndex(x => x.ID.Equals(item.ID));
+                    Holder.factionInventories[realFaction][index].Count++;
+                    Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
+                    Helper.SaveCurrentInventories(Holder.factionInventories);
+                }
+            }
+            Console.WriteLine(salvage.Count + " items inserted into inventory for " + Faction);
+            return salvage.Count + " items inserted into inventory for " + Faction;
+        }
+
+        public string PostPurchaseForFaction(string Faction, string ID) {
+            Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
+            Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.FirstOrDefault(x => x.ID.Equals(ID)).Count--;
+            Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.RemoveAll(x => x.Count <= 0);
+            Console.WriteLine(ID + " 1 removed from shop for " + Faction);
+            return ID + " 1 removed from shop for " + Faction;
         }
     }
 }

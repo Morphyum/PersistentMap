@@ -8,13 +8,13 @@
         public const string GetStartupTime = "/Info/StartupTime";
         public const string GetShopForFaction = "/Shop/{Faction}";
         public const string PostMissionResult = "/Mission/";
+        public const string PostSalvageForFaction = "/Salvage/{Faction}";
+        public const string PostPurchaseForFaction = "/Buy/?Faction={Faction}&ID={ID}";
 
         //DEPRECATED
         public const string PostMissionResultDepricated = "/Mission/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}";
         public const string PostMissionResultDepricated2 = "/Mission/V2/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}";
         public const string PostMissionResultDepricated3 = "/Mission/V3/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}&rep={rep}";
         public const string PostMissionResultDepricated4 = "/Mission/V4/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}&rep={rep}&planetSupport={planetSupport}";
-
-        public const string PostTest = "/Test/";
     }
 }

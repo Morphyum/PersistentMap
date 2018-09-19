@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BattleTech;
+using System;
 using System.Collections.Generic;
 
 namespace PersistentMapAPI {
@@ -7,5 +8,7 @@ namespace PersistentMapAPI {
         public static Dictionary<string, UserInfo> connectionStore = new Dictionary<string, UserInfo>();
         public static List<HistoryResult> resultHistory = new List<HistoryResult>();
         public static DateTime startupTime = DateTime.UtcNow;
+        public static Dictionary<Faction, List<ShopDefItem>> factionInventories;
+        public static List<FactionShop> factionShops;
     }
 }

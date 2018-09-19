@@ -48,21 +48,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FactionControl.cs" />
-    <Compile Include="Helper.cs" />
-    <Compile Include="HistoryResult.cs" />
-    <Compile Include="Holder.cs" />
-    <Compile Include="IWarServices.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="MissionResult.cs" />
+    <Compile Include="Objects\FactionControl.cs" />
+    <Compile Include="Objects\FactionShop.cs" />
+    <Compile Include="Util\Helper.cs" />
+    <Compile Include="Objects\HistoryResult.cs" />
+    <Compile Include="Util\Holder.cs" />
+    <Compile Include="API\IWarServices.cs" />
+    <Compile Include="Util\Logger.cs" />
+    <Compile Include="Objects\MissionResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Routing.cs" />
-    <Compile Include="Settings.cs" />
-    <Compile Include="StarMap.cs" />
-    <Compile Include="System.cs" />
-    <Compile Include="TestObject.cs" />
-    <Compile Include="UserInfo.cs" />
-    <Compile Include="WarServices.cs" />
+    <Compile Include="API\Routing.cs" />
+    <Compile Include="Util\Settings.cs" />
+    <Compile Include="Objects\StarMap.cs" />
+    <Compile Include="Objects\System.cs" />
+    <Compile Include="Objects\UserInfo.cs" />
+    <Compile Include="API\WarServices.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

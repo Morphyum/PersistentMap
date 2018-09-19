@@ -19,7 +19,6 @@ namespace PersistentMapClient {
         static void Prefix(SimGameState __instance, DropshipLocation state) {
             try {
                 if(state == DropshipLocation.SHOP) {
-                    Web.TestPost();
                     if (__instance.CurSystem.Shop == null) {
                         __instance.CurSystem.InitializeShop();
                     }
@@ -27,6 +26,18 @@ namespace PersistentMapClient {
                         __instance.CurSystem.Shop.UpdateShop(true);
                     }
                 }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Contract), "FinalizeSalvage")]
+    public static class Contract_FinalizeSalvage_Patch {
+        static void Postfix(Contract __instance, List<SalvageDef> ___finalPotentialSalvage) {
+            try {
+                Web.PostUnusedSalvage(___finalPotentialSalvage, __instance.Override.employerTeam.faction);
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -97,6 +108,34 @@ namespace PersistentMapClient {
             catch (Exception e) {
                 Logger.LogError(e);
                 return false;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Shop), "SellInventoryItem", new Type[] { typeof(ShopDefItem) })]
+    public static class Shop_SellInventoryItem_Patch {
+        static void Postfix(ShopDefItem item, bool __result, StarSystem ___system) {
+            try {
+                if (__result) {
+                    Web.PostSoldItem(item, ___system.Owner);
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Shop), "Purchase")]
+    public static class Shop_Purchase_Patch {
+        static void Postfix(string id, bool __result, StarSystem ___system) {
+            try {
+                if (__result) {
+                    Web.PostBuyItem(id, ___system.Owner);
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
             }
         }
     }

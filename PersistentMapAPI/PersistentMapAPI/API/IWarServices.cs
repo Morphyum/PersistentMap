@@ -20,6 +20,14 @@ namespace PersistentMapAPI {
         System PostMissionResult(MissionResult mresult);
 
         [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = Routing.PostSalvageForFaction, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        string PostSalvageForFaction(List<ShopDefItem> salvage, string Faction);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = Routing.PostPurchaseForFaction, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        string PostPurchaseForFaction(string Faction, string ID);
+
+        [OperationContract]
         [WebGet(UriTemplate = Routing.GetMissionResults, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults);
 
@@ -53,7 +61,7 @@ namespace PersistentMapAPI {
         [WebGet(UriTemplate = Routing.PostMissionResultDepricated, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult);
 
-        /* [OperationContract]
+        /*[OperationContract]
          [WebInvoke(Method = "POST", UriTemplate = Routing.ResetStarMap, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
          string ResetStarMap();*/
     }
