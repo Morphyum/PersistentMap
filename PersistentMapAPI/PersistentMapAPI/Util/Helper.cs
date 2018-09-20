@@ -70,19 +70,24 @@ namespace PersistentMapAPI {
         }
 
         public static Dictionary<Faction, List<ShopDefItem>> LoadCurrentInventories() {
-            if (Holder.currentMap == null) {
-                if (File.Exists(currentShopFilePath)) {
-                    using (StreamReader r = new StreamReader(currentShopFilePath)) {
-                        string json = r.ReadToEnd();
-                        Holder.factionInventories = JsonConvert.DeserializeObject<Dictionary<Faction, List<ShopDefItem>>>(json);
+            try {
+                if (Holder.factionInventories == null) {
+                    if (File.Exists(currentShopFilePath)) {
+                        using (StreamReader r = new StreamReader(currentShopFilePath)) {
+                            string json = r.ReadToEnd();
+                            Holder.factionInventories = JsonConvert.DeserializeObject<Dictionary<Faction, List<ShopDefItem>>>(json);
+                        }
+                    }
+                    else {
+                        Holder.factionInventories = new Dictionary<Faction, List<ShopDefItem>>();
                     }
                 }
-                else {
-                    Holder.factionInventories = new Dictionary<Faction, List<ShopDefItem>>();
-                }
+                Dictionary<Faction, List<ShopDefItem>> result = Holder.factionInventories;
+                return result;
+            }catch(Exception e) {
+                Logger.LogError(e);
+                return null;
             }
-            Dictionary<Faction, List<ShopDefItem>> result = Holder.factionInventories;
-            return result;
         }
 
         public static void SaveCurrentInventories(Dictionary<Faction, List<ShopDefItem>> shop) {
