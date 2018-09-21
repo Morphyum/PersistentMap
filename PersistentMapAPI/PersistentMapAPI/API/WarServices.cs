@@ -181,9 +181,10 @@ namespace PersistentMapAPI {
                 Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
                 if (Holder.factionShops == null) {
                     Holder.factionShops = new List<FactionShop>();
+                    Logger.LogLine("Shops initilaized");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction) == null) {
-                    Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.UtcNow));
+                    Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.MinValue));
                     Logger.LogLine("Shop Not found");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) < DateTime.UtcNow) {

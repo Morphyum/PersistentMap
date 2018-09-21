@@ -165,7 +165,7 @@ namespace PersistentMapAPI {
                 if(newShop.Count >= Helper.LoadSettings().MaxItemsPerShop) {
                     break;
                 }
-                int rolledNumber = rand.Next(1, maxCount + 1);
+                int rolledNumber = rand.Next(0, maxCount + 1);
                 if (rolledNumber <= item.Count) {
                     while (rolledNumber < item.Count) {
                         if (newShop.FirstOrDefault(x => x.ID.Equals(item.ID)) == null) {
@@ -181,6 +181,9 @@ namespace PersistentMapAPI {
                         item.DiscountModifier += Helper.LoadSettings().DiscountPerItem;
                     }
                 }
+            }
+            foreach(ShopDefItem item in newShop) {
+                Logger.LogLine("Added " + item.ID + " Count" + item.Count);
             }
             Holder.factionInventories[realFaction].RemoveAll(x => x.Count <= 0);
             Helper.SaveCurrentInventories(Holder.factionInventories);

@@ -131,7 +131,7 @@ namespace PersistentMapClient {
                 foreach (string id in __instance.Sim.DataManager.Shops.Keys) {
                     ShopDef shopDef = __instance.Sim.DataManager.Shops.Get(id);
                     if (shopDef.RequirementTags.Contains(Fields.ShopFileTag)) {
-                        TagSet filteredRequirements = shopDef.RequirementTags;
+                        TagSet filteredRequirements = new TagSet(shopDef.RequirementTags);
                         filteredRequirements.Remove(Fields.ShopFileTag);
                         if (SimGameState.MeetsTagRequirements(filteredRequirements, shopDef.ExclusionTags, __instance.Tags, null)) {
                             list.Add(shopDef);
@@ -187,9 +187,6 @@ namespace PersistentMapClient {
                 __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMechTechsPerSystem, true);
                 __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMedTechsPerSystem, false);
                 __instance.RefreshBreadcrumbs();
-                if (__instance.Shop == null) {
-                    __instance.InitializeShop();
-                }
                 return false;
             }
             catch (Exception e) {
