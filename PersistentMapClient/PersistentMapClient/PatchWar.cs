@@ -2,6 +2,7 @@
 using BattleTech.Framework;
 using BattleTech.Save;
 using BattleTech.UI;
+using BattleTech.UI.Tooltips;
 using Harmony;
 using HBS;
 using PersistentMapAPI;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PersistentMapClient {
 
@@ -99,6 +101,17 @@ namespace PersistentMapClient {
         }
     }
 
+    /* [HarmonyPatch(typeof(SGSystemViewPopulator), "UpdateRoutedSystem")]
+     public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
+         static void Postfix(SimGameState __instance, Contract __result) {
+             try {
+                 GameObject newwidget = GameObject.Instantiate(OwnerFactionWidgets);
+             }
+             catch (Exception e) {
+                 Logger.LogError(e);
+             }
+         }
+     }*/
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {

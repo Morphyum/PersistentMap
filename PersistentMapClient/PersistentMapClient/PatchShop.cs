@@ -1,4 +1,5 @@
 ﻿using BattleTech;
+using BattleTech.Data;
 using BattleTech.Framework;
 using BattleTech.Save;
 using BattleTech.UI;
@@ -57,7 +58,7 @@ namespace PersistentMapClient {
     public static class SimGameState_SetSimRoomState_Patch {
         static void Prefix(SimGameState __instance, DropshipLocation state) {
             try {
-                if(state == DropshipLocation.SHOP) {
+                if (state == DropshipLocation.SHOP) {
                     if (__instance.CurSystem.Shop == null) {
                         __instance.CurSystem.InitializeShop();
                     }
@@ -86,10 +87,56 @@ namespace PersistentMapClient {
 
     [HarmonyPatch(typeof(Shop), "UpdateShop")]
     public static class Shop_UpdateShop_Patch {
-        static void Postfix(Shop __instance, StarSystem ___system) {
+        static void Postfix(Shop __instance, StarSystem ___system, SimGameState ___Sim) {
             try {
                 foreach (ShopDefItem item in Web.GetShopForFaction(___system.Owner)) {
-                    __instance.ActiveSpecials.Add(item);
+                    DataManager dataManager = ___Sim.DataManager;
+                    switch (item.Type) {
+                        case ShopItemType.Weapon: {
+                                if (dataManager.WeaponDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+                            }
+                        case ShopItemType.AmmunitionBox: {
+                                if (dataManager.AmmoBoxDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+                            }
+                        case ShopItemType.HeatSink: {
+
+                                if (dataManager.HeatSinkDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+                            }
+                        case ShopItemType.JumpJet: {
+                                if (dataManager.JumpJetDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+
+                            }
+                        case ShopItemType.MechPart: {
+                                if (dataManager.MechDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+                            }
+                        case ShopItemType.Upgrade: {
+                                if (dataManager.UpgradeDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+                            }
+                        case ShopItemType.Mech: {
+                                if (dataManager.MechDefs.Exists(item.ID)) {
+                                    __instance.ActiveSpecials.Add(item);
+                                }
+                                break;
+                            }
+                    }
                 }
             }
             catch (Exception e) {
@@ -97,6 +144,7 @@ namespace PersistentMapClient {
             }
         }
     }
+
     [HarmonyPatch(typeof(StarSystem), "OnSystemChange")]
     public static class StarSystem_OnSystemChange_Patch {
         static bool Prefix() {
@@ -121,7 +169,7 @@ namespace PersistentMapClient {
             }
         }
     }
-    
+
 
     [HarmonyPatch(typeof(StarSystem), "InitializeShop")]
     public static class StarSystem_InitializeShop {
@@ -210,7 +258,7 @@ namespace PersistentMapClient {
 
     [HarmonyPatch(typeof(SGLocationWidget), "ManageShopButtonState")]
     public static class SGLocationWidget_ManageShopButtonState_Patch {
-        static bool Prefix(SGLocationWidget __instance, SimGameState ___simState,HBSDOTweenButton ___storeButton, StarSystem currSystem, GameObject ___NothingToBuyStoreOverlay, GameObject ___LowRepStoreOverlay) {
+        static bool Prefix(SGLocationWidget __instance, SimGameState ___simState, HBSDOTweenButton ___storeButton, StarSystem currSystem, GameObject ___NothingToBuyStoreOverlay, GameObject ___LowRepStoreOverlay) {
             try {
                 Faction owner = currSystem.Owner;
                 SimGameReputation reputation = ___simState.GetReputation(owner);
