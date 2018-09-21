@@ -184,8 +184,10 @@ namespace PersistentMapAPI {
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction) == null) {
                     Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.UtcNow));
+                    Logger.LogLine("Shop Not found");
                 }
-                if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) > DateTime.UtcNow) {
+                if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) < DateTime.UtcNow) {
+                    Logger.LogLine("Time passed");
                     List<ShopDefItem> newShop = Helper.GenerateNewShop(realFaction);
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.Clear();
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems = newShop;

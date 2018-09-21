@@ -5,6 +5,7 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using HBS.Collections;
+using Localize;
 using PersistentMapAPI;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,44 @@ using TMPro;
 using UnityEngine;
 
 namespace PersistentMapClient {
+
+    [HarmonyPatch(typeof(SGTravelManager), "DisplayEnteredOrbitPopup")]
+    public static class SGTravelManager_DisplayEnteredOrbitPopup_Patch {
+        static bool Prefix(SGTravelManager __instance, SimGameState ___simState) {
+            try {
+                bool flag = true;
+                Faction owner = ___simState.CurSystem.Owner;
+                SimGameReputation reputation = ___simState.GetReputation(owner);
+                if (reputation <= SimGameReputation.LOATHED) {
+                    flag = false;
+                }
+                if (flag) {
+                    Action actionArrive = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "OnArrivedAtPlanet");
+                    Action actionSave = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "SaveNow");
+                    ___simState.GetInterruptQueue().QueueTravelPauseNotification("Arrived", Strings.T("We've arrived at {0}.", new object[]
+                    {
+                    ___simState.Starmap.CurPlanet.System.Def.Description.Name
+                    }), ___simState.GetCrewPortrait(SimGameCrew.Crew_Sumire), "notification_travelcomplete", actionArrive, "Visit Store", actionSave, "Continue");
+                }
+                else {
+                    Action actionSave = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "SaveNow");
+                    ___simState.GetInterruptQueue().QueueTravelPauseNotification("Arrived", Strings.T("We've arrived at {0}.", new object[]
+                    {
+                    ___simState.Starmap.CurPlanet.System.Def.Description.Name
+                    }), ___simState.GetCrewPortrait(SimGameCrew.Crew_Sumire), "notification_travelcomplete", actionSave, "Continue", null, null);
+                }
+                if (!___simState.TimeMoving) {
+                    ___simState.GetInterruptQueue().DisplayIfAvailable();
+                }
+                return false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+
+    }
 
     [HarmonyPatch(typeof(SimGameState), "SetSimRoomState")]
     public static class SimGameState_SetSimRoomState_Patch {
@@ -148,6 +187,9 @@ namespace PersistentMapClient {
                 __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMechTechsPerSystem, true);
                 __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMedTechsPerSystem, false);
                 __instance.RefreshBreadcrumbs();
+                if (__instance.Shop == null) {
+                    __instance.InitializeShop();
+                }
                 return false;
             }
             catch (Exception e) {
@@ -194,4 +236,25 @@ namespace PersistentMapClient {
         }
     }
 
+    [HarmonyPatch(typeof(SGNavigationButton), "ManageShopFlyout")]
+    public static class SGNavigationButton_ManageShopFlyout_Patch {
+        static bool Prefix(SGNavigationButton __instance, SimGameState ___simState) {
+            try {
+                Faction owner = ___simState.CurSystem.Owner;
+                SimGameReputation reputation = ___simState.GetReputation(owner);
+                bool flag = true;
+                if (reputation <= SimGameReputation.LOATHED) {
+                    flag = false;
+                }
+                if (flag) {
+                    __instance.AddFlyoutButton("Store", DropshipMenuType.Shop);
+                }
+                return false;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+    }
 }
