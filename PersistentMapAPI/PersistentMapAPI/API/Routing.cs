@@ -7,7 +7,7 @@
         public const string GetActivePlayers = "Users/Active/?MinutesBack={MinutesBack}";
         public const string GetStartupTime = "/Info/StartupTime";
         public const string GetShopForFaction = "/Shop/{Faction}";
-        public const string PostMissionResult = "/Mission/";
+        public const string PostMissionResult = "/Mission/?CompanyName={CompanyName}";
         public const string PostSalvageForFaction = "/Salvage/{Faction}";
         public const string PostPurchaseForFaction = "/Buy/?Faction={Faction}&ID={ID}";
 
@@ -16,5 +16,6 @@
         public const string PostMissionResultDepricated2 = "/Mission/V2/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}";
         public const string PostMissionResultDepricated3 = "/Mission/V3/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}&rep={rep}";
         public const string PostMissionResultDepricated4 = "/Mission/V4/?employer={employer}&target={target}&systemName={systemName}&mresult={mresult}&difficulty={difficulty}&rep={rep}&planetSupport={planetSupport}";
+        public const string PostMissionResultDepricated5 = "/Mission/";
     }
 }

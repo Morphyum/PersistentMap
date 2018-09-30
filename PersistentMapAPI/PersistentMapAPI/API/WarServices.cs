@@ -37,7 +37,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult) {
             try {
-                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, 5, 0, 0));
+                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, 5, 0, 0), "UNKNOWN");
 
             }
             catch (Exception e) {
@@ -48,7 +48,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResultDeprecated2(string employer, string target, string systemName, string mresult, string difficulty) {
             try {
-                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), 0, 0));
+                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), 0, 0), "UNKNOWN");
 
             }
             catch (Exception e) {
@@ -59,7 +59,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResultDeprecated3(string employer, string target, string systemName, string mresult, string difficulty, string rep) {
             try {
-                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), int.Parse(rep), 0));
+                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), int.Parse(rep), 0), "UNKNOWN");
 
             }
             catch (Exception e) {
@@ -70,7 +70,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResultDepricated4(string employer, string target, string systemName, string mresult, string difficulty, string rep, string planetSupport) {
             try {
-                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), int.Parse(rep), int.Parse(planetSupport)));
+                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), int.Parse(rep), int.Parse(planetSupport)),"UNKNOWN");
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -78,13 +78,17 @@ namespace PersistentMapAPI {
             }
         }
 
-        public System PostMissionResult(MissionResult mresult) {
+        public System PostMissionResultDepricated5(MissionResult mresult) {
+            return PostMissionResult(mresult, "UNKNOWN");
+        }
+
+        public System PostMissionResult(MissionResult mresult, string companyName) {
             try {
                 HistoryResult hresult = new HistoryResult();
                 hresult.date = DateTime.UtcNow;
                 int realDifficulty = Math.Min(10, mresult.difficulty);
                 string ip = Helper.GetIP();
-                if (Helper.CheckUserInfo(ip, mresult.systemName)) {
+                if (Helper.CheckUserInfo(ip, mresult.systemName, companyName)) {
                     Logger.LogLine("One ip trys to send Missions to fast");
                     return null;
                 }

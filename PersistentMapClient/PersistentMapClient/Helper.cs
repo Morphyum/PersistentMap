@@ -24,8 +24,7 @@ namespace PersistentMapClient {
 
         public static bool meetsNewReqs(StarSystem instance, TagSet reqTags, TagSet exTags, TagSet curTags) {
             try {
-                if (!curTags.ContainsAny(exTags, true)) {
-
+                if (!curTags.ContainsAny(exTags, false)) {
                     //Check exclution for time and rep
                     foreach (string item in exTags) {
                         if (item.StartsWith("time")) {
@@ -515,7 +514,7 @@ namespace PersistentMapClient {
             int support = 0;
             List<StarSystem> neighbours = new List<StarSystem>();
             foreach (StarSystem possibleSystem in Sim.StarSystems) {
-                if(GetDistanceInLY(attackSystem, possibleSystem) <= Sim.Constants.Travel.MaxJumpDistance && !possibleSystem.Name.Equals(attackSystem.Name)) {
+                if (GetDistanceInLY(attackSystem, possibleSystem) <= Sim.Constants.Travel.MaxJumpDistance && !possibleSystem.Name.Equals(attackSystem.Name)) {
                     neighbours.Add(possibleSystem);
                 }
             }

@@ -128,7 +128,7 @@ namespace PersistentMapAPI {
 
         }
 
-        public static bool CheckUserInfo(string ip, string systemname) {
+        public static bool CheckUserInfo(string ip, string systemname, string companyName) {
             if (Holder.connectionStore.ContainsKey(ip)) {
                 if (Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.Now) {
                     return true;
@@ -136,12 +136,14 @@ namespace PersistentMapAPI {
                 else {
                     Holder.connectionStore[ip].LastDataSend = DateTime.UtcNow;
                     Holder.connectionStore[ip].lastSystemFoughtAt = systemname;
+                    Holder.connectionStore[ip].companyName = companyName;
                 }
             }
             else {
                 UserInfo info = new UserInfo();
                 info.LastDataSend = DateTime.UtcNow;
                 info.lastSystemFoughtAt = systemname;
+                info.companyName = companyName;
                 Holder.connectionStore.Add(ip, info);
             }
             return false;
@@ -178,7 +180,7 @@ namespace PersistentMapAPI {
                             newShop.FirstOrDefault(x => x.ID.Equals(item.ID)).Count++;
                         }
                         item.Count--;
-                        item.DiscountModifier += Helper.LoadSettings().DiscountPerItem;
+                        item.DiscountModifier = Math.Min(item.DiscountModifier + Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountCeiling);
                     }
                 }
             }

@@ -150,11 +150,11 @@ namespace PersistentMapClient {
             }
         }
 
-        public static bool PostMissionResult(PersistentMapAPI.MissionResult mresult) {
+        public static bool PostMissionResult(PersistentMapAPI.MissionResult mresult, string companyName) {
             try {
                 string testjson = JsonConvert.SerializeObject(mresult);
                 byte[] testarray = Encoding.ASCII.GetBytes(testjson);
-                string URL = Fields.settings.ServerURL + "warServices/Mission/";
+                string URL = Fields.settings.ServerURL + "warServices/Mission/?CompanyName=" + companyName;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "POST";

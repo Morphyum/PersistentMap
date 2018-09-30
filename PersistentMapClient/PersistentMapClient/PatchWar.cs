@@ -101,31 +101,66 @@ namespace PersistentMapClient {
         }
     }
 
-    /* [HarmonyPatch(typeof(SGSystemViewPopulator), "UpdateRoutedSystem")]
+    [HarmonyPatch(typeof(SGSystemViewPopulator), "UpdateRoutedSystem")]
      public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
-         static void Postfix(SimGameState __instance, Contract __result) {
+         static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem) {
              try {
-                 GameObject newwidget = GameObject.Instantiate(OwnerFactionWidgets);
+                if (GameObject.Find("COMPANYNAMES") == null) {
+                    GameObject old = GameObject.Find("uixPrfPanl_NAV_systemStats-Element-MANAGED");
+                    if (old != null) {
+                        GameObject newwidget = GameObject.Instantiate(old);
+                        newwidget.transform.SetParent(old.transform.parent, false);
+                        newwidget.name = "COMPANYNAMES";
+                        old.transform.position = new Vector3(old.transform.position.x, 311, old.transform.position.z);
+                        old.transform.FindRecursive("dotgrid").gameObject.active = false;
+                        old.transform.FindRecursive("crossLL").gameObject.active = false;
+                        newwidget.transform.position = new Vector3(old.transform.position.x, 106, old.transform.position.z);
+                        newwidget.transform.FindRecursive("stats_factionsAndClimate").gameObject.active = false;
+                        newwidget.transform.FindRecursive("owner_icon").gameObject.active = false;
+                        newwidget.transform.FindRecursive("uixPrfIndc_SIM_Reputation-MANAGED").gameObject.active = false;
+                        newwidget.transform.FindRecursive("crossUL").gameObject.active = false;
+                        GameObject ownerPanel = newwidget.transform.FindRecursive("owner_detailsPanel").gameObject;
+                        ownerPanel.transform.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
+                        RectTransform ownerRect = ownerPanel.GetComponent<RectTransform>();
+                        ownerRect.sizeDelta = new Vector2(ownerRect.sizeDelta.x, 145);
+                        TextMeshProUGUI title = newwidget.transform.FindRecursive("ownerTitle_text").GetComponent<TextMeshProUGUI>();
+                        title.SetText("COMPANIES");
+                        TextMeshProUGUI text = newwidget.transform.FindRecursive("txt-owner").GetComponent<TextMeshProUGUI>();
+                        text.alignment = TextAlignmentOptions.TopLeft;
+                        text.enableWordWrapping = false;
+                    }
+                }
+                GameObject companyObject = GameObject.Find("COMPANYNAMES");
+                if (companyObject != null) {
+                    TextMeshProUGUI companietext = companyObject.transform.FindRecursive("txt-owner").GetComponent<TextMeshProUGUI>();
+                    ParseSystem system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
+                    if (system != null && companietext != null) {
+                        companietext.SetText(string.Join(Environment.NewLine, system.companies.ToArray()));
+                    }
+                    else {
+                        companietext.SetText("");
+                    }
+                }
              }
              catch (Exception e) {
                  Logger.LogError(e);
              }
          }
-     }*/
+     }
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
         static void Postfix(Starmap __instance, SimGameState simGame) {
             try {
-                ParseMap map = Web.GetStarMap();
+                Fields.currentMap = Web.GetStarMap();
                 List<StarSystem> needUpdates = new List<StarSystem>();
-                if (map == null) {
+                if (Fields.currentMap == null) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
                     return;
                 }
                 List<string> changes = new List<string>();
-                foreach (ParseSystem system in map.systems) {
+                foreach (ParseSystem system in Fields.currentMap.systems) {
                     if (system.activePlayers > 0) {
                         GameObject starObject = GameObject.Find(system.name);
                         Transform argoMarker = starObject.transform.Find("ArgoMarker");
@@ -179,7 +214,7 @@ namespace PersistentMapClient {
                             Helper.GetEmployees(changedSystem, simGame) });
                     AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(changedSystem.Def, new object[] {
                             Helper.GetTargets(changedSystem, simGame) });
-                    ParseSystem system = map.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
+                    ParseSystem system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
                     if (system != null) {
                         AccessTools.Method(typeof(StarSystemDef), "set_Description").Invoke(changedSystem.Def, new object[] {
                             Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description});
@@ -207,7 +242,7 @@ namespace PersistentMapClient {
                 StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                 int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
                 PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.InitialContractReputation * __instance.PercentageContractReputation), planetSupport);
-                bool postSuccessfull = Web.PostMissionResult(mresult);
+                bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
                 if (!postSuccessfull) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);

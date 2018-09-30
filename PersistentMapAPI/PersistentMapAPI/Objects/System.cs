@@ -13,6 +13,24 @@ namespace PersistentMapAPI {
             }
             set { }
         }
+        public List<string> companies {
+            get {
+                return GetCompanies();
+            }
+            set { }
+        }
+
+        private List<string> GetCompanies() {
+            List<string> companies = new List<string>();
+            Settings settings = Helper.LoadSettings();
+            Dictionary<string, UserInfo> activeConnections = Holder.connectionStore.Where(x => x.Value.LastDataSend.AddMinutes(settings.MinutesForActive) > DateTime.UtcNow).ToDictionary(p => p.Key, p => p.Value);
+            foreach (KeyValuePair<string, UserInfo> info in activeConnections) {
+                if (info.Value.lastSystemFoughtAt.Equals(this.name)) {
+                    companies.Add(info.Value.companyName);
+                }
+            }
+            return companies;
+        }
 
         private int GetActivePlayers() {
             int players = 0;

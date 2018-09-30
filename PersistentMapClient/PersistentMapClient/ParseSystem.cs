@@ -9,5 +9,6 @@ namespace PersistentMapClient {
         public List<FactionControl> controlList;
         public string name;
         public int activePlayers;
+        public List<string> companies;
     }
 }
