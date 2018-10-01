@@ -234,14 +234,9 @@ namespace PersistentMapClient {
                     foreach (string id in Fields.currentShopBought.Value) {
                         ShopDefItem match = Fields.currentShops[Fields.currentShopBought.Key].FirstOrDefault(x => x.ID.Equals(id));
                         if (match != null) {
-                            Logger.LogLine("Count: " + match.Count);
-                            if (match.Count == 1) {
+                            if (match.Count == 0) {
                                 Fields.currentShops[Fields.currentShopBought.Key].Remove(match);
                             }
-                            else {
-                                match.Count--;
-                            }
-                            
                         }
                     }
                     Fields.currentShopBought = new KeyValuePair<Faction, List<string>>(Faction.INVALID_UNSET, new List<string>());               

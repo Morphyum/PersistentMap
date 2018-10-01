@@ -10,5 +10,6 @@ namespace PersistentMapAPI {
         public static DateTime startupTime = DateTime.UtcNow;
         public static Dictionary<Faction, List<ShopDefItem>> factionInventories;
         public static List<FactionShop> factionShops;
+        public static DateTime lastBackup = DateTime.MinValue;
     }
 }

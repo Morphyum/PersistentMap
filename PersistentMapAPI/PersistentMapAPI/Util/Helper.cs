@@ -11,6 +11,7 @@ using System.ServiceModel.Channels;
 namespace PersistentMapAPI {
     public static class Helper {
         public static string currentMapFilePath = $"../Map/current.json";
+        public static string backupMapFilePath = $"../Map/";
         public static string currentShopFilePath = $"../Shop/current.json";
         public static string settingsFilePath = $"../Settings/settings.json";
         public static string systemDataFilePath = $"../StarSystems/";
@@ -67,6 +68,13 @@ namespace PersistentMapAPI {
                 writer.Write(json);
             }
             Console.WriteLine("Map Saved");
+            if(Holder.lastBackup.AddHours(Helper.LoadSettings().HoursPerBackup) < DateTime.UtcNow) {
+                using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString("yyyy-dd-M--HH-mm-ss") +".json", false)) {
+                    string json = JsonConvert.SerializeObject(map);
+                    writer.Write(json);
+                }
+                Holder.lastBackup = DateTime.UtcNow;
+            }
         }
 
         public static Dictionary<Faction, List<ShopDefItem>> LoadCurrentInventories() {
