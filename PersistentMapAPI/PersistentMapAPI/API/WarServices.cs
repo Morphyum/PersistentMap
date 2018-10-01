@@ -70,7 +70,7 @@ namespace PersistentMapAPI {
 
         public System PostMissionResultDepricated4(string employer, string target, string systemName, string mresult, string difficulty, string rep, string planetSupport) {
             try {
-                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), int.Parse(rep), int.Parse(planetSupport)),"UNKNOWN");
+                return PostMissionResult(new MissionResult((Faction)Enum.Parse(typeof(Faction), employer), (Faction)Enum.Parse(typeof(Faction), target), (BattleTech.MissionResult)Enum.Parse(typeof(BattleTech.MissionResult), mresult), systemName, int.Parse(difficulty), int.Parse(rep), int.Parse(planetSupport)), "UNKNOWN");
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -199,7 +199,8 @@ namespace PersistentMapAPI {
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate = DateTime.UtcNow;
                 }
                 return Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems;
-            }catch(Exception e) {
+            }
+            catch (Exception e) {
                 Console.WriteLine(e);
                 return null;
             }
@@ -214,9 +215,10 @@ namespace PersistentMapAPI {
                 Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());
             }
             foreach (ShopDefItem item in salvage) {
-                if(Holder.factionInventories[realFaction].FirstOrDefault(x => x.ID.Equals(item.ID)) == null) {
+                if (Holder.factionInventories[realFaction].FirstOrDefault(x => x.ID.Equals(item.ID)) == null) {
                     Holder.factionInventories[realFaction].Add(item);
-                } else {
+                }
+                else {
                     int index = Holder.factionInventories[realFaction].FindIndex(x => x.ID.Equals(item.ID));
                     Holder.factionInventories[realFaction][index].Count++;
                     Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
@@ -227,12 +229,44 @@ namespace PersistentMapAPI {
             return salvage.Count + " items inserted into inventory for " + Faction;
         }
 
-        public string PostPurchaseForFaction(string Faction, string ID) {
+        public string PostPurchaseForFactionDepricated(string Faction, string ID) {
             Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
-            Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.FirstOrDefault(x => x.ID.Equals(ID)).Count--;
-            Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.RemoveAll(x => x.Count <= 0);
-            Console.WriteLine(ID + " 1 removed from shop for " + Faction);
+            if (Holder.factionShops != null) {
+                FactionShop shop = Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction);
+                if (shop != null) {
+                    ShopDefItem item = shop.currentSoldItems.FirstOrDefault(x => x.ID.Equals(ID));
+                    if (item != null) {
+                        item.Count--;
+                    }
+                    shop.currentSoldItems.RemoveAll(x => x.Count <= 0);
+                }
+            }
+            Logger.LogLine(ID + " 1 removed from shop for " + Faction);
             return ID + " 1 removed from shop for " + Faction;
+        }
+
+        public string PostPurchaseForFaction(List<string> ids, string Faction) {
+            try {
+                Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
+                if (Holder.factionShops != null) {
+                    FactionShop shop = Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction);
+                    if (shop != null) {
+                        foreach (string ID in ids) {
+                            ShopDefItem item = shop.currentSoldItems.FirstOrDefault(x => x.ID.Equals(ID));
+                            if (item != null) {
+                                item.Count--;
+                            }
+                        }
+                        shop.currentSoldItems.RemoveAll(x => x.Count <= 0);
+                    }
+                }
+                Logger.LogLine(ids.Count + " items removed from shop for " + Faction);
+                return ids.Count + " items removed from shop for " + Faction;
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+                return "Error";
+            }
         }
     }
 }

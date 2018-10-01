@@ -25,7 +25,7 @@ namespace PersistentMapAPI {
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = Routing.PostPurchaseForFaction, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string PostPurchaseForFaction(string Faction, string ID);
+        string PostPurchaseForFaction(List<string> ids, string Faction);
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetMissionResults, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
@@ -44,6 +44,10 @@ namespace PersistentMapAPI {
         List<ShopDefItem> GetShopForFaction(string Faction);
 
         //DEPRECATED
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = Routing.PostPurchaseForFactionDepricated, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        string PostPurchaseForFactionDepricated(string Faction, string ID);
+
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = Routing.PostMissionResultDepricated5, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         System PostMissionResultDepricated5(MissionResult mresult);

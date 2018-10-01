@@ -16,7 +16,7 @@ namespace PersistentMapClient {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "GET";
-                request.Timeout = 30;
+                request.Timeout = 30000;
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 List<ShopDefItem> items;
                 using (Stream responseStream = response.GetResponseStream()) {
@@ -74,7 +74,7 @@ namespace PersistentMapClient {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "POST";
-                request.Timeout = 30;
+                request.Timeout = 30000;
                 request.ContentLength = testarray.Length;
                 Stream dataStream = request.GetRequestStream();
                 dataStream.Write(testarray, 0, testarray.Length);
@@ -88,19 +88,18 @@ namespace PersistentMapClient {
             return true;
         }
 
-        public static bool PostSoldItem(ShopDefItem item, Faction faction) {
-            List<ShopDefItem> items = new List<ShopDefItem>();
-            item.DiscountModifier = 1f;
-            item.Count = 1;
-            items.Add(item);
-
+        public static bool PostSoldItems(List<ShopDefItem> items, Faction faction) {
+            foreach (ShopDefItem item in items) {
+                item.DiscountModifier = 1f;
+                item.Count = 1;
+            }
             string testjson = JsonConvert.SerializeObject(items);
             byte[] testarray = Encoding.ASCII.GetBytes(testjson);
             string URL = Fields.settings.ServerURL + "warServices/Salvage/" + faction;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
             request.ContentType = "application/json; charset=utf-8";
             request.Method = "POST";
-            request.Timeout = 30;
+            request.Timeout = 30000;
             request.ContentLength = testarray.Length;
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(testarray, 0, testarray.Length);
@@ -113,13 +112,19 @@ namespace PersistentMapClient {
             }
         }
 
-        public static bool PostBuyItem(string id, Faction owner) {
+        public static bool PostBuyItems(List<string> ids, Faction owner) {
             try {
-                string URL = Fields.settings.ServerURL + "warServices/Buy/?Faction=" + owner + "&ID=" + id;
+                string testjson = JsonConvert.SerializeObject(ids);
+                byte[] testarray = Encoding.ASCII.GetBytes(testjson);
+                string URL = Fields.settings.ServerURL + "warServices/Buy/" + owner;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "POST";
-                request.Timeout = 30;
+                request.Timeout = 30000;
+                request.ContentLength = testarray.Length;
+                Stream dataStream = request.GetRequestStream();
+                dataStream.Write(testarray, 0, testarray.Length);
+                dataStream.Close();
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 using (Stream responseStream = response.GetResponseStream()) {
                     StreamReader reader = new StreamReader(responseStream);
@@ -139,7 +144,7 @@ namespace PersistentMapClient {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "GET";
-                request.Timeout = 30;
+                request.Timeout = 30000;
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 ParseMap map;
                 using (Stream responseStream = response.GetResponseStream()) {
@@ -164,7 +169,7 @@ namespace PersistentMapClient {
                 request.ContentType = "application/json; charset=utf-8";
                 request.Method = "POST";
                 request.ContentLength = testarray.Length;
-                request.Timeout = 30;
+                request.Timeout = 30000;
                 Stream dataStream = request.GetRequestStream();
                 dataStream.Write(testarray, 0, testarray.Length);
                 dataStream.Close();

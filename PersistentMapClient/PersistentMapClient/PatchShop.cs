@@ -1,17 +1,12 @@
 ﻿using BattleTech;
 using BattleTech.Data;
-using BattleTech.Framework;
-using BattleTech.Save;
 using BattleTech.UI;
 using Harmony;
-using HBS;
 using HBS.Collections;
 using Localize;
-using PersistentMapAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 
 namespace PersistentMapClient {
@@ -89,7 +84,16 @@ namespace PersistentMapClient {
     public static class Shop_UpdateShop_Patch {
         static void Postfix(Shop __instance, StarSystem ___system, SimGameState ___Sim) {
             try {
-                foreach (ShopDefItem item in Web.GetShopForFaction(___system.Owner)) {
+                if (!Fields.LastUpdate.ContainsKey(___system.Owner)) {
+                    Fields.LastUpdate.Add(___system.Owner, DateTime.MinValue);
+                }
+                if (!Fields.currentShops.ContainsKey(___system.Owner)) {
+                    Fields.currentShops.Add(___system.Owner, new List<ShopDefItem>());
+                }
+                if (Fields.LastUpdate[___system.Owner].AddMinutes(Fields.UpdateTimer) < DateTime.UtcNow) {
+                    Fields.currentShops[___system.Owner] = Web.GetShopForFaction(___system.Owner);
+                }
+                foreach (ShopDefItem item in Fields.currentShops[___system.Owner]) {
                     DataManager dataManager = ___Sim.DataManager;
                     switch (item.Type) {
                         case ShopItemType.Weapon: {
@@ -138,6 +142,7 @@ namespace PersistentMapClient {
                             }
                     }
                 }
+                Fields.LastUpdate[___system.Owner] = DateTime.UtcNow;
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -204,7 +209,42 @@ namespace PersistentMapClient {
         static void Postfix(ShopDefItem item, bool __result, StarSystem ___system) {
             try {
                 if (__result) {
-                    Web.PostSoldItem(item, ___system.Owner);
+                    if (Fields.currentShopSold.Key == Faction.INVALID_UNSET) {
+                        Fields.currentShopSold = new KeyValuePair<Faction, List<ShopDefItem>>(___system.Owner, new List<ShopDefItem>());
+                    }
+                    Fields.currentShopSold.Value.Add(item);
+                }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SG_Shop_Screen), "OnCompleted")]
+    public static class SG_Shop_Screen_OnCompleted_Patch {
+        static void Postfix() {
+            try {
+                if (Fields.currentShopSold.Key != Faction.INVALID_UNSET) {
+                    Web.PostSoldItems(Fields.currentShopSold.Value, Fields.currentShopSold.Key);
+                    Fields.currentShopSold = new KeyValuePair<Faction, List<ShopDefItem>>(Faction.INVALID_UNSET, new List<ShopDefItem>());
+                }
+                if (Fields.currentShopBought.Key != Faction.INVALID_UNSET) {
+                    Web.PostBuyItems(Fields.currentShopBought.Value, Fields.currentShopBought.Key);
+                    foreach (string id in Fields.currentShopBought.Value) {
+                        ShopDefItem match = Fields.currentShops[Fields.currentShopBought.Key].FirstOrDefault(x => x.ID.Equals(id));
+                        if (match != null) {
+                            Logger.LogLine("Count: " + match.Count);
+                            if (match.Count == 1) {
+                                Fields.currentShops[Fields.currentShopBought.Key].Remove(match);
+                            }
+                            else {
+                                match.Count--;
+                            }
+                            
+                        }
+                    }
+                    Fields.currentShopBought = new KeyValuePair<Faction, List<string>>(Faction.INVALID_UNSET, new List<string>());               
                 }
             }
             catch (Exception e) {
@@ -218,7 +258,10 @@ namespace PersistentMapClient {
         static void Postfix(string id, bool __result, StarSystem ___system) {
             try {
                 if (__result) {
-                    Web.PostBuyItem(id, ___system.Owner);
+                    if (Fields.currentShopBought.Key == Faction.INVALID_UNSET) {
+                        Fields.currentShopBought = new KeyValuePair<Faction, List<string>>(___system.Owner, new List<string>());
+                    }
+                    Fields.currentShopBought.Value.Add(id);
                 }
             }
             catch (Exception e) {
