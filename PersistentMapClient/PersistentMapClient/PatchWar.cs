@@ -288,7 +288,7 @@ namespace PersistentMapClient {
                         }
                         if (numberOfContracts > 0) {
                             List<ParseSystem> targets = new List<ParseSystem>();
-                            foreach (ParseSystem potentialTarget in Web.GetStarMap().systems) {
+                            foreach (ParseSystem potentialTarget in Fields.currentMap.systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
                                 if (control != null && control.percentage < 100 && control.percentage != 0) {
                                     targets.Add(potentialTarget);

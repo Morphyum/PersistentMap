@@ -10,5 +10,7 @@
         public float DiscountFloor = 0.5f;
         public float DiscountCeiling = 1.5f;
         public int HoursPerBackup = 24;
+        public int MaxPlanetSupport = 20;
+        public int MaxRep = 30;
     }
 }

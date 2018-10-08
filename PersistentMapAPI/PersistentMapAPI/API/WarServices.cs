@@ -84,12 +84,18 @@ namespace PersistentMapAPI {
 
         public System PostMissionResult(MissionResult mresult, string companyName) {
             try {
-                HistoryResult hresult = new HistoryResult();
-                hresult.date = DateTime.UtcNow;
                 int realDifficulty = Math.Min(10, mresult.difficulty);
                 string ip = Helper.GetIP();
+                int realPlanets = Math.Min(Helper.LoadSettings().MaxPlanetSupport, mresult.planetSupport);
+                int realRep = Math.Min(Helper.LoadSettings().MaxRep, mresult.awardedRep);
+                if ((Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets > 50){
+                    Logger.LogToFile("Weird Result - Difficulty: " + realDifficulty + " - planet: " + realPlanets + " - rep: " + realRep + " - employer: " + mresult.employer + " - target: " + mresult.target + " - systemName: " + mresult.systemName + " - mresult: " + mresult.result + " - IP: "+ip);
+                }
+                HistoryResult hresult = new HistoryResult();
+                hresult.date = DateTime.UtcNow;
+                
                 if (Helper.CheckUserInfo(ip, mresult.systemName, companyName)) {
-                    Logger.LogLine("One ip trys to send Missions to fast");
+                    Logger.LogToFile("One ip trys to send Missions to fast. IP:" + ip);
                     return null;
                 }
                 Logger.LogLine("New Result Posted");
@@ -109,7 +115,7 @@ namespace PersistentMapAPI {
 
                 if (mresult.result == BattleTech.MissionResult.Victory) {
                     Console.WriteLine("Victory Result");
-                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + mresult.awardedRep + mresult.planetSupport));
+                    int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets));
                     hresult.winner = employerControl.faction;
                     hresult.loser = targetControl.faction;
                     hresult.pointsTraded = realChange;
@@ -137,7 +143,7 @@ namespace PersistentMapAPI {
                 }
                 else {
                     Console.WriteLine("Loss Result");
-                    int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + mresult.awardedRep / 2 + mresult.planetSupport / 2));
+                    int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
                     hresult.winner = targetControl.faction;
                     hresult.loser = employerControl.faction;
                     hresult.pointsTraded = realChange;
