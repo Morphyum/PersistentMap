@@ -5,8 +5,14 @@ using System.Linq;
 
 namespace PersistentMapAPI {
     public class System {
+
         public List<FactionControl> controlList;
+
         public string name;
+
+        // Settings used when the object was fixated
+        private Settings settingsForFixation = null;
+
         public int activePlayers {
             get{
                 return GetActivePlayers();
@@ -20,9 +26,15 @@ namespace PersistentMapAPI {
             set { }
         }
 
+        // Call to fixate the object graph, activePlayers and companies will no longer be dynamically calculated after this call is performed
+        public void fixate(Settings settings) {
+            this.settingsForFixation = settings;
+        }
+
         private List<string> GetCompanies() {
+            Settings settings = this.settingsForFixation != null ? this.settingsForFixation : Helper.LoadSettings();
+
             List<string> companies = new List<string>();
-            Settings settings = Helper.LoadSettings();
             Dictionary<string, UserInfo> activeConnections = Holder.connectionStore.Where(x => x.Value.LastDataSend.AddMinutes(settings.MinutesForActive) > DateTime.UtcNow).ToDictionary(p => p.Key, p => p.Value);
             foreach (KeyValuePair<string, UserInfo> info in activeConnections) {
                 if (info.Value.lastSystemFoughtAt.Equals(this.name)) {
@@ -33,8 +45,9 @@ namespace PersistentMapAPI {
         }
 
         private int GetActivePlayers() {
+            Settings settings = this.settingsForFixation != null ? this.settingsForFixation : Helper.LoadSettings();
+
             int players = 0;
-            Settings settings = Helper.LoadSettings();
             Dictionary<string, UserInfo> activeConnections = Holder.connectionStore.Where(x => x.Value.LastDataSend.AddMinutes(settings.MinutesForActive) > DateTime.UtcNow).ToDictionary(p => p.Key, p => p.Value);
             foreach (KeyValuePair<string, UserInfo> info in activeConnections) {
                 if (info.Value.lastSystemFoughtAt.Equals(this.name)) {

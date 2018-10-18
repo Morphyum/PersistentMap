@@ -16,12 +16,12 @@ namespace PersistentMapAPI {
 
         public StarMap GetStarmap() {
             WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
-            return Helper.LoadCurrentMap();
+            return Helper.LoadCurrentMap().fixate();
         }
 
         public System GetSystem(string name) {
             WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
-            StarMap map = Helper.LoadCurrentMap();
+            StarMap map = Helper.LoadCurrentMap().fixate();
             return map.FindSystemByName(name); ;
         }
 
