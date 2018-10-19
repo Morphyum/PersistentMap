@@ -20,7 +20,7 @@ namespace PersistentMapAPI {
 
 
         public static StarMap initializeNewMap() {
-            Console.WriteLine("Map Init Started");
+            Logger.LogLine("Map Init Started");
             StarMap map = new StarMap();
             map.systems = new List<System>();
             foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
@@ -69,7 +69,7 @@ namespace PersistentMapAPI {
                 string json = JsonConvert.SerializeObject(map);
                 writer.Write(json);
             }
-            Console.WriteLine("Map Saved");
+            Logger.LogLine("Map Saved");
             if(Holder.lastBackup.AddHours(Helper.LoadSettings().HoursPerBackup) < DateTime.UtcNow) {
                 using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString("yyyy-dd-M--HH-mm-ss") +".json", false)) {
                     string json = JsonConvert.SerializeObject(map);
@@ -218,9 +218,10 @@ namespace PersistentMapAPI {
                 }
             }
             foreach(ShopDefItem item in newShop) {
-                Logger.LogLine("Added " + item.ID + " Count" + item.Count);
+                Logger.Debug("Added " + item.ID + " Count" + item.Count);
             }
             Holder.factionInventories[realFaction].RemoveAll(x => x.Count <= 0);
+            Logger.LogLine("New Shop generated for " + realFaction);
             return newShop;
 
         }

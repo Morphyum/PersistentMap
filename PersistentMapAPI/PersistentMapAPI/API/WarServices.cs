@@ -99,10 +99,10 @@ namespace PersistentMapAPI {
                     return null;
                 }
                 Logger.LogLine("New Result Posted");
-                Console.WriteLine("employer: " + mresult.employer);
-                Console.WriteLine("target: " + mresult.target);
-                Console.WriteLine("systemName: " + mresult.systemName);
-                Console.WriteLine("mresult: " + mresult.result);
+                Logger.Debug("employer: " + mresult.employer);
+                Logger.Debug("target: " + mresult.target);
+                Logger.Debug("systemName: " + mresult.systemName);
+                Logger.Debug("mresult: " + mresult.result);
                 StarMap map = Helper.LoadCurrentMap();
                 System system = map.FindSystemByName(mresult.systemName);
                 FactionControl oldOwnerControl = system.FindHighestControl();
@@ -114,17 +114,17 @@ namespace PersistentMapAPI {
                 FactionControl targetControl = system.FindFactionControlByFaction(mresult.target);
 
                 if (mresult.result == BattleTech.MissionResult.Victory) {
-                    Console.WriteLine("Victory Result");
+                    Logger.Debug("Victory Result");
                     int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets));
                     hresult.winner = employerControl.faction;
                     hresult.loser = targetControl.faction;
                     hresult.pointsTraded = realChange;
                     employerControl.percentage += realChange;
                     targetControl.percentage -= realChange;
-                    Console.WriteLine(realChange + " Points traded");
+                    Logger.Debug(realChange + " Points traded");
                     if (targetControl.percentage < 0) {
                         int leftoverChange = Math.Abs(targetControl.percentage);
-                        Console.WriteLine(leftoverChange + " Leftover Points");
+                        Logger.Debug(leftoverChange + " Leftover Points");
                         targetControl.percentage = 0;
                         int debugcounter = leftoverChange;
                         while (leftoverChange > 0 && debugcounter != 0) {
@@ -134,7 +134,7 @@ namespace PersistentMapAPI {
                                     && leftoverChange > 0) {
                                     leftOverFaction.percentage--;
                                     leftoverChange--;
-                                    Console.WriteLine(leftOverFaction.faction.ToString() + " Points deducted");
+                                    Logger.Debug(leftOverFaction.faction.ToString() + " Points deducted");
                                 }
                             }
                             debugcounter--;
@@ -142,14 +142,14 @@ namespace PersistentMapAPI {
                     }
                 }
                 else {
-                    Console.WriteLine("Loss Result");
+                    Logger.Debug("Loss Result");
                     int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
                     hresult.winner = targetControl.faction;
                     hresult.loser = employerControl.faction;
                     hresult.pointsTraded = realChange;
                     employerControl.percentage -= realChange;
                     targetControl.percentage += realChange;
-                    Console.WriteLine(realChange + " Points traded");
+                    Logger.Debug(realChange + " Points traded");
                 }
                 FactionControl afterBattleOwnerControl = system.FindHighestControl();
                 Faction newOwner = afterBattleOwnerControl.faction;
@@ -194,10 +194,10 @@ namespace PersistentMapAPI {
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction) == null) {
                     Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.MinValue));
-                    Logger.LogLine("Shop Not found");
+                    Logger.LogLine(Faction + ": Shop not found");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) < DateTime.UtcNow) {
-                    Logger.LogLine("Time passed");
+                    Logger.LogLine(Faction + ": Shop refresh");
                     List<ShopDefItem> newShop = Helper.GenerateNewShop(realFaction);
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.Clear();
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems = newShop;
@@ -229,7 +229,7 @@ namespace PersistentMapAPI {
                     Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);                  
                 }
             }
-            Console.WriteLine(salvage.Count + " items inserted into inventory for " + Faction);
+            Logger.LogLine(salvage.Count + " items inserted into inventory for " + Faction);
             return salvage.Count + " items inserted into inventory for " + Faction;
         }
 
@@ -245,7 +245,7 @@ namespace PersistentMapAPI {
                     shop.currentSoldItems.RemoveAll(x => x.Count <= 0);
                 }
             }
-            Logger.LogLine(ID + " 1 removed from shop for " + Faction);
+            Logger.Debug(ID + " 1 removed from shop for " + Faction);
             return ID + " 1 removed from shop for " + Faction;
         }
 

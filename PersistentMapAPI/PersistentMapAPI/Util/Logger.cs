@@ -15,6 +15,12 @@ namespace PersistentMapAPI {
             Console.WriteLine(Environment.NewLine + "Date :" + DateTime.Now.ToString() + Environment.NewLine + line);
         }
 
+        public static void Debug(string line) {
+            if (Helper.LoadSettings().Debug) {
+                Console.WriteLine(line);
+            }
+        }
+
         public static void LogToFile(string line) {
             (new FileInfo(LogFilePath)).Directory.Create();
             using (StreamWriter writer = new StreamWriter(LogFilePath, true)) {
