@@ -12,5 +12,6 @@
         public int HoursPerBackup = 24;
         public int MaxPlanetSupport = 20;
         public int MaxRep = 30;
+        public bool Debug = false;
     }
 }

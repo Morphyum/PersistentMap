@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Threading;
 
 namespace PersistentMapAPI {
     public static class Helper {
@@ -18,7 +20,7 @@ namespace PersistentMapAPI {
 
 
         public static StarMap initializeNewMap() {
-            Console.WriteLine("Map Init Started");
+            Logger.LogLine("Map Init Started");
             StarMap map = new StarMap();
             map.systems = new List<System>();
             foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
@@ -67,7 +69,6 @@ namespace PersistentMapAPI {
                 string json = JsonConvert.SerializeObject(map);
                 writer.Write(json);
             }
-            Console.WriteLine("Map Saved");
             if(Holder.lastBackup.AddHours(Helper.LoadSettings().HoursPerBackup) < DateTime.UtcNow) {
                 using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString("yyyy-dd-M--HH-mm-ss") +".json", false)) {
                     string json = JsonConvert.SerializeObject(map);
@@ -106,21 +107,44 @@ namespace PersistentMapAPI {
             }
         }
 
-        public static Settings LoadSettings() {
-            Settings settings;
-            if (File.Exists(settingsFilePath)) {
-                using (StreamReader r = new StreamReader(settingsFilePath)) {
-                    string json = r.ReadToEnd();
-                    settings = JsonConvert.DeserializeObject<Settings>(json);
+        // Settings that were previously read
+        private static Settings cachedSettings;
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static Settings LoadSettings(bool forceRefresh=false) {
+            Settings settings = null;
+            if (! forceRefresh && cachedSettings != null) {
+                // Cached settings can be returned
+                settings = cachedSettings;
+            } else {
+                if (File.Exists(settingsFilePath)) {
+                    // Load the files from disk
+                    bool wasAbleToRead = false;
+                    while (!wasAbleToRead) {
+                        try {
+                            using (StreamReader r = new StreamReader(settingsFilePath)) {
+                                string json = r.ReadToEnd();
+                                settings = JsonConvert.DeserializeObject<Settings>(json);
+                                Logger.LogLine("Reading settings from disk");
+                            }
+                            wasAbleToRead = true;
+                        } catch (IOException) {
+                            // Handle race conditions when the file has been modified (in an editor) but the lock isn't released yet.
+                            Logger.LogLine("Failed to open settings.json due to lock, waiting 5ms");
+                            Thread.Sleep(5);
+                        }
+                    }
+                } else {
+                    // Create default settings
+                    settings = new Settings();
+                    (new FileInfo(settingsFilePath)).Directory.Create();
+                    using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
+                        string json = JsonConvert.SerializeObject(settings);
+                        writer.Write(json);
+                        //Logger.LogLine("Writing new default settings");
+                    }
                 }
-            }
-            else {
-                settings = new Settings();
-                (new FileInfo(settingsFilePath)).Directory.Create();
-                using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
-                    string json = JsonConvert.SerializeObject(settings);
-                    writer.Write(json);
-                }
+                cachedSettings = settings;
             }
             return settings;
         }
@@ -138,7 +162,7 @@ namespace PersistentMapAPI {
 
         public static bool CheckUserInfo(string ip, string systemname, string companyName) {
             if (Holder.connectionStore.ContainsKey(ip)) {
-                if (Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.Now) {
+                if (Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.UtcNow) {
                     return true;
                 }
                 else {
@@ -193,10 +217,10 @@ namespace PersistentMapAPI {
                 }
             }
             foreach(ShopDefItem item in newShop) {
-                Logger.LogLine("Added " + item.ID + " Count" + item.Count);
+                Logger.Debug("Added " + item.ID + " Count" + item.Count);
             }
             Holder.factionInventories[realFaction].RemoveAll(x => x.Count <= 0);
-            Helper.SaveCurrentInventories(Holder.factionInventories);
+            Logger.LogLine("New Shop generated for " + realFaction);
             return newShop;
 
         }
