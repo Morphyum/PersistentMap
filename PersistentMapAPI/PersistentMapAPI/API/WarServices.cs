@@ -1,5 +1,4 @@
 ﻿using BattleTech;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,13 +15,14 @@ namespace PersistentMapAPI {
 
         public StarMap GetStarmap() {
             WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
-            return Helper.LoadCurrentMap().fixate();
+            StarMap clone = (StarMap)Helper.LoadCurrentMap().Clone();
+            return clone.fixate();
         }
 
         public System GetSystem(string name) {
             WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
-            StarMap map = Helper.LoadCurrentMap().fixate();
-            return map.FindSystemByName(name); ;
+            StarMap map = (StarMap)Helper.LoadCurrentMap().Clone();
+            return map.fixate().FindSystemByName(name); ;
         }
 
         public string ResetStarMap() {

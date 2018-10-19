@@ -1,12 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace PersistentMapAPI {
-    public class StarMap {
+
+    public class StarMap : ICloneable {
 
         public List<System> systems = new List<System>();
 
-        public bool hasBeenFixated = false;
+        [NonSerialized]
+        private bool fixated = false;
 
         public System FindSystemByName(string name) {
             System result = null;
@@ -20,8 +23,17 @@ namespace PersistentMapAPI {
         public StarMap fixate () {
             Settings settingsForFixation = Helper.LoadSettings();
             systems.ForEach(x => { x.fixate(settingsForFixation); });
-            this.hasBeenFixated = true;
+            this.fixated = true;
             return this;
         }
+
+        public object Clone() {
+            return this.MemberwiseClone();
+        }
+
+        public bool hasBeenFixated() {
+            return this.fixated;
+        }
+
     }
 }
