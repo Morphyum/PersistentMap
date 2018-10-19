@@ -69,7 +69,6 @@ namespace PersistentMapAPI {
                 string json = JsonConvert.SerializeObject(map);
                 writer.Write(json);
             }
-            Logger.LogLine("Map Saved");
             if(Holder.lastBackup.AddHours(Helper.LoadSettings().HoursPerBackup) < DateTime.UtcNow) {
                 using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString("yyyy-dd-M--HH-mm-ss") +".json", false)) {
                     string json = JsonConvert.SerializeObject(map);
