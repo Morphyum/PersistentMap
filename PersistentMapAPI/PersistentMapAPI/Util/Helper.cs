@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Threading;
 
 namespace PersistentMapAPI {
     public static class Helper {
@@ -109,23 +110,30 @@ namespace PersistentMapAPI {
 
         // Settings that were previously read
         private static Settings cachedSettings;
-        // When the cached settings were fetched
-        private static DateTime cachedSettingsFetchTimestamp;
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public static Settings LoadSettings() {
-            Settings settings;
-            if (cachedSettings != null && 
-                DateTime.Compare(cachedSettingsFetchTimestamp.AddSeconds(5), DateTime.UtcNow) > 0) {
+        public static Settings LoadSettings(bool forceRefresh=false) {
+            Settings settings = null;
+            if (! forceRefresh && cachedSettings != null) {
                 // Cached settings can be returned
                 settings = cachedSettings;
             } else {
                 if (File.Exists(settingsFilePath)) {
                     // Load the files from disk
-                    using (StreamReader r = new StreamReader(settingsFilePath)) {
-                        string json = r.ReadToEnd();
-                        settings = JsonConvert.DeserializeObject<Settings>(json);
-                        //Logger.LogLine("Reading settings from disk");
+                    bool wasAbleToRead = false;
+                    while (!wasAbleToRead) {
+                        try {
+                            using (StreamReader r = new StreamReader(settingsFilePath)) {
+                                string json = r.ReadToEnd();
+                                settings = JsonConvert.DeserializeObject<Settings>(json);
+                                Logger.LogLine("Reading settings from disk");
+                            }
+                            wasAbleToRead = true;
+                        } catch (IOException) {
+                            // Handle race conditions when the file has been modified (in an editor) but the lock isn't released yet.
+                            Logger.LogLine("Failed to open settings.json due to lock, waiting 5ms");
+                            Thread.Sleep(5);
+                        }
                     }
                 } else {
                     // Create default settings
@@ -138,7 +146,6 @@ namespace PersistentMapAPI {
                     }
                 }
                 cachedSettings = settings;
-                cachedSettingsFetchTimestamp = DateTime.UtcNow;
             }
             return settings;
         }
