@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
@@ -106,21 +107,38 @@ namespace PersistentMapAPI {
             }
         }
 
+        // Settings that were previously read
+        private static Settings cachedSettings;
+        // When the cached settings were fetched
+        private static DateTime cachedSettingsFetchTimestamp;
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static Settings LoadSettings() {
             Settings settings;
-            if (File.Exists(settingsFilePath)) {
-                using (StreamReader r = new StreamReader(settingsFilePath)) {
-                    string json = r.ReadToEnd();
-                    settings = JsonConvert.DeserializeObject<Settings>(json);
+            if (cachedSettings != null && 
+                DateTime.Compare(cachedSettingsFetchTimestamp.AddSeconds(5), DateTime.UtcNow) > 0) {
+                // Cached settings can be returned
+                settings = cachedSettings;
+            } else {
+                if (File.Exists(settingsFilePath)) {
+                    // Load the files from disk
+                    using (StreamReader r = new StreamReader(settingsFilePath)) {
+                        string json = r.ReadToEnd();
+                        settings = JsonConvert.DeserializeObject<Settings>(json);
+                        //Logger.LogLine("Reading settings from disk");
+                    }
+                } else {
+                    // Create default settings
+                    settings = new Settings();
+                    (new FileInfo(settingsFilePath)).Directory.Create();
+                    using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
+                        string json = JsonConvert.SerializeObject(settings);
+                        writer.Write(json);
+                        //Logger.LogLine("Writing new default settings");
+                    }
                 }
-            }
-            else {
-                settings = new Settings();
-                (new FileInfo(settingsFilePath)).Directory.Create();
-                using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
-                    string json = JsonConvert.SerializeObject(settings);
-                    writer.Write(json);
-                }
+                cachedSettings = settings;
+                cachedSettingsFetchTimestamp = DateTime.UtcNow;
             }
             return settings;
         }
