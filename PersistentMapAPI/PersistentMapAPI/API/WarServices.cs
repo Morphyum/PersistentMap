@@ -151,7 +151,6 @@ namespace PersistentMapAPI {
                     targetControl.percentage += realChange;
                     Console.WriteLine(realChange + " Points traded");
                 }
-                Helper.SaveCurrentMap(map);
                 FactionControl afterBattleOwnerControl = system.FindHighestControl();
                 Faction newOwner = afterBattleOwnerControl.faction;
                 if (oldOwner != newOwner) {
@@ -227,8 +226,7 @@ namespace PersistentMapAPI {
                 else {
                     int index = Holder.factionInventories[realFaction].FindIndex(x => x.ID.Equals(item.ID));
                     Holder.factionInventories[realFaction][index].Count++;
-                    Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
-                    Helper.SaveCurrentInventories(Holder.factionInventories);
+                    Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);                  
                 }
             }
             Console.WriteLine(salvage.Count + " items inserted into inventory for " + Faction);

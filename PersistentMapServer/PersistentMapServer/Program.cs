@@ -29,7 +29,15 @@ namespace PersistentMapServer {
                 _serviceHost.Close();
                 Console.WriteLine("Connection Closed");
 
+                Helper.SaveCurrentMap(Helper.LoadCurrentMap());
+                Console.WriteLine("Map Saved");
+
+                Helper.SaveCurrentInventories(Helper.LoadCurrentInventories());
+                Console.WriteLine("Shops Saved");
+
                 monitor.disable();
+                Console.WriteLine("Monitor Disabled");
+                Console.ReadKey();
             } catch (Exception e) {
                 Console.WriteLine(e);
                 Console.ReadKey();

@@ -221,7 +221,6 @@ namespace PersistentMapAPI {
                 Logger.LogLine("Added " + item.ID + " Count" + item.Count);
             }
             Holder.factionInventories[realFaction].RemoveAll(x => x.Count <= 0);
-            Helper.SaveCurrentInventories(Holder.factionInventories);
             return newShop;
 
         }
