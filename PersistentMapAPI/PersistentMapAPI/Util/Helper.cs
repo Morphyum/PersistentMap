@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Threading;
 
 namespace PersistentMapAPI {
     public static class Helper {
@@ -106,21 +108,44 @@ namespace PersistentMapAPI {
             }
         }
 
-        public static Settings LoadSettings() {
-            Settings settings;
-            if (File.Exists(settingsFilePath)) {
-                using (StreamReader r = new StreamReader(settingsFilePath)) {
-                    string json = r.ReadToEnd();
-                    settings = JsonConvert.DeserializeObject<Settings>(json);
+        // Settings that were previously read
+        private static Settings cachedSettings;
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static Settings LoadSettings(bool forceRefresh=false) {
+            Settings settings = null;
+            if (! forceRefresh && cachedSettings != null) {
+                // Cached settings can be returned
+                settings = cachedSettings;
+            } else {
+                if (File.Exists(settingsFilePath)) {
+                    // Load the files from disk
+                    bool wasAbleToRead = false;
+                    while (!wasAbleToRead) {
+                        try {
+                            using (StreamReader r = new StreamReader(settingsFilePath)) {
+                                string json = r.ReadToEnd();
+                                settings = JsonConvert.DeserializeObject<Settings>(json);
+                                Logger.LogLine("Reading settings from disk");
+                            }
+                            wasAbleToRead = true;
+                        } catch (IOException) {
+                            // Handle race conditions when the file has been modified (in an editor) but the lock isn't released yet.
+                            Logger.LogLine("Failed to open settings.json due to lock, waiting 5ms");
+                            Thread.Sleep(5);
+                        }
+                    }
+                } else {
+                    // Create default settings
+                    settings = new Settings();
+                    (new FileInfo(settingsFilePath)).Directory.Create();
+                    using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
+                        string json = JsonConvert.SerializeObject(settings);
+                        writer.Write(json);
+                        //Logger.LogLine("Writing new default settings");
+                    }
                 }
-            }
-            else {
-                settings = new Settings();
-                (new FileInfo(settingsFilePath)).Directory.Create();
-                using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
-                    string json = JsonConvert.SerializeObject(settings);
-                    writer.Write(json);
-                }
+                cachedSettings = settings;
             }
             return settings;
         }
