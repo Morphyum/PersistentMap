@@ -138,7 +138,7 @@ namespace PersistentMapAPI {
 
         public static bool CheckUserInfo(string ip, string systemname, string companyName) {
             if (Holder.connectionStore.ContainsKey(ip)) {
-                if (Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.Now) {
+                if (Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.UtcNow) {
                     return true;
                 }
                 else {
