@@ -7,6 +7,9 @@ using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
 
 namespace PersistentMapServer.MessageInspector {
+    /* Inspector that records the total time spend processing a request. This only includes the time between when WCF received the request, 
+     * dispatched it to the service for processing, and the service returned. It does NOT cover the transfer time.
+     */
     class RequestDurationLoggingInspector : IDispatchMessageInspector {
 
         private Dictionary<int, DateTime> requests = new Dictionary<int, DateTime>();

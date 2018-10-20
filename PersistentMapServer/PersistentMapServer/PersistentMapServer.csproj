@@ -58,7 +58,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />
+    <Compile Include="MessageInspector\CorsWildcardInspector.cs" />
     <Compile Include="MessageInspector\RequestDurationLoggingInspector.cs" />
     <Compile Include="SettingsFileMonitor.cs" />
     <Compile Include="Program.cs" />

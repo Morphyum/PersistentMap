@@ -15,12 +15,10 @@ namespace PersistentMapAPI {
     public class WarServices : IWarServices {
 
         public StarMap GetStarmap() {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Helper.LoadCurrentMap();
         }
 
         public System GetSystem(string name) {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             StarMap map = Helper.LoadCurrentMap();
             return map.FindSystemByName(name); ;
         }
@@ -170,18 +168,15 @@ namespace PersistentMapAPI {
         }
 
         public List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults) {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             List<HistoryResult> resultList = Holder.resultHistory.Where(i => i.date.Value.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow).OrderByDescending(x => x.date).Take(int.Parse(MaxResults)).ToList();
             return resultList;
         }
 
         public int GetActivePlayers(string MinutesBack) {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Holder.connectionStore.Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow).Count();
         }
 
         public string GetStartupTime() {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Holder.startupTime.ToString("o", CultureInfo.InvariantCulture);
         }
 
