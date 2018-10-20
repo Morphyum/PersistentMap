@@ -4,6 +4,7 @@ using PersistentMapAPI;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Description;
+using PersistentMapServer.Behavior;
 
 namespace PersistentMapServer {
     class Program {
@@ -12,15 +13,20 @@ namespace PersistentMapServer {
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
-                ServiceThrottlingBehavior behaviour = new ServiceThrottlingBehavior();
-                behaviour.MaxConcurrentSessions = 9999;
-                behaviour.MaxConcurrentCalls = 9999;
-                behaviour.MaxConcurrentInstances = 9999;
 
                 WarServices warServices = new WarServices();
 
                 WebServiceHost _serviceHost = new WebServiceHost(warServices, new Uri("http://localhost:8001/warServices"));
-                _serviceHost.Description.Behaviors.Add(behaviour);
+
+                ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
+                throttlingBehavior.MaxConcurrentSessions = 9999;
+                throttlingBehavior.MaxConcurrentCalls = 9999;
+                throttlingBehavior.MaxConcurrentInstances = 9999;
+                _serviceHost.Description.Behaviors.Add(throttlingBehavior);
+
+                RequestLoggingBehavior loggingBehavior = new RequestLoggingBehavior();
+                _serviceHost.Description.Behaviors.Add(loggingBehavior);
+
                 _serviceHost.Open();
 
                 Console.WriteLine("Open Press Key to close");
