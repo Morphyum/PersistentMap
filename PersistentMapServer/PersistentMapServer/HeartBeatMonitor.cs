@@ -1,4 +1,5 @@
 ﻿using PersistentMapAPI;
+using PersistentMapAPI.Objects;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,11 +36,13 @@ namespace PersistentMapServer {
                 // If more than reportTimeSpan was passed since we last logged values, log them
                 DateTime now = DateTime.UtcNow;
                 if (now.Subtract(reportingTimeSpan) > lastReportedTime) {
-                    Logger.LogLine("-------- HeartBeat --------");
-                    Logger.LogLine($"  Calls - Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " + 
+                    Logger.Debug("-------- HeartBeat --------");
+                    Logger.Debug($"  Calls - Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " + 
                         $"Faulted:({pc_sms_callsFaulted.NextValue()}) Failed:({pc_sms_callsFailed.NextValue()}) " +
                         $" Max% ({pc_sms_pctMaxCalls.NextValue()})%"
                         );
+                    ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
+                    Logger.Debug($"  ServerDataSnapshot: {snapshot.ToString()}");
                     
                     lastReportedTime = now;
                 }

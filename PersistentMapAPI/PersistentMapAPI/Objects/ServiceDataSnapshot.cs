@@ -1,7 +1,7 @@
-﻿using System;
+﻿using BattleTech;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace PersistentMapAPI.Objects {
     // Point in time overview of the size of internal data elements
@@ -14,13 +14,17 @@ namespace PersistentMapAPI.Objects {
         public int num_results = 0;
         public int num_results_past_inactive_time = 0;
 
-        public int size_factionInventory = 0;
-        public int size_factionShopsInventory = 0;
+        public Dictionary<Faction, int> faction_inventory_size;
+        public Dictionary<Faction, int> faction_shop_size;
+
+        DateTime server_startup;
+        DateTime server_last_backup;
 
         public ServiceDataSnapshot() {
             Settings settings = Helper.LoadSettings();
-
             DateTime activeOnOrAfter = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(settings.MinutesForActive));
+
+            // user data
             int size_connectionStore = Holder.connectionStore.Count;
             num_connections_active = Holder.connectionStore
                 .Where(x => x.Value.LastDataSend >= activeOnOrAfter)
@@ -29,34 +33,45 @@ namespace PersistentMapAPI.Objects {
             percent_connections_active = size_connectionStore == 0 ? 
                 0.0f : (size_connectionStore - num_connections_inactive) / (size_connectionStore);
 
+            // result data
             num_results = Holder.resultHistory.Count;
             num_results_past_inactive_time = Holder.resultHistory
                 .Where(x => x.date < activeOnOrAfter)
                 .Count();
 
+            // inventory data
+            Dictionary<Faction, int> factionInventorySizes = new Dictionary<Faction, int>();
+            if (Holder.factionInventories != null && Holder.factionInventories.Keys.Count > 0) {
+                foreach (Faction faction in Holder.factionInventories.Keys) {
+                    factionInventorySizes[faction] = Holder.factionInventories[faction].Count;
+                }
+            }
+            faction_inventory_size = factionInventorySizes;
+
+            // shop data
+            Dictionary<Faction, int> factionShopSizes = new Dictionary<Faction, int>();
+            if (Holder.factionShops != null && Holder.factionShops.Count > 0) {
+                foreach (FactionShop factionShop in Holder.factionShops) {
+                    factionShopSizes[factionShop.shopOwner] = factionShop.currentSoldItems.Count();
+                }
+            }
+            faction_shop_size = factionShopSizes;
+
+            // server data
+            server_startup = Holder.startupTime;
+            server_last_backup = Holder.lastBackup;
+        }
+
+        public override string ToString() {
+            string json_inventory_size = fastJSON.JSON.ToJSON(faction_inventory_size);
+            string json_faction_shops = fastJSON.JSON.ToJSON(faction_shop_size);
+
+            string toString =
+                $"  Connections: active({num_connections_active}) inactive:({num_connections_inactive}) percent active:({percent_connections_active})" + Environment.NewLine +
+                $"  ResultsHistory: count:({num_results}) before_inactivity:({num_results_past_inactive_time})" + Environment.NewLine +
+                $"  Faction inventory size: {json_inventory_size}" + Environment.NewLine +
+                $"  Faction shop size: {json_faction_shops}" + Environment.NewLine;
+            return toString;
         }
     }
-
-    /*
-     *         // The current state of the map
-        public static StarMap currentMap;
-
-        // List of all connections currently tracked
-        public static Dictionary<string, UserInfo> connectionStore = new Dictionary<string, UserInfo>();
-
-        // All results that have been posted
-        public static List<HistoryResult> resultHistory = new List<HistoryResult>();
-        
-        // When the web-service started
-        public static DateTime startupTime = DateTime.UtcNow;
-
-        // All of the player contributed items available to a faction
-        public static Dictionary<Faction, List<ShopDefItem>> factionInventories;
-
-        // All of the items a faction has for sale
-        public static List<FactionShop> factionShops;
-
-        // When the last backup occurred
-        public static DateTime lastBackup = DateTime.MinValue;
-        */
 }
