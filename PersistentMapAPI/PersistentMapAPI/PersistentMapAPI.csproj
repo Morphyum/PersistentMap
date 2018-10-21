@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\DeprecatedWarServices.cs" />
+    <Compile Include="Objects\ServiceDataSnapshot.cs" />
     <Compile Include="Objects\FactionControl.cs" />
     <Compile Include="Objects\FactionShop.cs" />
     <Compile Include="Util\Helper.cs" />

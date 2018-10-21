@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
+using PersistentMapAPI.Objects;
 
 namespace PersistentMapAPI.API {
 
@@ -17,6 +18,7 @@ namespace PersistentMapAPI.API {
         public abstract System PostMissionResult(MissionResult mresult, string CompanyName);
         public abstract string PostPurchaseForFaction(List<string> ids, string Faction);
         public abstract string PostSalvageForFaction(List<ShopDefItem> salvage, string Faction);
+        public abstract ServiceDataSnapshot GetServiceDataSnapshot();
 
         public System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult) {
             Logger.Debug("WARNING: Deprecated method invoked: PostMissionResultDeprecated");

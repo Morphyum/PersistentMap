@@ -7,6 +7,7 @@ namespace PersistentMapAPI {
         // The current state of the map
         public static StarMap currentMap;
 
+        // List of all connections currently tracked
         public static Dictionary<string, UserInfo> connectionStore = new Dictionary<string, UserInfo>();
 
         // All results that have been posted

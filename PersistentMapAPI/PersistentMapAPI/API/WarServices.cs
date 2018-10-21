@@ -1,4 +1,5 @@
 ﻿using BattleTech;
+using PersistentMapAPI.Objects;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -219,6 +220,13 @@ namespace PersistentMapAPI {
                     return "Error";
                 }
             }
+        }
+
+        // Helper method to return data on current data sizes. Intended to help determine if some objects are growing out of bounds.
+        public override ServiceDataSnapshot GetServiceDataSnapshot() {
+            ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
+
+            return snapshot;
         }
 
         // NON-SERVICE METHODS BELOW
