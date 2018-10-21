@@ -1,12 +1,13 @@
 ﻿using BattleTech;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace PersistentMapAPI {
+    // Contains all of the items currently available for sale unique to a specific faction.
     public class FactionShop {
+
         public Faction shopOwner;
+        // Items currently for sale
         public List<ShopDefItem> currentSoldItems;
         public DateTime lastUpdate;
 

@@ -22,9 +22,9 @@ namespace PersistentMapServer {
                 monitor.enable();
 
                 ServiceThrottlingBehavior behaviour = new ServiceThrottlingBehavior();
-                behaviour.MaxConcurrentSessions = 9999;
-                behaviour.MaxConcurrentCalls = 9999;
-                behaviour.MaxConcurrentInstances = 9999;
+                behaviour.MaxConcurrentCalls = 64; // Recommendation is 16 * Processors so 4*16=64
+                behaviour.MaxConcurrentInstances = 1; // Using a singleton instance, so this doens't matter
+                behaviour.MaxConcurrentSessions = 1; // Not using HTTP sessions, so this doesn't matter
 
                 WarServices warServices = new WarServices();
 

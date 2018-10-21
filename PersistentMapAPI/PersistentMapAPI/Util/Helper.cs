@@ -18,7 +18,6 @@ namespace PersistentMapAPI {
         public static string settingsFilePath = $"../Settings/settings.json";
         public static string systemDataFilePath = $"../StarSystems/";
 
-
         public static StarMap initializeNewMap() {
             Logger.LogLine("Map Init Started");
             StarMap map = new StarMap();

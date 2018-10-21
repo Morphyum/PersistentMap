@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Threading;
 
 namespace PersistentMapServer {
+    /* Reads various performanceCounters that indicate server health, and writes them to the Console */
     class HeartBeatMonitor {
 
         private const string CategoryName_ServiceModelService = "ServiceModelService 4.0.0.0";
