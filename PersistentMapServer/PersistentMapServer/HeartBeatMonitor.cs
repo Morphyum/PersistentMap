@@ -36,18 +36,18 @@ namespace PersistentMapServer {
                 // If more than reportTimeSpan was passed since we last logged values, log them
                 DateTime now = DateTime.UtcNow;
                 if (now.Subtract(reportingTimeSpan) > lastReportedTime) {
-                    Logger.Debug("-------- HeartBeat --------");
+                    Logger.Debug("  --- HeartBeat ---");
                     Logger.Debug($"  Calls - Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " + 
                         $"Faulted:({pc_sms_callsFaulted.NextValue()}) Failed:({pc_sms_callsFailed.NextValue()}) " +
                         $" Max% ({pc_sms_pctMaxCalls.NextValue()})%"
                         );
                     ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
-                    Logger.Debug($"  ServerDataSnapshot: {snapshot.ToString()}");
+                    Logger.Debug($"{snapshot.ToString()}");
                     
                     lastReportedTime = now;
                 }
 
-                // Sleep 50ms then check to see if we are cancelled
+                // Sleep a short period to see if we are cancelled.
                 Thread.Sleep(50);
             }                        
         }

@@ -67,6 +67,7 @@ namespace PersistentMapAPI.Objects {
             string json_faction_shops = fastJSON.JSON.ToJSON(faction_shop_size);
 
             string toString =
+                "  --- ServerDataSnapshot --- " + Environment.NewLine +
                 $"  Connections: active({num_connections_active}) inactive:({num_connections_inactive}) percent active:({percent_connections_active})" + Environment.NewLine +
                 $"  ResultsHistory: count:({num_results}) before_inactivity:({num_results_past_inactive_time})" + Environment.NewLine +
                 $"  Faction inventory size: {json_inventory_size}" + Environment.NewLine +
