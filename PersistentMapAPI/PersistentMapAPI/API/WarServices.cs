@@ -15,6 +15,7 @@ namespace PersistentMapAPI {
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : API.DeprecatedWarServices {
 
+
         // Locks to prevent concurrent modification
         private readonly object _missionResultLock = new Object();
         private readonly object _salvageLock = new Object();

@@ -49,6 +49,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -58,6 +59,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HeartBeatMonitor.cs" />
+    <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
+    <Compile Include="Behavior\RequestLoggingBehavior.cs" />
+    <Compile Include="MessageInspector\CorsWildcardInspector.cs" />
+    <Compile Include="MessageInspector\RequestDurationLoggingInspector.cs" />
     <Compile Include="SettingsFileMonitor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
