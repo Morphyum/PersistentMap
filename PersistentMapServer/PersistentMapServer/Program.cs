@@ -13,20 +13,9 @@ namespace PersistentMapServer {
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
-
                 WarServices warServices = new WarServices();
-
                 WebServiceHost _serviceHost = new WebServiceHost(warServices, new Uri("http://localhost:8001/warServices"));
-
-                ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
-                throttlingBehavior.MaxConcurrentSessions = 9999;
-                throttlingBehavior.MaxConcurrentCalls = 9999;
-                throttlingBehavior.MaxConcurrentInstances = 9999;
-                _serviceHost.Description.Behaviors.Add(throttlingBehavior);
-
-                RequestLoggingBehavior loggingBehavior = new RequestLoggingBehavior();
-                _serviceHost.Description.Behaviors.Add(loggingBehavior);
-
+                addBehaviors(_serviceHost);
                 _serviceHost.Open();
 
                 Console.WriteLine("Open Press Key to close");
@@ -48,6 +37,20 @@ namespace PersistentMapServer {
                 Console.WriteLine(e);
                 Console.ReadKey();
             }
+        }
+
+        private static void addBehaviors(WebServiceHost _serviceHost) {
+            ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
+            throttlingBehavior.MaxConcurrentSessions = 9999;
+            throttlingBehavior.MaxConcurrentCalls = 9999;
+            throttlingBehavior.MaxConcurrentInstances = 9999;
+            _serviceHost.Description.Behaviors.Add(throttlingBehavior);
+
+            RequestLoggingBehavior loggingBehavior = new RequestLoggingBehavior();
+            _serviceHost.Description.Behaviors.Add(loggingBehavior);
+
+            CorsWildcardForAllResponsesBehavior corsBehavior = new CorsWildcardForAllResponsesBehavior();
+            _serviceHost.Description.Behaviors.Add(corsBehavior);
         }
     }
 }
