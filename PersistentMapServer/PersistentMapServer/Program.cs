@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.ServiceModel.Web;
 using PersistentMapAPI;
 using System.ServiceModel.Description;
 using System.ComponentModel;
+using PersistentMapServer.Behavior;
 
 namespace PersistentMapServer {
     class Program {
@@ -21,15 +22,10 @@ namespace PersistentMapServer {
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
-                ServiceThrottlingBehavior behaviour = new ServiceThrottlingBehavior();
-                behaviour.MaxConcurrentSessions = 9999;
-                behaviour.MaxConcurrentCalls = 9999;
-                behaviour.MaxConcurrentInstances = 9999;
-
                 WarServices warServices = new WarServices();
 
                 WebServiceHost _serviceHost = new WebServiceHost(warServices, new Uri(ServiceUrl));
-                _serviceHost.Description.Behaviors.Add(behaviour);
+                addBehaviors(_serviceHost);
                 _serviceHost.Open();
 
                 Console.WriteLine("Open Press Key to close");
@@ -54,6 +50,20 @@ namespace PersistentMapServer {
                 Console.WriteLine(e);
                 Console.ReadKey();
             }
+        }
+
+        private static void addBehaviors(WebServiceHost _serviceHost) {
+            ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
+            throttlingBehavior.MaxConcurrentSessions = 9999;
+            throttlingBehavior.MaxConcurrentCalls = 9999;
+            throttlingBehavior.MaxConcurrentInstances = 9999;
+            _serviceHost.Description.Behaviors.Add(throttlingBehavior);
+
+            RequestLoggingBehavior loggingBehavior = new RequestLoggingBehavior();
+            _serviceHost.Description.Behaviors.Add(loggingBehavior);
+
+            CorsWildcardForAllResponsesBehavior corsBehavior = new CorsWildcardForAllResponsesBehavior();
+            _serviceHost.Description.Behaviors.Add(corsBehavior);
         }
     }
 }
