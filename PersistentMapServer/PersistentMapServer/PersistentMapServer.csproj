@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HeartBeatMonitor.cs" />
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />
     <Compile Include="MessageInspector\CorsWildcardInspector.cs" />

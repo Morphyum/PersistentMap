@@ -1,20 +1,30 @@
-﻿using System;
+using System;
 using System.ServiceModel.Web;
 using PersistentMapAPI;
-using System.Net;
-using System.ServiceModel;
 using System.ServiceModel.Description;
+using System.ComponentModel;
 using PersistentMapServer.Behavior;
 
 namespace PersistentMapServer {
     class Program {
+
+        public static string ServiceUrl = "http://localhost:8001/warServices";
+
         static void Main(string[] args) {
             try {
+                // Start a heart-beat monitor to check the server status
+                BackgroundWorker heartbeatWorker = new BackgroundWorker();
+                heartbeatWorker.WorkerSupportsCancellation = true;
+                heartbeatWorker.DoWork += new DoWorkEventHandler(HeartBeatMonitor.DoWork);
+                heartbeatWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(HeartBeatMonitor.RunWorkerCompleted);
+                heartbeatWorker.RunWorkerAsync();
+
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
                 WarServices warServices = new WarServices();
-                WebServiceHost _serviceHost = new WebServiceHost(warServices, new Uri("http://localhost:8001/warServices"));
+
+                WebServiceHost _serviceHost = new WebServiceHost(warServices, new Uri(ServiceUrl));
                 addBehaviors(_serviceHost);
                 _serviceHost.Open();
 
@@ -31,7 +41,10 @@ namespace PersistentMapServer {
                 Console.WriteLine("Shops Saved");
 
                 monitor.disable();
-                Console.WriteLine("Monitor Disabled");
+                Console.WriteLine("Monitor disabled");
+                heartbeatWorker.CancelAsync();
+
+                Console.WriteLine("HeartBeatMonitor cancelled");
                 Console.ReadKey();
             } catch (Exception e) {
                 Console.WriteLine(e);
