@@ -23,13 +23,11 @@ namespace PersistentMapAPI {
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override StarMap GetStarmap() {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return (StarMap)Helper.LoadCurrentMap().Clone();
         }
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override System GetSystem(string name) {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             StarMap map = (StarMap)Helper.LoadCurrentMap().Clone();
             return map.FindSystemByName(name); ;
         }
@@ -125,7 +123,6 @@ namespace PersistentMapAPI {
         // Thread-safe; returns copy of list
         // TODO: Test with large # of results
         public override List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults) {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             List<HistoryResult> resultList = Holder.resultHistory
                 .Where(i => i.date.Value.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow)
                 .OrderByDescending(x => x.date)
@@ -137,7 +134,6 @@ namespace PersistentMapAPI {
         // Thread-safe; returns count only
         // TODO: Test with large # of 
         public override int GetActivePlayers(string MinutesBack) {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Holder.connectionStore
                 .Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow)
                 .Count();
@@ -145,7 +141,6 @@ namespace PersistentMapAPI {
 
         // Thread-safe; returns simple value.
         public override string GetStartupTime() {
-            WebOperationContext.Current.OutgoingResponse.Headers.Add("Access-Control-Allow-Origin", "*");
             return Holder.startupTime.ToString("o", CultureInfo.InvariantCulture);
         }
 
