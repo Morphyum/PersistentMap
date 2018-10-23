@@ -10,6 +10,7 @@
         public const string PostMissionResult = "/Mission/?CompanyName={CompanyName}";
         public const string PostSalvageForFaction = "/Salvage/{Faction}";
         public const string PostPurchaseForFaction = "/Buy/{Faction}";
+        public const string GetServiceDataSnapshot = "/Admin/ServiceDataSnapshot";
 
         //DEPRECATED
         public const string PostPurchaseForFactionDepricated = "/Buy/?Faction={Faction}&ID={ID}";

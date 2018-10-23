@@ -1,4 +1,5 @@
 ﻿using PersistentMapAPI;
+using PersistentMapAPI.Objects;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -6,6 +7,7 @@ using System.Diagnostics;
 using System.Threading;
 
 namespace PersistentMapServer {
+    /* Reads various performanceCounters that indicate server health, and writes them to the Console */
     class HeartBeatMonitor {
 
         private const string CategoryName_ServiceModelService = "ServiceModelService 4.0.0.0";
@@ -34,16 +36,18 @@ namespace PersistentMapServer {
                 // If more than reportTimeSpan was passed since we last logged values, log them
                 DateTime now = DateTime.UtcNow;
                 if (now.Subtract(reportingTimeSpan) > lastReportedTime) {
-                    Logger.LogLine("-------- HeartBeat --------");
-                    Logger.LogLine($"  Calls - Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " + 
+                    Logger.Debug("  --- HeartBeat ---");
+                    Logger.Debug($"  Calls - Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " + 
                         $"Faulted:({pc_sms_callsFaulted.NextValue()}) Failed:({pc_sms_callsFailed.NextValue()}) " +
                         $" Max% ({pc_sms_pctMaxCalls.NextValue()})%"
                         );
+                    ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
+                    Logger.Debug($"{snapshot.ToString()}");
                     
                     lastReportedTime = now;
                 }
 
-                // Sleep 50ms then check to see if we are cancelled
+                // Sleep a short period to see if we are cancelled.
                 Thread.Sleep(50);
             }                        
         }

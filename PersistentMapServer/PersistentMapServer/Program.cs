@@ -54,9 +54,9 @@ namespace PersistentMapServer {
 
         private static void addBehaviors(WebServiceHost _serviceHost) {
             ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
-            throttlingBehavior.MaxConcurrentSessions = 9999;
-            throttlingBehavior.MaxConcurrentCalls = 9999;
-            throttlingBehavior.MaxConcurrentInstances = 9999;
+                throttlingBehavior.MaxConcurrentCalls = 64; // Recommendation is 16 * Processors so 4*16=64
+                throttlingBehavior.MaxConcurrentInstances = 9999; // Using a singleton instance, so this doens't matter
+                throttlingBehavior.MaxConcurrentSessions = 9999; // Not using HTTP sessions, so this doesn't matter
             _serviceHost.Description.Behaviors.Add(throttlingBehavior);
 
             RequestLoggingBehavior loggingBehavior = new RequestLoggingBehavior();
