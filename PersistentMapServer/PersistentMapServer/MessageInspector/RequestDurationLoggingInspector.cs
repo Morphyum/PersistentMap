@@ -13,6 +13,9 @@ namespace PersistentMapServer.MessageInspector {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        // Requests that take longer than this many millseconds will always be reported. All other requests logged at trace.
+        private const long ReportingThreshold = 50;
+
         public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext) {
             return Stopwatch.StartNew();
         }
@@ -25,7 +28,12 @@ namespace PersistentMapServer.MessageInspector {
             Stopwatch stopWatch = (Stopwatch)correlationState;
             stopWatch.Stop();
 
-            logger.Info($"RequestID ({requestId}) mapped to method ({serviceMethod}) returned in {stopWatch.ElapsedMilliseconds}ms"); 
+            long deltaAsMillis = stopWatch.ElapsedTicks / TimeSpan.TicksPerMillisecond;
+            if (deltaAsMillis > ReportingThreshold) {
+                logger.Info($"RequestID ({requestId}) mapped to method ({serviceMethod}) returned in {deltaAsMillis}ms");
+            } else {
+                logger.Trace($"RequestID ({requestId}) mapped to method ({serviceMethod}) returned in {deltaAsMillis}ms");
+            }
         }
 
         // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc
