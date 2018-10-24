@@ -10,7 +10,7 @@ namespace PersistentMapServer {
     /* Reads various performanceCounters that indicate server health, and writes them to the Console */
     class HeartBeatMonitor {
 
-        private static readonly slf4net.ILogger _logger = slf4net.LoggerFactory.GetLogger(typeof(HeartBeatMonitor));
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private const string CategoryName_ServiceModelService = "ServiceModelService 4.0.0.0";
 
@@ -37,19 +37,19 @@ namespace PersistentMapServer {
                 DateTime now = DateTime.UtcNow;
                 if (now.Subtract(reportingTimeSpan) > lastReportedTime) {
                     // Report WCF connection status
-                    _logger.Debug($"Connections-> Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " +
+                    logger.Debug($"Connections-> Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " +
                         $"Faulted:({pc_sms_callsFaulted.NextValue()}) Failed:({pc_sms_callsFailed.NextValue()}) " +
                         $" Max% ({pc_sms_pctMaxCalls.NextValue()})%"
                         );
 
                     ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
                     // Report internal data sizes
-                    _logger.Debug($"Users-> active({snapshot.num_connections_active}) inactive:({snapshot.num_connections_inactive}) percent active:({snapshot.percent_connections_active})");
-                    _logger.Debug($"ResultsHistory-> total objects:({snapshot.num_results}) before_inactivity:({snapshot.num_results_past_inactive_time})");
+                    logger.Debug($"Users-> active({snapshot.num_connections_active}) inactive:({snapshot.num_connections_inactive}) percent active:({snapshot.percent_connections_active})");
+                    logger.Debug($"ResultsHistory-> total objects:({snapshot.num_results}) before_inactivity:({snapshot.num_results_past_inactive_time})");
                     string json_inventory_size = fastJSON.JSON.ToJSON(snapshot.faction_inventory_size);
                     string json_faction_shops = fastJSON.JSON.ToJSON(snapshot.faction_shop_size);
-                    _logger.Debug($"Faction inventory: {json_inventory_size}");
-                    _logger.Debug($"Faction shop size: {json_faction_shops}");
+                    logger.Debug($"Faction inventory: {json_inventory_size}");
+                    logger.Debug($"Faction shop size: {json_faction_shops}");
 
                     lastReportedTime = now;
                 }
@@ -73,7 +73,7 @@ namespace PersistentMapServer {
         }
     
         public static void RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
-            _logger.Info("Shutting down heart");
+            logger.Info("Shutting down heart");
         }
     }
 }
