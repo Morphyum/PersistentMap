@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
-using System.ServiceModel.Web;
 
 namespace PersistentMapAPI {
 

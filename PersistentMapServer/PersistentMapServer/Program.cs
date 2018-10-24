@@ -1,9 +1,9 @@
-using System;
-using System.ServiceModel.Web;
 using PersistentMapAPI;
-using System.ServiceModel.Description;
-using System.ComponentModel;
 using PersistentMapServer.Behavior;
+using System;
+using System.ComponentModel;
+using System.ServiceModel.Description;
+using System.ServiceModel.Web;
 
 namespace PersistentMapServer {
 
