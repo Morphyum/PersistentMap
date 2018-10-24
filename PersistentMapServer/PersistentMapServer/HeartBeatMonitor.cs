@@ -14,7 +14,7 @@ namespace PersistentMapServer {
 
         private static string InstanceName_WarServices = "WarServices@" + Program.ServiceUrl.Replace("/", "|");
 
-        private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(60);
+        private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(15);
 
         private static DateTime lastReportedTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10));
 
