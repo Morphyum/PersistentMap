@@ -1,6 +1,5 @@
-﻿using PersistentMapAPI;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
@@ -12,26 +11,29 @@ namespace PersistentMapServer.MessageInspector {
      */
     class RequestDurationLoggingInspector : IDispatchMessageInspector {
 
-        private Dictionary<int, DateTime> requests = new Dictionary<int, DateTime>();
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        // Requests that take longer than this many millseconds will always be reported. All other requests logged at trace.
+        private const long ReportingThreshold = 50;
 
         public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext) {
-            int requestId = OperationContext.Current.GetHashCode();
-            requests[requestId] = DateTime.UtcNow;          
-            return null;
+            return Stopwatch.StartNew();
         }
 
         public void BeforeSendReply(ref Message reply, object correlationState) {
-            int requestId = OperationContext.Current.GetHashCode();
-            DateTime start = requests[requestId];
-            DateTime now = DateTime.UtcNow;
-            TimeSpan span = now - start;
-            int duration = (int)span.TotalMilliseconds;
 
-            string requestIP = mapRequestIP();
-            string requestUrl = WebOperationContext.Current.IncomingRequest.UriTemplateMatch.BaseUri.ToString();
             string serviceMethod = WebOperationContext.Current.IncomingRequest.UriTemplateMatch.Data.ToString();
+            int requestId = OperationContext.Current.GetHashCode();
 
-            Logger.LogLine($"Request from IP ({requestIP}) for url ({requestUrl}) mapped to method ({serviceMethod}) returned in {duration}ms");
+            Stopwatch stopWatch = (Stopwatch)correlationState;
+            stopWatch.Stop();
+
+            long deltaAsMillis = stopWatch.ElapsedTicks / TimeSpan.TicksPerMillisecond;
+            if (deltaAsMillis > ReportingThreshold) {
+                logger.Info($"RequestID ({requestId}) mapped to method ({serviceMethod}) returned in {deltaAsMillis}ms");
+            } else {
+                logger.Trace($"RequestID ({requestId}) mapped to method ({serviceMethod}) returned in {deltaAsMillis}ms");
+            }
         }
 
         // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc

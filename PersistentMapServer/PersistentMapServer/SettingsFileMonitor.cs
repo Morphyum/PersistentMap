@@ -10,7 +10,6 @@ namespace PersistentMapServer {
         public SettingsFileMonitor() {
             this.fileSystemWatcher = new FileSystemWatcher();
             string settingsFilePath = Helper.settingsFilePath.Substring(0, Helper.settingsFilePath.IndexOf("settings.json"));
-            //Logger.LogLine("Attempting to monitor: " + System.IO.Directory.GetCurrentDirectory() + settingsFilePath);
             this.fileSystemWatcher.Path = settingsFilePath;
             this.fileSystemWatcher.Changed += this.SettingsFileChange;
             this.fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite;

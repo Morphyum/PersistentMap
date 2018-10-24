@@ -1,15 +1,29 @@
-using System;
-using System.ServiceModel.Web;
 using PersistentMapAPI;
-using System.ServiceModel.Description;
-using System.ComponentModel;
 using PersistentMapServer.Behavior;
+using System;
+using System.ComponentModel;
+using System.ServiceModel.Description;
+using System.ServiceModel.Web;
 
 namespace PersistentMapServer {
+
     class Program {
 
         public static string ServiceUrl = "http://localhost:8001/warServices";
 
+        /*
+         *Application that uses Windows Communications Foundation (WCF) to provide a RESTful API that allows persistence of Morphyum's WarTech.
+         * If you're unfamiliar with WCF, checkout the following:
+         * 
+         * http://dotnetmentors.com/wcf/overview-on-wcf-service-architecture.aspx
+         * https://docs.microsoft.com/en-us/dotnet/framework/wcf/extending/extending-dispatchers
+         * 
+         * The client is the PersistentMapClient, in this repository.
+         * This PersistentMapServer is the server.
+         * 
+         * Note that WCF is no longer the preferred solution for REST endpoints, which has become ASP.NET5 w/ MVC6. 
+         *  See https://blog.tonysneed.com/2016/01/06/wcf-is-dead-long-live-mvc-6/.
+        */
         static void Main(string[] args) {
             try {
                 // Start a heart-beat monitor to check the server status
@@ -55,7 +69,7 @@ namespace PersistentMapServer {
         private static void addBehaviors(WebServiceHost _serviceHost) {
             ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
                 throttlingBehavior.MaxConcurrentCalls = 64; // Recommendation is 16 * Processors so 4*16=64
-                throttlingBehavior.MaxConcurrentInstances = 9999; // Using a singleton instance, so this doens't matter
+                throttlingBehavior.MaxConcurrentInstances = 9999; // Using a singleton instance, so this doesn't matter
                 throttlingBehavior.MaxConcurrentSessions = 9999; // Not using HTTP sessions, so this doesn't matter
             _serviceHost.Description.Behaviors.Add(throttlingBehavior);
 

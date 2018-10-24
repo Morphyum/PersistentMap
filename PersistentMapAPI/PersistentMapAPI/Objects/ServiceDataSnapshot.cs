@@ -61,18 +61,5 @@ namespace PersistentMapAPI.Objects {
             server_startup = Holder.startupTime;
             server_last_backup = Holder.lastBackup;
         }
-
-        public override string ToString() {
-            string json_inventory_size = fastJSON.JSON.ToJSON(faction_inventory_size);
-            string json_faction_shops = fastJSON.JSON.ToJSON(faction_shop_size);
-
-            string toString =
-                "  --- ServerDataSnapshot --- " + Environment.NewLine +
-                $"  Connections: active({num_connections_active}) inactive:({num_connections_inactive}) percent active:({percent_connections_active})" + Environment.NewLine +
-                $"  ResultsHistory: count:({num_results}) before_inactivity:({num_results_past_inactive_time})" + Environment.NewLine +
-                $"  Faction inventory size: {json_inventory_size}" + Environment.NewLine +
-                $"  Faction shop size: {json_faction_shops}" + Environment.NewLine;
-            return toString;
-        }
     }
 }
