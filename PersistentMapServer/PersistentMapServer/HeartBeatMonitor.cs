@@ -24,8 +24,6 @@ namespace PersistentMapServer {
         private static PerformanceCounter pc_sms_callsOutstanding = null;
         private static PerformanceCounter pc_sms_callsFaulted = null;
         private static PerformanceCounter pc_sms_callsFailed = null;
-        private static PerformanceCounter pc_sms_pctMaxSessions = null;
-        private static PerformanceCounter pc_sms_pctMaxInstances = null;
         private static PerformanceCounter pc_sms_pctMaxCalls = null;
 
         public static void DoWork(object sender, DoWorkEventArgs e) {
