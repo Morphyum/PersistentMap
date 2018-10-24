@@ -12,7 +12,7 @@ namespace PersistentMapAPI {
 
 
         public static void LogLine(string line) {
-            Console.WriteLine(Environment.NewLine + "Date :" + DateTime.Now.ToString() + Environment.NewLine + line);
+            Console.WriteLine($"[{DateTime.Now.ToString()}] {line}");
         }
 
         public static void Debug(string line) {

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace PersistentMapAPI {
-    public class StarMap {
+    public class StarMap : ICloneable {
+
         public List<System> systems = new List<System>();
 
         public System FindSystemByName(string name) {
@@ -12,5 +14,11 @@ namespace PersistentMapAPI {
             }
             return result;
         }
+
+        // Do a deep clone of all members
+        public object Clone() {
+            return MemberwiseClone();
+        }
+
     }
 }
