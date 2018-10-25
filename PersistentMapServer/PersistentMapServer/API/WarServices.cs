@@ -1,5 +1,6 @@
 ﻿using BattleTech;
 using PersistentMapAPI.Objects;
+using PersistentMapServer.Attribute;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,7 +14,6 @@ namespace PersistentMapAPI {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple, IncludeExceptionDetailInFaults = true)]
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : API.DeprecatedWarServices {
-
 
         // Locks to prevent concurrent modification
         private readonly object _missionResultLock = new Object();
@@ -31,6 +31,7 @@ namespace PersistentMapAPI {
             return map.FindSystemByName(name); ;
         }
 
+        [UserQuota(enforcement : UserQuotaAttribute.EnforcementEnum.Block)]
         public override System PostMissionResult(MissionResult mresult, string companyName) {
             lock (_missionResultLock) {
                 try {
@@ -220,7 +221,6 @@ namespace PersistentMapAPI {
         // Helper method to return data on current data sizes. Intended to help determine if some objects are growing out of bounds.
         public override ServiceDataSnapshot GetServiceDataSnapshot() {
             ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
-
             return snapshot;
         }
 
