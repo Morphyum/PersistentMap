@@ -12,7 +12,8 @@ namespace PersistentMapServer {
 
         private const string CategoryName_ServiceModelService = "ServiceModelService 4.0.0.0";
 
-        private static string InstanceName_WarServices = "WarServices@" + Program.ServiceUrl.Replace("/", "|");
+        // TODO: Pull 'WarServicesProxy' from the instance, instead of hard-coding it like this.
+        private static string InstanceName_WarServices = "WarServicesProxy@" + Program.ServiceUrl.Replace("/", "|");
 
         private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(15);
 

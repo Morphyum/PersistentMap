@@ -45,12 +45,6 @@ namespace PersistentMapAPI {
                     HistoryResult hresult = new HistoryResult();
                     hresult.date = DateTime.UtcNow;
 
-                    if (Helper.CheckUserInfo(ip, mresult.systemName, companyName)) {
-                        Logger.LogToFile("One ip trys to send Missions to fast. IP:" + ip);
-                        // TODO: Change response type to make it clear throttling was the issue?
-                        // TODO: Move to pre-processor
-                        return null;
-                    }
                     Logger.LogLine("New Result Posted");
                     Logger.Debug("employer: " + mresult.employer);
                     Logger.Debug("target: " + mresult.target);
