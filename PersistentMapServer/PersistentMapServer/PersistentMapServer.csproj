@@ -79,9 +79,8 @@
     <Compile Include="Interceptor\UserQuotaInterceptor.cs" />
     <Compile Include="MessageInspector\CorsWildcardInspector.cs" />
     <Compile Include="MessageInspector\RequestDurationLoggingInspector.cs" />
-    <Compile Include="Objects\PlayerDecoratedStarMap.cs" />
-    <Compile Include="Objects\PlayerDecoratedSystem.cs" />
     <Compile Include="Objects\ServiceDataSnapshot.cs" />
+    <Compile Include="Objects\StarMapBuilder.cs" />
     <Compile Include="SettingsFileMonitor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

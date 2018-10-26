@@ -23,7 +23,6 @@ namespace PersistentMapAPI {
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override StarMap GetStarmap() {
-            StarMap map = (StarMap)Helper.LoadCurrentMap().Clone();
             StarMap builtMap = StarMapBuilder.Build();
             return builtMap;
         }

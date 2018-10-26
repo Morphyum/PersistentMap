@@ -52,7 +52,7 @@ namespace PersistentMapServer {
 
                 _serviceHost.Close();
                 Console.WriteLine("Connection Closed");
-
+                
                 Helper.SaveCurrentMap(Helper.LoadCurrentMap());
                 Console.WriteLine("Map Saved");
 
