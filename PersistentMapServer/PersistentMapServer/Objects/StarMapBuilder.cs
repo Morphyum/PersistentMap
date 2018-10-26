@@ -63,8 +63,9 @@ namespace PersistentMapServer.Objects {
                     Holder.currentMap = mapFromDisk;
                 }
             } else {
-                Holder.currentMap = initializeNewMap();
+                mapFromDisk = initializeNewMap();
             }
+            Holder.currentMap = mapFromDisk;
         }
 
         // Create a new StarMap from InnerSphereMap system data
