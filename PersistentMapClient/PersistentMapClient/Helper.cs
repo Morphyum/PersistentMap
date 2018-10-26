@@ -83,14 +83,14 @@ namespace PersistentMapClient {
             }
         }
 
-        public static Settings LoadSettings() {
+        public static Settings LoadSettings(string settingsPath) {
+            string _settingsPath = settingsPath != null ? settingsPath : $"{ PersistentMapClient.ModDirectory}/settings.json";
             try {
-                using (StreamReader r = new StreamReader($"{ PersistentMapClient.ModDirectory}/settings.json")) {
+                using (StreamReader r = new StreamReader(_settingsPath)) {
                     string json = r.ReadToEnd();
                     return JsonConvert.DeserializeObject<Settings>(json);
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Logger.LogError(ex);
                 return null;
             }
