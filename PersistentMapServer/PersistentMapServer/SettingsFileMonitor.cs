@@ -5,6 +5,8 @@ namespace PersistentMapServer {
 
     class SettingsFileMonitor {
 
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private FileSystemWatcher fileSystemWatcher;
 
         public SettingsFileMonitor() {
@@ -17,16 +19,18 @@ namespace PersistentMapServer {
         }
 
         public void enable() {
+            logger.Trace("Settings monitoring enabled.");
             this.fileSystemWatcher.EnableRaisingEvents = true;
         }
 
         public void disable() {
+            logger.Trace("Settings monitoring disabled.");
             this.fileSystemWatcher.EnableRaisingEvents = false;
         }
 
         // For some reason, this fires twice. Can't track down why, but it does.
         private void SettingsFileChange(object sender, FileSystemEventArgs e) {
-            Logger.LogLine("Settings file changed, refreshing.");
+            logger.Debug("Settings file changed, refreshing settings from disk.");
             Helper.LoadSettings(true);
             return;
         }
