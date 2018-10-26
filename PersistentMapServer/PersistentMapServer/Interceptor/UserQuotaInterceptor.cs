@@ -63,9 +63,12 @@ namespace PersistentMapServer.Interceptor {
                     }                    
                 }
             }
-            invocation.Proceed();
             if (returnNull) {
+                // Prevent the method from executing by not invoking proceed
                 invocation.ReturnValue = null;
+            } else {
+                // Allow the method to execute normally
+                invocation.Proceed();
             }
         }
 
