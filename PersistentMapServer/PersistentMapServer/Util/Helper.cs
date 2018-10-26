@@ -16,7 +16,9 @@ namespace PersistentMapAPI {
         public static string backupMapFilePath = $"../Map/";
         public static string currentShopFilePath = $"../Shop/current.json";
         public static string settingsFilePath = $"../Settings/settings.json";
-        public static string systemDataFilePath = $"../StarSystems/";      
+        public static string systemDataFilePath = $"../StarSystems/";
+
+        public static readonly string DateFormat = "yyyy-dd-M--HH-mm-ss";
 
         public static StarMap LoadCurrentMap() {
             if (Holder.currentMap == null) {
@@ -69,7 +71,7 @@ namespace PersistentMapAPI {
                 writer.Write(json);
             }
             if(Holder.lastBackup.AddHours(Helper.LoadSettings().HoursPerBackup) < DateTime.UtcNow) {
-                using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString("yyyy-dd-M--HH-mm-ss") +".json", false)) {
+                using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString(DateFormat) +".json", false)) {
                     string json = JsonConvert.SerializeObject(map);
                     writer.Write(json);
                 }

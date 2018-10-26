@@ -73,7 +73,7 @@
     <Compile Include="API\Routing.cs" />
     <Compile Include="API\WarServices.cs" />
     <Compile Include="Attribute\UserQuotaAttribute.cs" />
-    <Compile Include="HeartBeatMonitor.cs" />
+    <Compile Include="Worker\HeartBeatMonitor.cs" />
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />
     <Compile Include="Interceptor\UserQuotaInterceptor.cs" />
@@ -88,6 +88,7 @@
     <Compile Include="Util\Holder.cs" />
     <Compile Include="Util\Logger.cs" />
     <Compile Include="Util\Settings.cs" />
+    <Compile Include="Worker\StarMapBackupWorker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
