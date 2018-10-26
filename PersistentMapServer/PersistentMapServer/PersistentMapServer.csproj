@@ -69,6 +69,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\DeprecatedWarServices.cs" />
+    <Compile Include="API\IWarServices.cs" />
+    <Compile Include="API\Routing.cs" />
     <Compile Include="API\WarServices.cs" />
     <Compile Include="Attribute\UserQuotaAttribute.cs" />
     <Compile Include="HeartBeatMonitor.cs" />
