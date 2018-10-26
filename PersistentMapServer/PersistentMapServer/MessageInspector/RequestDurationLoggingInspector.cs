@@ -21,8 +21,8 @@ namespace PersistentMapServer.MessageInspector {
         }
 
         public void BeforeSendReply(ref Message reply, object correlationState) {
-
-            string serviceMethod = WebOperationContext.Current.IncomingRequest.UriTemplateMatch.Data.ToString();
+            IncomingWebRequestContext requestContext = WebOperationContext.Current.IncomingRequest;
+            string serviceMethod = requestContext.UriTemplateMatch != null ? requestContext.UriTemplateMatch.Data.ToString() : "UNMAPPED";
             int requestId = OperationContext.Current.GetHashCode();
 
             Stopwatch stopWatch = (Stopwatch)correlationState;
