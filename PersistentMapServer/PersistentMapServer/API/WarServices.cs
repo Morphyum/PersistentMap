@@ -29,8 +29,8 @@ namespace PersistentMapAPI {
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override System GetSystem(string name) {
-            StarMap map = (StarMap)Helper.LoadCurrentMap().Clone();
-            return map.FindSystemByName(name); ;
+            StarMap builtMap = StarMapBuilder.Build();            
+            return builtMap.FindSystemByName(name);
         }
 
         [UserQuota(enforcement : UserQuotaAttribute.EnforcementEnum.Block)]
@@ -56,8 +56,10 @@ namespace PersistentMapAPI {
                     Logger.Debug("target: " + mresult.target);
                     Logger.Debug("systemName: " + mresult.systemName);
                     Logger.Debug("mresult: " + mresult.result);
-                    StarMap map = Helper.LoadCurrentMap();
-                    System system = map.FindSystemByName(mresult.systemName);
+                    
+                    StarMap builtMap = StarMapBuilder.Build();
+
+                    System system = builtMap.FindSystemByName(mresult.systemName);
                     FactionControl oldOwnerControl = system.FindHighestControl();
                     Faction oldOwner = Faction.INVALID_UNSET;
                     if (oldOwnerControl != null) {
