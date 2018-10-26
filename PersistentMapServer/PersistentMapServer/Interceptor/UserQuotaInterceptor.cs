@@ -22,6 +22,7 @@ namespace PersistentMapServer.Interceptor {
 
         public void Intercept(IInvocation invocation) {
 
+            bool returnNull = false;
             foreach (System.Attribute attribute in invocation.GetConcreteMethod().GetCustomAttributes(false)) {
                 if (attribute.GetType() == typeof(UserQuotaAttribute)) {
 
@@ -45,7 +46,7 @@ namespace PersistentMapServer.Interceptor {
                                 context.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
                                 context.OutgoingResponse.StatusDescription = $"Too many requests - try again later.";
                                 logger.Info($"Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
-                                invocation.ReturnValue = null;
+                                returnNull = true;
                             } else {
                                 // Update the last sent marker
                                 info.LastDataSend = DateTime.UtcNow;
@@ -63,6 +64,9 @@ namespace PersistentMapServer.Interceptor {
                 }
             }
             invocation.Proceed();
+            if (returnNull) {
+                invocation.ReturnValue = null;
+            }
         }
 
         // Stolen from https://stackoverflow.com/questions/3984138/hash-string-in-c-sharp
