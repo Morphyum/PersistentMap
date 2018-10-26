@@ -1,5 +1,6 @@
 ﻿using BattleTech;
 using PersistentMapAPI.Objects;
+using PersistentMapServer.Objects;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -10,7 +11,7 @@ namespace PersistentMapAPI {
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetStarMap, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        StarMap GetStarmap();
+        PlayerDecoratedStarMap GetStarmap();
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetSystem, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]

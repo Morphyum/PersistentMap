@@ -1,6 +1,7 @@
 ﻿using BattleTech;
 using PersistentMapAPI.Objects;
 using PersistentMapServer.Attribute;
+using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,8 +22,9 @@ namespace PersistentMapAPI {
         private readonly object _purchaseLock = new Object();
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
-        public override StarMap GetStarmap() {
-            return (StarMap)Helper.LoadCurrentMap().Clone();
+        public override PlayerDecoratedStarMap GetStarmap() {
+            PlayerDecoratedStarMap map = (PlayerDecoratedStarMap)Helper.LoadCurrentMap().Clone();
+            return map;
         }
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
@@ -225,7 +227,7 @@ namespace PersistentMapAPI {
         // NON-SERVICE METHODS BELOW
         public string ResetStarMap() {
             Logger.LogLine("Init new Map");
-            StarMap map = Helper.initializeNewMap();
+            PlayerDecoratedStarMap map = Helper.initializeNewMap();
             Holder.currentMap = map;
             Console.WriteLine("Save new Map");
             Helper.SaveCurrentMap(map);

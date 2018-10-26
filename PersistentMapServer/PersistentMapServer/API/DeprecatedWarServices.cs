@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BattleTech;
 using PersistentMapAPI.Objects;
+using PersistentMapServer.Objects;
 
 namespace PersistentMapAPI.API {
 
@@ -12,7 +13,7 @@ namespace PersistentMapAPI.API {
         public abstract int GetActivePlayers(string MinutesBack);
         public abstract List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults);
         public abstract List<ShopDefItem> GetShopForFaction(string Faction);
-        public abstract StarMap GetStarmap();
+        public abstract PlayerDecoratedStarMap GetStarmap();
         public abstract string GetStartupTime();
         public abstract System GetSystem(string name);
         public abstract System PostMissionResult(MissionResult mresult, string CompanyName);

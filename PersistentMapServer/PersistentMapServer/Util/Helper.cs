@@ -1,6 +1,7 @@
 ﻿using BattleTech;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,10 +19,10 @@ namespace PersistentMapAPI {
         public static string settingsFilePath = $"../Settings/settings.json";
         public static string systemDataFilePath = $"../StarSystems/";
 
-        public static StarMap initializeNewMap() {
+        public static PlayerDecoratedStarMap initializeNewMap() {
             Logger.LogLine("Map Init Started");
-            StarMap map = new StarMap();
-            map.systems = new List<System>();
+            PlayerDecoratedStarMap map = new PlayerDecoratedStarMap();
+            map.systems123 = new List<PlayerDecoratedSystem>();
             foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
                 string originalJson = File.ReadAllText(filePaths);
                 JObject originalJObject = JObject.Parse(originalJson);
@@ -36,7 +37,7 @@ namespace PersistentMapAPI {
                     ownerControl.percentage = 0;
                 }
 
-                System system = new System();
+                PlayerDecoratedSystem system = new PlayerDecoratedSystem();
                 system.controlList = new List<FactionControl>();
                 system.name = (string)originalJObject["Description"]["Name"];
                 system.controlList.Add(ownerControl);
@@ -46,23 +47,23 @@ namespace PersistentMapAPI {
             return map;
         }
 
-        public static StarMap LoadCurrentMap() {
+        public static PlayerDecoratedStarMap LoadCurrentMap() {
             if (Holder.currentMap == null) {
                 if (File.Exists(currentMapFilePath)) {
                     using (StreamReader r = new StreamReader(currentMapFilePath)) {
                         string json = r.ReadToEnd();
-                        Holder.currentMap = JsonConvert.DeserializeObject<StarMap>(json);
+                        Holder.currentMap = JsonConvert.DeserializeObject<PlayerDecoratedStarMap>(json);
                     }
                 }
                 else {
                     Holder.currentMap = initializeNewMap();
                 }
             }
-            StarMap result = Holder.currentMap;
+            PlayerDecoratedStarMap result = Holder.currentMap;
             return result;
         }
 
-        public static void SaveCurrentMap(StarMap map) {
+        public static void SaveCurrentMap(PlayerDecoratedStarMap map) {
             (new FileInfo(currentMapFilePath)).Directory.Create();
             using (StreamWriter writer = new StreamWriter(currentMapFilePath, false)) {
                 string json = JsonConvert.SerializeObject(map);
