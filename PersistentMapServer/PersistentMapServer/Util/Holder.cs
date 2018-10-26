@@ -1,12 +1,11 @@
 ﻿using BattleTech;
-using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
 
 namespace PersistentMapAPI {
     public static class Holder {
         // The current state of the map
-        public static PlayerDecoratedStarMap currentMap;
+        public static StarMap currentMap;
 
         // List of all connections currently tracked
         public static Dictionary<string, UserInfo> connectionStore = new Dictionary<string, UserInfo>();

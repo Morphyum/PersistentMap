@@ -22,9 +22,10 @@ namespace PersistentMapAPI {
         private readonly object _purchaseLock = new Object();
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
-        public override PlayerDecoratedStarMap GetStarmap() {
-            PlayerDecoratedStarMap map = (PlayerDecoratedStarMap)Helper.LoadCurrentMap().Clone();
-            return map;
+        public override StarMap GetStarmap() {
+            StarMap map = (StarMap)Helper.LoadCurrentMap().Clone();
+            StarMap builtMap = StarMapBuilder.Build();
+            return builtMap;
         }
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
@@ -224,10 +225,20 @@ namespace PersistentMapAPI {
             return snapshot;
         }
 
+        // Admin helper that loads some necessary test data
+        public override void LoadTestData() {
+
+            // TODO: Remove after testing
+            List<UserInfo> randos = Helper.GenerateFakeActivity();
+            foreach (UserInfo rando in randos) {
+                Holder.connectionStore.Add(rando.companyName, rando);
+            }
+        }
+
         // NON-SERVICE METHODS BELOW
         public string ResetStarMap() {
             Logger.LogLine("Init new Map");
-            PlayerDecoratedStarMap map = Helper.initializeNewMap();
+            StarMap map = Helper.initializeNewMap();
             Holder.currentMap = map;
             Console.WriteLine("Save new Map");
             Helper.SaveCurrentMap(map);

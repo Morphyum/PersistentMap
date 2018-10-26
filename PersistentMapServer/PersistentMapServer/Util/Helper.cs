@@ -1,7 +1,6 @@
 ﻿using BattleTech;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,13 +16,30 @@ namespace PersistentMapAPI {
         public static string backupMapFilePath = $"../Map/";
         public static string currentShopFilePath = $"../Shop/current.json";
         public static string settingsFilePath = $"../Settings/settings.json";
-        public static string systemDataFilePath = $"../StarSystems/";
+        public static string systemDataFilePath = $"../StarSystems/";      
 
-        public static PlayerDecoratedStarMap initializeNewMap() {
+        public static StarMap LoadCurrentMap() {
+            if (Holder.currentMap == null) {
+                if (File.Exists(currentMapFilePath)) {
+                    using (StreamReader r = new StreamReader(currentMapFilePath)) {
+                        string json = r.ReadToEnd();
+                        Holder.currentMap = JsonConvert.DeserializeObject<StarMap>(json);
+                    }
+                } else {
+                    Holder.currentMap = initializeNewMap();
+                }
+            }
+            StarMap result = Holder.currentMap;
+            return result;
+        }
+
+        // TODO: remove!
+        public static StarMap initializeNewMap() {
             Logger.LogLine("Map Init Started");
-            PlayerDecoratedStarMap map = new PlayerDecoratedStarMap();
-            map.systems123 = new List<PlayerDecoratedSystem>();
-            foreach (string filePaths in Directory.GetFiles(systemDataFilePath)) {
+            StarMap map = new StarMap();
+            map.systems = new List<System>();
+
+            foreach (string filePaths in Directory.GetFiles(Helper.systemDataFilePath)) {
                 string originalJson = File.ReadAllText(filePaths);
                 JObject originalJObject = JObject.Parse(originalJson);
                 Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);
@@ -32,12 +48,11 @@ namespace PersistentMapAPI {
                 ownerControl.faction = owner;
                 if (owner != Faction.NoFaction) {
                     ownerControl.percentage = 100;
-                }
-                else {
+                } else {
                     ownerControl.percentage = 0;
                 }
 
-                PlayerDecoratedSystem system = new PlayerDecoratedSystem();
+                System system = new System();
                 system.controlList = new List<FactionControl>();
                 system.name = (string)originalJObject["Description"]["Name"];
                 system.controlList.Add(ownerControl);
@@ -47,23 +62,7 @@ namespace PersistentMapAPI {
             return map;
         }
 
-        public static PlayerDecoratedStarMap LoadCurrentMap() {
-            if (Holder.currentMap == null) {
-                if (File.Exists(currentMapFilePath)) {
-                    using (StreamReader r = new StreamReader(currentMapFilePath)) {
-                        string json = r.ReadToEnd();
-                        Holder.currentMap = JsonConvert.DeserializeObject<PlayerDecoratedStarMap>(json);
-                    }
-                }
-                else {
-                    Holder.currentMap = initializeNewMap();
-                }
-            }
-            PlayerDecoratedStarMap result = Holder.currentMap;
-            return result;
-        }
-
-        public static void SaveCurrentMap(PlayerDecoratedStarMap map) {
+        public static void SaveCurrentMap(StarMap map) {
             (new FileInfo(currentMapFilePath)).Directory.Create();
             using (StreamWriter writer = new StreamWriter(currentMapFilePath, false)) {
                 string json = JsonConvert.SerializeObject(map);
@@ -224,5 +223,50 @@ namespace PersistentMapAPI {
             return newShop;
 
         }
+
+        // TODO: Generates fake user activity for local testing
+        public static List<UserInfo> GenerateFakeActivity() {
+
+            List<UserInfo> randos = new List<UserInfo>(20);
+            var random = new Random();
+            int count = random.Next(5, 20); // No more than twenty
+            Console.WriteLine($"Generating {count} companies");
+
+            int systemCount = Holder.currentMap.systems.Count;
+            int numSystems = random.Next(1, count);
+            List<string> systems = new List<string>(count);
+            for (int i = 0; i < numSystems; i++) {
+                int systemId = random.Next(0, systemCount - 1);
+                Console.WriteLine($"Using systemID {systemId}");
+                systems.Add(Holder.currentMap.systems.ElementAt(systemId).name);
+            }
+            Console.WriteLine($"Generated {numSystems} systems");
+
+            for (int i = 0; i < count; i++) {
+                UserInfo randomUser = new UserInfo();
+                randomUser.companyName = GenerateFakeCompanyName(random);
+                randomUser.LastDataSend = DateTime.UtcNow;
+
+                int systemId = random.Next(0, systems.Count - 1);
+                randomUser.lastSystemFoughtAt = systems[systemId];
+                randos.Add(randomUser);
+                Console.WriteLine($"Adding randomUser - Company {randomUser.companyName} at system {randomUser.lastSystemFoughtAt}");
+            }
+            return randos;
+        }
+
+        // TODO: Generates fake company names
+        private static String GenerateFakeCompanyName(Random random) {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var stringChars = new char[12];
+
+            for (int i = 0; i < stringChars.Length; i++) {
+                stringChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            var finalString = new String(stringChars);
+            return "Random_Company_" + finalString;
+        }
+
     }
 }

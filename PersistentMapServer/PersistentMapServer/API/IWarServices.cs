@@ -1,6 +1,5 @@
 ﻿using BattleTech;
 using PersistentMapAPI.Objects;
-using PersistentMapServer.Objects;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -11,7 +10,7 @@ namespace PersistentMapAPI {
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetStarMap, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
-        PlayerDecoratedStarMap GetStarmap();
+        StarMap GetStarmap();
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetSystem, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
@@ -45,9 +44,14 @@ namespace PersistentMapAPI {
         [WebGet(UriTemplate = Routing.GetShopForFaction, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         List<ShopDefItem> GetShopForFaction(string Faction);
 
+        // Admin functions
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetServiceDataSnapshot, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         ServiceDataSnapshot GetServiceDataSnapshot();
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.LoadTestData, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        void LoadTestData();
 
         //DEPRECATED
         [OperationContract]
