@@ -1,7 +1,5 @@
-﻿using PersistentMapAPI;
-using PersistentMapAPI.Objects;
+﻿using PersistentMapAPI.Objects;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
@@ -10,11 +8,13 @@ namespace PersistentMapServer {
     /* Reads various performanceCounters that indicate server health, and writes them to the Console */
     class HeartBeatMonitor {
 
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private const string CategoryName_ServiceModelService = "ServiceModelService 4.0.0.0";
 
         private static string InstanceName_WarServices = "WarServices@" + Program.ServiceUrl.Replace("/", "|");
 
-        private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(5);
+        private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(15);
 
         private static DateTime lastReportedTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10));
 
@@ -22,8 +22,6 @@ namespace PersistentMapServer {
         private static PerformanceCounter pc_sms_callsOutstanding = null;
         private static PerformanceCounter pc_sms_callsFaulted = null;
         private static PerformanceCounter pc_sms_callsFailed = null;
-        private static PerformanceCounter pc_sms_pctMaxSessions = null;
-        private static PerformanceCounter pc_sms_pctMaxInstances = null;
         private static PerformanceCounter pc_sms_pctMaxCalls = null;
 
         public static void DoWork(object sender, DoWorkEventArgs e) {
@@ -36,14 +34,21 @@ namespace PersistentMapServer {
                 // If more than reportTimeSpan was passed since we last logged values, log them
                 DateTime now = DateTime.UtcNow;
                 if (now.Subtract(reportingTimeSpan) > lastReportedTime) {
-                    Logger.Debug("  --- HeartBeat ---");
-                    Logger.Debug($"  Calls - Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " + 
+                    // Report WCF connection status
+                    logger.Debug($"Connections-> Total:({pc_sms_calls.NextValue()}) Outstanding:({pc_sms_callsOutstanding.NextValue()}) " +
                         $"Faulted:({pc_sms_callsFaulted.NextValue()}) Failed:({pc_sms_callsFailed.NextValue()}) " +
                         $" Max% ({pc_sms_pctMaxCalls.NextValue()})%"
                         );
+
                     ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
-                    Logger.Debug($"{snapshot.ToString()}");
-                    
+                    // Report internal data sizes
+                    logger.Debug($"Users-> active({snapshot.num_connections_active}) inactive:({snapshot.num_connections_inactive}) percent active:({snapshot.percent_connections_active})");
+                    logger.Debug($"ResultsHistory-> total objects:({snapshot.num_results}) before_inactivity:({snapshot.num_results_past_inactive_time})");
+                    string json_inventory_size = fastJSON.JSON.ToJSON(snapshot.faction_inventory_size);
+                    string json_faction_shops = fastJSON.JSON.ToJSON(snapshot.faction_shop_size);
+                    logger.Debug($"Faction inventory: {json_inventory_size}");
+                    logger.Debug($"Faction shop size: {json_faction_shops}");
+
                     lastReportedTime = now;
                 }
 
@@ -65,22 +70,8 @@ namespace PersistentMapServer {
                 new PerformanceCounter(CategoryName_ServiceModelService, "percent of max concurrent sessions", InstanceName_WarServices);
         }
     
-        private static void printCategoryNames() {
-            PerformanceCounterCategory[] perfCategories = PerformanceCounterCategory.GetCategories();
-            List<PerformanceCounterCategory> categories = new List<PerformanceCounterCategory>(perfCategories);
-            var categoryNames = categories.ConvertAll(new Converter<PerformanceCounterCategory, String>(CategoryToNameConverter));
-            categoryNames.Sort();
-            foreach (String cname in categoryNames) {
-                Logger.LogLine($"Found category {cname}");
-            }
-        }
-
-        public static string CategoryToNameConverter(PerformanceCounterCategory category) {
-            return category.CategoryName;
-        }
-
         public static void RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
-            Logger.LogLine("Work completed...");
+            logger.Info("Shutting down heart");
         }
     }
 }
