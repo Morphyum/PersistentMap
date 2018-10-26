@@ -56,6 +56,8 @@ namespace PersistentMapServer.Interceptor {
                         // Add a new record of access
                         UserInfo info = new UserInfo();
                         info.LastDataSend = DateTime.UtcNow;
+                        info.companyName = "";
+                        info.lastSystemFoughtAt = "";
                         Holder.connectionStore.Add(requestIP, info);
                     }                    
                 }
