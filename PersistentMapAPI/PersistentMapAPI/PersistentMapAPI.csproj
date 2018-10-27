@@ -48,18 +48,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Objects\ServiceDataSnapshot.cs" />
     <Compile Include="Objects\FactionControl.cs" />
     <Compile Include="Objects\FactionShop.cs" />
-    <Compile Include="Util\Helper.cs" />
     <Compile Include="Objects\HistoryResult.cs" />
-    <Compile Include="Util\Holder.cs" />
-    <Compile Include="API\IWarServices.cs" />
-    <Compile Include="Util\Logger.cs" />
     <Compile Include="Objects\MissionResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="API\Routing.cs" />
-    <Compile Include="Util\Settings.cs" />
     <Compile Include="Objects\StarMap.cs" />
     <Compile Include="Objects\System.cs" />
     <Compile Include="Objects\UserInfo.cs" />

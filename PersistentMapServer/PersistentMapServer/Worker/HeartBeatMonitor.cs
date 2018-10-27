@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 
-namespace PersistentMapServer {
+namespace PersistentMapServer.Worker {
     /* Reads various performanceCounters that indicate server health, and writes them to the Console */
     class HeartBeatMonitor {
 
@@ -72,7 +72,7 @@ namespace PersistentMapServer {
         }
     
         public static void RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
-            logger.Info("Shutting down heart");
+            logger.Debug("Shutting down HeartBeatMonitor");
         }
     }
 }
