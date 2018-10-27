@@ -56,10 +56,11 @@ namespace PersistentMapServer.Objects {
 
         // Read the system data from disk, or create a new copy
         private static void readOrInitialize() {
+            StarMap mapFromDisk;
             if (File.Exists(Helper.currentMapFilePath)) {
                 using (StreamReader r = new StreamReader(Helper.currentMapFilePath)) {
                     string json = r.ReadToEnd();
-                    StarMap mapFromDisk = JsonConvert.DeserializeObject<StarMap>(json);
+                    mapFromDisk = JsonConvert.DeserializeObject<StarMap>(json);
                     Holder.currentMap = mapFromDisk;
                 }
             } else {
