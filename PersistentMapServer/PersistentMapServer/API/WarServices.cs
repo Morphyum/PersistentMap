@@ -16,6 +16,8 @@ namespace PersistentMapAPI {
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : API.DeprecatedWarServices {
 
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         // Locks to prevent concurrent modification
         private readonly object _missionResultLock = new Object();
         private readonly object _salvageLock = new Object();
@@ -42,8 +44,14 @@ namespace PersistentMapAPI {
                     int realPlanets = Math.Min(Helper.LoadSettings().MaxPlanetSupport, mresult.planetSupport);
                     int realRep = Math.Min(Helper.LoadSettings().MaxRep, mresult.awardedRep);
                     if ((Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets > 50) {
-                        Logger.LogToFile("Weird Result - Difficulty: " + realDifficulty + " - planet: " + realPlanets + " - rep: " + realRep + " - employer: " + mresult.employer + " - target: " + mresult.target + " - systemName: " + mresult.systemName + " - mresult: " + mresult.result + " - IP: " + ip);
+                        logger.Info("Suspicious result reported. See console.log for details.");
+                        logger.Debug($"Suspicous result for IP:({ip})" +
+                            $" normalized difficulty:({realDifficulty}) planetSupport:({realPlanets}) reptuation:({realRep})" +
+                            $" for employer:({mresult.employer}) vs target:({mresult.target}) on system: ({mresult.systemName})" +
+                            $" with result:({mresult.result})"
+                            );
                     }
+                    // TODO: Add unique id (guid?) for each result, to allow easy correlation in the logs?
                     HistoryResult hresult = new HistoryResult();
                     hresult.date = DateTime.UtcNow;
 
@@ -51,15 +59,13 @@ namespace PersistentMapAPI {
                     Holder.connectionStore[ip].companyName = companyName;
                     Holder.connectionStore[ip].lastSystemFoughtAt = mresult.systemName;
 
-                    Logger.LogLine("New Result Posted");
-                    Logger.Debug("employer: " + mresult.employer);
-                    Logger.Debug("target: " + mresult.target);
-                    Logger.Debug("systemName: " + mresult.systemName);
-                    Logger.Debug("mresult: " + mresult.result);
-                    
+                    logger.Info($"New Mission Result for ({companyName}) on ({mresult.systemName})");
+                    logger.Debug($"New MissionResult - ({companyName}) fought for ({mresult.employer}) against ({mresult.target})" +
+                        $" on ({mresult.systemName}) and achieved ({mresult.result})");
+                  
                     StarMap builtMap = StarMapBuilder.Build();
-
                     System system = builtMap.FindSystemByName(mresult.systemName);
+                    
                     FactionControl oldOwnerControl = system.FindHighestControl();
                     Faction oldOwner = Faction.INVALID_UNSET;
                     if (oldOwnerControl != null) {
@@ -69,41 +75,41 @@ namespace PersistentMapAPI {
                     FactionControl targetControl = system.FindFactionControlByFaction(mresult.target);
 
                     if (mresult.result == BattleTech.MissionResult.Victory) {
-                        Logger.Debug("Victory Result");
-                        int realChange = Math.Min(Math.Abs(employerControl.percentage - 100), Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets));
+                        int realChange = Math.Min(
+                            Math.Abs(employerControl.percentage - 100), 
+                            Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets)
+                            );
                         hresult.winner = employerControl.faction;
                         hresult.loser = targetControl.faction;
                         hresult.pointsTraded = realChange;
                         employerControl.percentage += realChange;
                         targetControl.percentage -= realChange;
-                        Logger.Debug(realChange + " Points traded");
+                        logger.Debug($"Victory for {hresult.winner} over {hresult.loser} - {realChange} points were traded.");                        
                         if (targetControl.percentage < 0) {
                             int leftoverChange = Math.Abs(targetControl.percentage);
-                            Logger.Debug(leftoverChange + " Leftover Points");
+                            logger.Debug($"{leftoverChange} points could not be removed from {hresult.loser} - distributing them to other factions.");                            
                             targetControl.percentage = 0;
                             int debugcounter = leftoverChange;
                             while (leftoverChange > 0 && debugcounter != 0) {
                                 foreach (FactionControl leftOverFaction in system.controlList) {
-                                    if (leftOverFaction.faction != mresult.employer &&
-                                        leftOverFaction.faction != mresult.target && leftOverFaction.percentage > 0
-                                        && leftoverChange > 0) {
+                                    if (leftOverFaction.faction != mresult.employer && leftOverFaction.faction != mresult.target && 
+                                        leftOverFaction.percentage > 0 && leftoverChange > 0) {
                                         leftOverFaction.percentage--;
                                         leftoverChange--;
-                                        Logger.Debug(leftOverFaction.faction.ToString() + " Points deducted");
+                                        logger.Debug($"Removed {leftoverChange} points {leftOverFaction.faction.ToString()}.");
                                     }
                                 }
                                 debugcounter--;
                             }
                         }
                     } else {
-                        Logger.Debug("Loss Result");
                         int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
                         hresult.winner = targetControl.faction;
                         hresult.loser = employerControl.faction;
                         hresult.pointsTraded = realChange;
                         employerControl.percentage -= realChange;
                         targetControl.percentage += realChange;
-                        Logger.Debug(realChange + " Points traded");
+                        logger.Debug($"Loss for {hresult.loser} against {hresult.winner} - {realChange} points were traded.");
                     }
                     FactionControl afterBattleOwnerControl = system.FindHighestControl();
                     Faction newOwner = afterBattleOwnerControl.faction;
@@ -116,7 +122,7 @@ namespace PersistentMapAPI {
                     Holder.resultHistory.Add(hresult);
                     return system;
                 } catch (Exception e) {
-                    Logger.LogError(e);
+                    logger.Warn(e, "Failed to process mission result!");
                     return null;
                 }
             }
@@ -151,14 +157,15 @@ namespace PersistentMapAPI {
                 Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
                 if (Holder.factionShops == null) {
                     Holder.factionShops = new List<FactionShop>();
-                    Logger.LogLine("Shops initialized");
+                    logger.Debug("Faction shops were null - initialized to empty shops");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction) == null) {
                     Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.MinValue));
+                    logger.Info($"Shop for faction {Faction} was not found!");
                     Logger.LogLine(Faction + ": Shop not found");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) < DateTime.UtcNow) {
-                    Logger.LogLine(Faction + ": Shop refresh");
+                    logger.Info($"Shop for faction {Faction} was refreshed.");                    
                     List<ShopDefItem> newShop = Helper.GenerateNewShop(realFaction);
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.Clear();
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems = newShop;
@@ -167,7 +174,7 @@ namespace PersistentMapAPI {
                 return Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems;
             }
             catch (Exception e) {
-                Console.WriteLine(e);
+                logger.Warn(e, "Failed to get shop for faction!");
                 return null;
             }
         }
@@ -190,7 +197,7 @@ namespace PersistentMapAPI {
                         Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
                     }
                 }
-                Logger.LogLine(salvage.Count + " items inserted into inventory for " + Faction);
+                logger.Info("INV: Added {salvage.Count} items into inventory for faction {Faction}");
                 return salvage.Count + " items inserted into inventory for " + Faction;
             }
         }
@@ -212,9 +219,10 @@ namespace PersistentMapAPI {
                         }
                     }
                     Logger.LogLine(ids.Count + " items removed from shop for " + Faction);
+                    logger.Info("INV: {ids.Count} items were removed from the shop for faction {Faction}");
                     return ids.Count + " items removed from shop for " + Faction;
                 } catch (Exception e) {
-                    Logger.LogError(e);
+                    logger.Warn(e, "Failed to process purchase!");
                     return "Error";
                 }
             }
@@ -238,12 +246,12 @@ namespace PersistentMapAPI {
 
         // NON-SERVICE METHODS BELOW
         public string ResetStarMap() {
-            Logger.LogLine("Init new Map");
+            logger.Info("MAP: Resetting StarMap!");
             StarMap map = Helper.initializeNewMap();
             Holder.currentMap = map;
-            Console.WriteLine("Save new Map");
+            logger.Info("MAP: Saved new map");
             Helper.SaveCurrentMap(map);
-            Console.WriteLine("Map reset Sucessfull");
+            logger.Info("MAP: Map reset successful");
             return "Reset Sucessfull";
         }
 
