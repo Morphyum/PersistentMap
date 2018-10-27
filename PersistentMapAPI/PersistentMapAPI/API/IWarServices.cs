@@ -6,7 +6,7 @@ using System.ServiceModel.Web;
 
 namespace PersistentMapAPI {
     [ServiceContract(Name = "WarServices")]
-    interface IWarServices {
+    public interface IWarServices {
 
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetStarMap, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]

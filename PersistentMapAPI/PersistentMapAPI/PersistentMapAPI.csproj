@@ -48,7 +48,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="API\DeprecatedWarServices.cs" />
     <Compile Include="Objects\ServiceDataSnapshot.cs" />
     <Compile Include="Objects\FactionControl.cs" />
     <Compile Include="Objects\FactionShop.cs" />
@@ -64,7 +63,6 @@
     <Compile Include="Objects\StarMap.cs" />
     <Compile Include="Objects\System.cs" />
     <Compile Include="Objects\UserInfo.cs" />
-    <Compile Include="API\WarServices.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">
