@@ -55,7 +55,7 @@ namespace PersistentMapAPI {
                     HistoryResult hresult = new HistoryResult();
                     hresult.date = DateTime.UtcNow;
 
-                    // TODO: Update connection data ni a cleaner fashion
+                    // TODO: Update connection data in a cleaner fashion
                     Holder.connectionStore[ip].companyName = companyName;
                     Holder.connectionStore[ip].lastSystemFoughtAt = mresult.systemName;
 
