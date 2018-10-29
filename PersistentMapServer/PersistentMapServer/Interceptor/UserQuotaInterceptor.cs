@@ -22,51 +22,65 @@ namespace PersistentMapServer.Interceptor {
 
         public void Intercept(IInvocation invocation) {
 
-            bool returnNull = false;
+            string requestIP = mapRequestIP();
+            string obfuscatedIP = HashAndTruncate(requestIP);
+
+            bool preventMethodInvocation = false;
             foreach (System.Attribute attribute in invocation.GetConcreteMethod().GetCustomAttributes(false)) {
                 if (attribute.GetType() == typeof(UserQuotaAttribute)) {
+                    // Method is decorated with UserQuotaAttribute
 
-                    string requestIP = mapRequestIP();
-                    string obfuscatedIP = HashAndTruncate(requestIP);
                     if (Holder.connectionStore.ContainsKey(requestIP) && Holder.connectionStore[requestIP].LastDataSend != null) {
+                        // We have seen this IP before
                         UserInfo info = Holder.connectionStore[requestIP];
-
                         PersistentMapAPI.Settings settings = Helper.LoadSettings();
                         DateTime now = DateTime.UtcNow;
                         DateTime blockedUntil = info.LastDataSend.AddMinutes(settings.minMinutesBetweenPost);
                         TimeSpan delta = now.Subtract(info.LastDataSend);
                         if (now >= blockedUntil) {
-                            // The user hasn't sent a message within the time limit, so just mark it when we're tracing
+                            // The user hasn't sent a message within the time limit, so just note it when tracing is enabled
                             logger.Trace($"IP:{(settings.Debug ? requestIP : obfuscatedIP)} last send a request {delta.ToString()} ago.");
                         } else {
                             // User is flooding. We should send back a 429 (Too Many Requests) but WCF isn't there yet. Send back a 403 for now.
-                            // TODO: Verify this works for the client.
+                            // TODO: Verify this breaks the client as expected - with an error (cannot upload)
+                            // TOOD: Add a better error message on the client for this case
                             if (((UserQuotaAttribute)attribute).enforcementPolicy == UserQuotaAttribute.EnforcementEnum.Block) {
                                 WebOperationContext context = WebOperationContext.Current;
                                 context.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
                                 context.OutgoingResponse.StatusDescription = $"Too many requests - try again later.";
-                                logger.Info($"Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
-                                returnNull = true;
+                                logger.Info($"IP: Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
+                                preventMethodInvocation = true;
                             } else {
-                                // Update the last sent marker
-                                info.LastDataSend = DateTime.UtcNow;
-                                logger.Debug($"Potential flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
+                                // The attribute is marked as log only, so log a warning
+                                logger.Warn($"IP: Potential flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
                             }
                         }
                     } else {
-                        // Add a new record of access
-                        UserInfo info = new UserInfo();
-                        info.LastDataSend = DateTime.UtcNow;
-                        info.companyName = "";
-                        info.lastSystemFoughtAt = "";
-                        Holder.connectionStore.Add(requestIP, info);
+                        // We haven't seen this IP before, so go ahead and let it through
+                        logger.Trace($"IP: Unrecognized IP, so allowing request.");
                     }                    
                 }
             }
-            if (returnNull) {
-                // Prevent the method from executing by not invoking proceed
+            if (preventMethodInvocation) {
+                // Prevent the method from executing
                 invocation.ReturnValue = null;
             } else {
+                // Add or set the userInfo
+                UserInfo info;
+                if (!Holder.connectionStore.ContainsKey(requestIP)) {
+                    info = new UserInfo();
+                    // Trust that any request beyond this adds the company name and lastSystemFoughtAt attributes. 
+                    // TODO: Improve this somehow, to identify users?
+                    info.lastSystemFoughtAt = "";
+                    info.companyName = "";                
+                    info.LastDataSend = DateTime.UtcNow;
+                    Holder.connectionStore.Add(requestIP, info);
+                } else {
+                    info = Holder.connectionStore[requestIP];
+                    info.LastDataSend = DateTime.UtcNow;
+                    Holder.connectionStore[requestIP] = info;
+                }
+                
                 // Allow the method to execute normally
                 invocation.Proceed();
             }
