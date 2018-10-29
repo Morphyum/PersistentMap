@@ -197,7 +197,7 @@ namespace PersistentMapAPI {
                         Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
                     }
                 }
-                logger.Info("INV: Added {salvage.Count} items into inventory for faction {Faction}");
+                logger.Info($"INV: Added {salvage.Count} items into inventory for faction {Faction}");
                 return salvage.Count + " items inserted into inventory for " + Faction;
             }
         }
@@ -218,8 +218,7 @@ namespace PersistentMapAPI {
                             shop.currentSoldItems.RemoveAll(x => x.Count <= 0);
                         }
                     }
-                    Logger.LogLine(ids.Count + " items removed from shop for " + Faction);
-                    logger.Info("INV: {ids.Count} items were removed from the shop for faction {Faction}");
+                    logger.Info($"INV: {ids.Count} items were removed from the shop for faction {Faction}");
                     return ids.Count + " items removed from shop for " + Faction;
                 } catch (Exception e) {
                     logger.Warn(e, "Failed to process purchase!");
