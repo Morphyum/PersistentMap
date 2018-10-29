@@ -84,10 +84,10 @@ namespace PersistentMapAPI {
                         hresult.pointsTraded = realChange;
                         employerControl.percentage += realChange;
                         targetControl.percentage -= realChange;
-                        logger.Debug($"Victory for {hresult.winner} over {hresult.loser} - {realChange} points were traded.");                        
+                        logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser}) - {realChange} points were traded.");                        
                         if (targetControl.percentage < 0) {
                             int leftoverChange = Math.Abs(targetControl.percentage);
-                            logger.Debug($"{leftoverChange} points could not be removed from {hresult.loser} - distributing them to other factions.");                            
+                            logger.Debug($"{leftoverChange} points could not be removed from ({hresult.loser}) - distributing them to other factions.");                            
                             targetControl.percentage = 0;
                             int debugcounter = leftoverChange;
                             while (leftoverChange > 0 && debugcounter != 0) {
@@ -109,7 +109,7 @@ namespace PersistentMapAPI {
                         hresult.pointsTraded = realChange;
                         employerControl.percentage -= realChange;
                         targetControl.percentage += realChange;
-                        logger.Debug($"Loss for {hresult.loser} against {hresult.winner} - {realChange} points were traded.");
+                        logger.Debug($"Loss for ({hresult.loser}) against ({hresult.winner}) - {realChange} points were traded.");
                     }
                     FactionControl afterBattleOwnerControl = system.FindHighestControl();
                     Faction newOwner = afterBattleOwnerControl.faction;
@@ -161,11 +161,10 @@ namespace PersistentMapAPI {
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction) == null) {
                     Holder.factionShops.Add(new FactionShop(realFaction, new List<ShopDefItem>(), DateTime.MinValue));
-                    logger.Info($"Shop for faction {Faction} was not found!");
-                    Logger.LogLine(Faction + ": Shop not found");
+                    logger.Info($"Shop for faction ({Faction}) was not found!");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) < DateTime.UtcNow) {
-                    logger.Info($"Shop for faction {Faction} was refreshed.");                    
+                    logger.Info($"Shop for faction ({Faction}) was refreshed.");                    
                     List<ShopDefItem> newShop = Helper.GenerateNewShop(realFaction);
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.Clear();
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems = newShop;
@@ -197,7 +196,7 @@ namespace PersistentMapAPI {
                         Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
                     }
                 }
-                logger.Info($"INV: Added {salvage.Count} items into inventory for faction {Faction}");
+                logger.Info($"INV: Added {salvage.Count} items into inventory for faction ({Faction})");
                 return salvage.Count + " items inserted into inventory for " + Faction;
             }
         }
@@ -218,7 +217,7 @@ namespace PersistentMapAPI {
                             shop.currentSoldItems.RemoveAll(x => x.Count <= 0);
                         }
                     }
-                    logger.Info($"INV: {ids.Count} items were removed from the shop for faction {Faction}");
+                    logger.Info($"INV: {ids.Count} items were removed from the shop for faction ({Faction})");
                     return ids.Count + " items removed from shop for " + Faction;
                 } catch (Exception e) {
                     logger.Warn(e, "Failed to process purchase!");
