@@ -34,25 +34,29 @@ namespace PersistentMapServer.Interceptor {
                         // We have seen this IP before
                         UserInfo info = Holder.connectionStore[requestIP];
                         PersistentMapAPI.Settings settings = Helper.LoadSettings();
+
+                        string lastDateSendISO = info.LastDataSend.ToString("u");
                         DateTime now = DateTime.UtcNow;
                         DateTime blockedUntil = info.LastDataSend.AddMinutes(settings.minMinutesBetweenPost);
                         TimeSpan delta = now.Subtract(info.LastDataSend);
+                        string deltaS = $"{(int)delta.TotalMinutes}:{delta.Seconds:00}";
                         if (now >= blockedUntil) {
                             // The user hasn't sent a message within the time limit, so just note it when tracing is enabled
-                            logger.Trace($"IP:{(settings.Debug ? requestIP : obfuscatedIP)} last send a request {delta.ToString()} ago.");
+                            logger.Trace($"IP:{(settings.Debug ? requestIP : obfuscatedIP)} last send a request {deltaS} ago.");
                         } else {
                             // User is flooding. We should send back a 429 (Too Many Requests) but WCF isn't there yet. Send back a 403 for now.
                             // TODO: Verify this breaks the client as expected - with an error (cannot upload)
                             // TOOD: Add a better error message on the client for this case
+                            string floodingMsg = $"IP: Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last successful request was ({lastDateSendISO}) which was {deltaS} ago.";
                             if (((UserQuotaAttribute)attribute).enforcementPolicy == UserQuotaAttribute.EnforcementEnum.Block) {
                                 WebOperationContext context = WebOperationContext.Current;
                                 context.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
                                 context.OutgoingResponse.StatusDescription = $"Too many requests - try again later.";
-                                logger.Info($"IP: Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
+                                logger.Info(floodingMsg);
                                 preventMethodInvocation = true;
                             } else {
                                 // The attribute is marked as log only, so log a warning
-                                logger.Warn($"IP: Potential flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
+                                logger.Warn(floodingMsg);
                             }
                         }
                     } else {
