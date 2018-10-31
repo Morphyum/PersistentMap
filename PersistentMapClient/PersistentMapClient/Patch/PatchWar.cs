@@ -162,14 +162,13 @@ namespace PersistentMapClient {
         static void Postfix(Starmap __instance, SimGameState simGame) {
             try {
                 Fields.currentMap = Web.GetStarMap();
-
                 if (Fields.currentMap == null) {
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
                     return;
                 }
 
-                List<string> changes = new List<string>();
+                List<string> changeNotifications = new List<string>();
                 List<StarSystem> transitiveContractUpdateTargets = new List<StarSystem>();
                 foreach (PersistentMapAPI.System system in Fields.currentMap.systems) {
                     if (system.activePlayers > 0) {
@@ -201,7 +200,7 @@ namespace PersistentMapClient {
                         if (newOwner != oldOwner) {
                             string newOwnerName = Helper.GetFactionShortName(newOwner, simGame.DataManager);
                             string oldOwnerName = Helper.GetFactionShortName(oldOwner, simGame.DataManager);
-                            changes.Add($"{newOwnerName} took {system2.Name} from {oldOwnerName}");
+                            changeNotifications.Add($"{newOwnerName} took {system2.Name} from {oldOwnerName}");
                             foreach (StarSystem changedSystem in simGame.Starmap.GetAvailableNeighborSystem(system2)) {
                                 if (!transitiveContractUpdateTargets.Contains(changedSystem)) {
                                     transitiveContractUpdateTargets.Add(changedSystem);
@@ -224,9 +223,9 @@ namespace PersistentMapClient {
                     }
                 }
 
-                if (changes.Count > 0 && !Fields.firstpass) {
+                if (changeNotifications.Count > 0 && !Fields.firstpass) {
                     SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
-                    interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changes.ToArray()), true);
+                    interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changeNotifications.ToArray()), true);
                 } else {
                     Fields.firstpass = false;
                 }
