@@ -25,7 +25,7 @@ namespace PersistentMapClient {
             Faction.AuriganMercenaries, Faction.Betrayers, Faction.MagistracyCentrella, Faction.MajestyMetals,
             Faction.MercenaryReviewBoard, Faction.Nautilus, Faction.NoFaction
         };
-        public static Starmap currentMap;
+        public static PersistentMapAPI.StarMap currentMap;
         public static Dictionary<Faction, List<ShopDefItem>> currentShops = new Dictionary<Faction, List<ShopDefItem>>();
         public static KeyValuePair<Faction, List<ShopDefItem>> currentShopSold = 
             new KeyValuePair<Faction, List<ShopDefItem>>(Faction.INVALID_UNSET,new List<ShopDefItem>());

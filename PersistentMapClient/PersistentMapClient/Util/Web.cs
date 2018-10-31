@@ -122,7 +122,7 @@ namespace PersistentMapClient {
         }
 
         // Fetch the current state of the starmap
-        public static StarMap GetStarMap() {
+        public static PersistentMapAPI.StarMap GetStarMap() {
             try {
                 HttpWebRequest request = new RequestBuilder(WarService.GetStarMap).Build();
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
