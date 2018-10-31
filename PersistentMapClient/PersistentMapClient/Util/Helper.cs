@@ -263,7 +263,7 @@ namespace PersistentMapClient {
         }
 
         // Capitals by faction
-        private static Dictionary<Faction, string> capitals = new Dictionary<Faction, string> {
+        private static Dictionary<Faction, string> capitalsByFaction = new Dictionary<Faction, string> {
             { Faction.Kurita, "Luthien" },
             { Faction.Davion, "New Avalon" },
             { Faction.Liao, "Sian" },
@@ -307,275 +307,23 @@ namespace PersistentMapClient {
             { Faction.Valkyrate, "Gotterdammerung" },
             { Faction.Axumite, "Thala" },
         };
-
+        private static ILookup<string, Faction> capitalsBySystemName = capitalsByFaction.ToLookup(pair => pair.Value, pair => pair.Key);
         public static bool IsCapital(StarSystem system, Faction faction) {
-            try {
-                switch (system.Name) {
-                    case "Luthien": {
-                            if (faction == Faction.Kurita)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "New Avalon": {
-                            if (faction == Faction.Davion)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Sian": {
-                            if (faction == Faction.Liao)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Atreus (FWL)": {
-                            if (faction == Faction.Marik)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Rasalhague": {
-                            if (faction == Faction.Rasalhague)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "St. Ives": {
-                            if (faction == Faction.Ives)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Oberon": {
-                            if (faction == Faction.Oberon)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Taurus": {
-                            if (faction == Faction.TaurianConcordat)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Canopus": {
-                            if (faction == Faction.MagistracyOfCanopus)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Alpheratz": {
-                            if (faction == Faction.Outworld)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Circinus": {
-                            if (faction == Faction.Circinus)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Alphard (MH)": {
-                            if (faction == Faction.Marian)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Lothario": {
-                            if (faction == Faction.Lothian)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Coromodir": {
-                            if (faction == Faction.AuriganRestoration)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Tharkad": {
-                            if (faction == Faction.Steiner)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Terra": {
-                            if (faction == Faction.ComStar)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Asturias": {
-                            if (faction == Faction.Castile)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Far Reach": {
-                            if (faction == Faction.Chainelane)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Albion (Clan)": {
-                            if (faction == Faction.ClanBurrock)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case " Zara(Homer 2850 +)": {
-                            if (faction == Faction.ClanCloudCobra)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Tamaron": {
-                            if (faction == Faction.ClanCoyote)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Strato Domingo": {
-                            if (faction == Faction.ClanDiamondShark)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Shadow": {
-                            if (faction == Faction.ClanFireMandrill)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Arcadia (Clan)": {
-                            if (faction == Faction.ClanGhostBear)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Dagda (Clan)": {
-                            if (faction == Faction.ClanGoliathScorpion)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Kirin": {
-                            if (faction == Faction.ClanHellsHorses)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Hector": {
-                            if (faction == Faction.ClanIceHellion)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Ironhold": {
-                            if (faction == Faction.ClanJadeFalcon)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Barcella": {
-                            if (faction == Faction.ClanNovaCat)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Strana Mechty": {
-                            if (faction == Faction.ClansGeneric)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Huntress": {
-                            if (faction == Faction.ClanSmokeJaguar)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Lum": {
-                            if (faction == Faction.ClanSnowRaven)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Sheridan (Clan)": {
-                            if (faction == Faction.ClanStarAdder)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "New Kent": {
-                            if (faction == Faction.ClanSteelViper)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Tiber (Clan)": {
-                            if (faction == Faction.ClanWolf)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "New Delphi": {
-                            if (faction == Faction.Delphi)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Blackbone (Nyserta 3025+)": {
-                            if (faction == Faction.Elysia)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Bremen (HL)": {
-                            if (faction == Faction.Hanse)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Trondheim (JF)": {
-                            if (faction == Faction.JarnFolk)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Tortuga Prime": {
-                            if (faction == Faction.Tortuga)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Gotterdammerung": {
-                            if (faction == Faction.Valkyrate)
-                                return true;
-                            else
-                                return false;
-                        }
-                    case "Thala": {
-                            if (faction == Faction.Axumite)
-                                return true;
-                            else
-                                return false;
-                        }
-                    default: {
-                            return false;
-                        }
-                }
-            }
-            catch (Exception ex) {
+            bool isCapital = false;
+            try {                
+                if (capitalsBySystemName.Contains(system.Name)) {
+                    Faction systemFaction = capitalsBySystemName[system.Name].First();
+                    isCapital = (systemFaction == faction);
+                }                
+            } catch (Exception ex) {
                 Logger.LogError(ex);
-                return false;
             }
+            return isCapital;
         }
 
         public static int CalculatePlanetSupport(SimGameState Sim, StarSystem attackSystem, Faction attacker, Faction defender) {
             int support = 0;
+            Logger.LogLine("Calculating planet support");
             List<StarSystem> neighbours = new List<StarSystem>();
             foreach (StarSystem possibleSystem in Sim.StarSystems) {
                 if (GetDistanceInLY(attackSystem, possibleSystem) <= Sim.Constants.Travel.MaxJumpDistance && !possibleSystem.Name.Equals(attackSystem.Name)) {
