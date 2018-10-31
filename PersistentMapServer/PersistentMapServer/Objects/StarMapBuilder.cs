@@ -33,6 +33,10 @@ namespace PersistentMapServer.Objects {
                         system.activePlayers = systemUsers.Count;
                         system.companies = systemUsers.Select(p => p.companyName).ToList();
                         logger.Trace($"Mapping {systemUsers.Count} activePlayers to {system} system.");
+                    } else {
+                        // Remove any expired records
+                        system.activePlayers = 0;
+                        system.companies = new List<string>();
                     }
                 }
             }
