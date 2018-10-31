@@ -1,5 +1,4 @@
-﻿using BattleTech;
-using System;
+﻿using System;
 using System.IO;
 
 namespace PersistentMapClient {
