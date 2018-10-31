@@ -1,4 +1,5 @@
-﻿using PersistentMapAPI.Objects;
+﻿using Newtonsoft.Json;
+using PersistentMapAPI.Objects;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ namespace PersistentMapServer.Worker {
         // TODO: Pull 'WarServicesProxy' from the instance, instead of hard-coding it like this.
         private static string InstanceName_WarServices = "WarServicesProxy@" + Program.ServiceUrl.Replace("/", "|");
 
-        private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(15);
+        private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(60);
 
         private static DateTime lastReportedTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10));
 
@@ -45,8 +46,8 @@ namespace PersistentMapServer.Worker {
                     // Report internal data sizes
                     logger.Debug($"Users-> active({snapshot.num_connections_active}) inactive:({snapshot.num_connections_inactive}) percent active:({snapshot.percent_connections_active})");
                     logger.Debug($"ResultsHistory-> total objects:({snapshot.num_results}) before_inactivity:({snapshot.num_results_past_inactive_time})");
-                    string json_inventory_size = fastJSON.JSON.ToJSON(snapshot.faction_inventory_size);
-                    string json_faction_shops = fastJSON.JSON.ToJSON(snapshot.faction_shop_size);
+                    string json_inventory_size = JsonConvert.SerializeObject(snapshot.faction_inventory_size);
+                    string json_faction_shops = JsonConvert.SerializeObject(snapshot.faction_shop_size);
                     logger.Debug($"Faction inventory: {json_inventory_size}");
                     logger.Debug($"Faction shop size: {json_faction_shops}");
 
