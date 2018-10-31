@@ -205,27 +205,28 @@ namespace PersistentMapClient {
 
         public static List<Faction> GetEmployees(StarSystem system, SimGameState Sim) {
             try {
-                List<Faction> employees = new List<Faction>();
+                HashSet<Faction> employees = new HashSet<Faction>();
                 if (Sim.Starmap != null) {
+                    // If a faction owns the planet, add the owning faction and local government
                     if (system.Owner != Faction.NoFaction) {
                         employees.Add(Faction.Locals);
                         employees.Add(system.Owner);
                     }
-                    foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
-                        if (system.Owner != neigbourSystem.Owner && !employees.Contains(neigbourSystem.Owner) && neigbourSystem.Owner != Faction.NoFaction) {
-                            employees.Add(neigbourSystem.Owner);
-                        }
-                    }
-                    foreach (Faction capitalFaction in Sim.FactionsDict.Keys) {
-                        if (!employees.Contains(capitalFaction)) {
-                            if (IsCapital(system, capitalFaction)) {
-                                employees.Add(capitalFaction);
-                                break;
-                            }
-                        }
+
+                    // Look across neighboring systems, and add employees of factions that border this system
+                    List<Faction> distinctNeighbors = Sim.Starmap.GetAvailableNeighborSystem(system)
+                        .Select(s => s.Owner)
+                        .Where(f => f != Faction.NoFaction && f != system.Owner)
+                        .Distinct()
+                        .ToList();
+
+                    // If a capital is occupied, add the faction that originally owned the capital to the employer list
+                    if (Helper.capitalsBySystemName.Contains(system.Name)) {
+                        Faction originalCapitalFaction = Helper.capitalsBySystemName[system.Name].First();
+                        employees.Add(originalCapitalFaction);
                     }
                 }
-                return employees;
+                return employees.ToList();
             }
             catch (Exception ex) {
                 Logger.LogError(ex);
