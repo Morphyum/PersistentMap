@@ -133,7 +133,7 @@ namespace PersistentMapClient {
                 GameObject companyObject = GameObject.Find("COMPANYNAMES");
                 if (companyObject != null) {
                     TextMeshProUGUI companietext = companyObject.transform.FindRecursive("txt-owner").GetComponent<TextMeshProUGUI>();
-                    ParseSystem system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
+                    PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
                     if (system != null && companietext != null) {
                         companietext.SetText(string.Join(Environment.NewLine, system.companies.ToArray()));
                     }
@@ -160,7 +160,7 @@ namespace PersistentMapClient {
                     return;
                 }
                 List<string> changes = new List<string>();
-                foreach (ParseSystem system in Fields.currentMap.systems) {
+                foreach (PersistentMapAPI.System system in Fields.currentMap.systems) {
                     if (system.activePlayers > 0) {
                         GameObject starObject = GameObject.Find(system.name);
                         Transform argoMarker = starObject.transform.Find("ArgoMarker");
@@ -214,7 +214,7 @@ namespace PersistentMapClient {
                             Helper.GetEmployees(changedSystem, simGame) });
                     AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(changedSystem.Def, new object[] {
                             Helper.GetTargets(changedSystem, simGame) });
-                    ParseSystem system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
+                    PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
                     if (system != null) {
                         AccessTools.Method(typeof(StarSystemDef), "set_Description").Invoke(changedSystem.Def, new object[] {
                             Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description});
@@ -287,8 +287,8 @@ namespace PersistentMapClient {
                                 }
                         }
                         if (numberOfContracts > 0) {
-                            List<ParseSystem> targets = new List<ParseSystem>();
-                            foreach (ParseSystem potentialTarget in Fields.currentMap.systems) {
+                            List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
+                            foreach (PersistentMapAPI.System potentialTarget in Fields.currentMap.systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
                                 if (control != null && control.percentage < 100 && control.percentage != 0) {
                                     targets.Add(potentialTarget);
