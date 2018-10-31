@@ -9,7 +9,7 @@ namespace PersistentMapClientTests {
         [Timeout(2000)]
         public void TestGetStarmap() {
             PersistentMapClient.PersistentMapClient.Init(".", "test.settings.json");
-            ParseMap parsedMap = Web.GetStarMap();
+            PersistentMapAPI.StarMap parsedMap = Web.GetStarMap();
             Assert.IsNotNull(parsedMap);
             Assert.AreEqual(parsedMap.systems.Count, 3359);
         }
