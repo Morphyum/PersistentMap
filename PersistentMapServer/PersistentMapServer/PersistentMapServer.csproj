@@ -89,7 +89,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\Helper.cs" />
     <Compile Include="Util\Holder.cs" />
-    <Compile Include="Util\Logger.cs" />
     <Compile Include="Util\Settings.cs" />
     <Compile Include="Worker\StarMapBackupWorker.cs" />
   </ItemGroup>
