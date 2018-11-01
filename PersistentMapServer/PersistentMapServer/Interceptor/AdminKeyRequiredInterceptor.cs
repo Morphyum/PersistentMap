@@ -17,7 +17,7 @@ namespace PersistentMapServer.Interceptor {
 
         public void Intercept(IInvocation invocation) {
 
-            bool preventMethodInvocation = true;
+            bool preventMethodInvocation = false;
             foreach (System.Attribute attribute in invocation.GetConcreteMethod().GetCustomAttributes(false)) {
                 if (attribute.GetType() == typeof(AdminKeyRequiredAttribute)) {
                     // Method is decorated 
@@ -26,8 +26,9 @@ namespace PersistentMapServer.Interceptor {
                     WebHeaderCollection headers = property.Headers;
                     var headerValue = headers != null && headers.Get(AdminKeyRequiredAttribute.HeaderName) != null ?
                         headers.Get(AdminKeyRequiredAttribute.HeaderName) : "";
-                    if (headerValue != null && headerValue.Equals(AdminKeyRequiredAttribute.HeaderValue)) {
-                        preventMethodInvocation = false;
+                    if (!headerValue.Equals(AdminKeyRequiredAttribute.HeaderValue)) {
+                        // Header value doesn't match, block access. Otherwise, let it through
+                        preventMethodInvocation = true;
                     }              
                 }
             }
