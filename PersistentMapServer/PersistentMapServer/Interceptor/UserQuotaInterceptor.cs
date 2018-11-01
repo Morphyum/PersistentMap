@@ -3,8 +3,6 @@ using PersistentMapAPI;
 using PersistentMapServer.Attribute;
 using System;
 using System.Net;
-using System.ServiceModel;
-using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 
 namespace PersistentMapServer.Interceptor {
@@ -22,8 +20,8 @@ namespace PersistentMapServer.Interceptor {
 
         public void Intercept(IInvocation invocation) {
 
-            string requestIP = mapRequestIP();
-            string obfuscatedIP = HashAndTruncate(requestIP);
+            string requestIP = Helper.mapRequestIP();
+            string obfuscatedIP = Helper.HashAndTruncate(requestIP);
 
             bool preventMethodInvocation = false;
             foreach (System.Attribute attribute in invocation.GetConcreteMethod().GetCustomAttributes(false)) {
@@ -90,35 +88,5 @@ namespace PersistentMapServer.Interceptor {
             }
         }
 
-        // Stolen from https://stackoverflow.com/questions/3984138/hash-string-in-c-sharp
-        internal static string HashAndTruncate(string text) {
-            if (String.IsNullOrEmpty(text))
-                return String.Empty;
-
-            using (var sha = new System.Security.Cryptography.SHA256Managed()) {
-                byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
-                byte[] hash = sha.ComputeHash(textData);
-                String convertedHash = BitConverter.ToString(hash).Replace("-", String.Empty);
-                String truncatedHash = convertedHash.Length > 12 ? convertedHash.Substring(0, 11) : convertedHash.Substring(0, convertedHash.Length);
-                return truncatedHash + "...";
-            }
-        }
-
-        // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc
-        protected string mapRequestIP() {
-            OperationContext context = OperationContext.Current;
-            MessageProperties properties = context.IncomingMessageProperties;
-            RemoteEndpointMessageProperty endpoint = properties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
-            string address = string.Empty;
-            if (properties.Keys.Contains(HttpRequestMessageProperty.Name)) {
-                HttpRequestMessageProperty endpointLoadBalancer = properties[HttpRequestMessageProperty.Name] as HttpRequestMessageProperty;
-                if (endpointLoadBalancer != null && endpointLoadBalancer.Headers["X-Forwarded-For"] != null)
-                    address = endpointLoadBalancer.Headers["X-Forwarded-For"];
-            }
-            if (string.IsNullOrEmpty(address)) {
-                address = endpoint.Address;
-            }
-            return address;
-        }
     }
 }

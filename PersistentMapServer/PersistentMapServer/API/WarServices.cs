@@ -14,7 +14,7 @@ namespace PersistentMapAPI {
     // Implementation of the current service methods used 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple, IncludeExceptionDetailInFaults = true)]
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
-    public class WarServices : API.DeprecatedWarServices {
+    public class WarServices : API.AdminWarServices {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -40,7 +40,7 @@ namespace PersistentMapAPI {
             lock (_missionResultLock) {
                 try {
                     int realDifficulty = Math.Min(10, mresult.difficulty);
-                    string ip = Helper.GetIP();
+                    string ip = Helper.mapRequestIP();
                     int realPlanets = Math.Min(Helper.LoadSettings().MaxPlanetSupport, mresult.planetSupport);
                     int realRep = Math.Min(Helper.LoadSettings().MaxRep, mresult.awardedRep);
                     if ((Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets > 50) {
@@ -224,33 +224,6 @@ namespace PersistentMapAPI {
                     return "Error";
                 }
             }
-        }
-
-        // Helper method to return data on current data sizes. Intended to help determine if some objects are growing out of bounds.
-        public override ServiceDataSnapshot GetServiceDataSnapshot() {
-            ServiceDataSnapshot snapshot = new ServiceDataSnapshot();
-            return snapshot;
-        }
-
-        // Admin helper that loads some necessary test data
-        public override void LoadTestData() {
-
-            // TODO: Remove after testing
-            List<UserInfo> randos = Helper.GenerateFakeActivity();
-            foreach (UserInfo rando in randos) {
-                Holder.connectionStore.Add(rando.companyName, rando);
-            }
-        }
-
-        // NON-SERVICE METHODS BELOW
-        public string ResetStarMap() {
-            logger.Info("MAP: Resetting StarMap!");
-            StarMap map = Helper.initializeNewMap();
-            Holder.currentMap = map;
-            logger.Info("MAP: Saved new map");
-            Helper.SaveCurrentMap(map);
-            logger.Info("MAP: Map reset successful");
-            return "Reset Sucessfull";
         }
 
     }
