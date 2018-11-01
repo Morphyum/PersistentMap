@@ -6,12 +6,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using SysSecurity = System.Security;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using SysText = System.Text;
 using System.Threading;
+using PersistentMapServer.Objects;
 
 namespace PersistentMapAPI {
     public static class Helper {
+
         public static string currentMapFilePath = $"../Map/current.json";
         public static string backupMapFilePath = $"../Map/";
         public static string currentShopFilePath = $"../Shop/current.json";
@@ -20,64 +24,10 @@ namespace PersistentMapAPI {
 
         public static readonly string DateFormat = "yyyy-dd-M--HH-mm-ss";
 
-        public static StarMap LoadCurrentMap() {
-            if (Holder.currentMap == null) {
-                if (File.Exists(currentMapFilePath)) {
-                    using (StreamReader r = new StreamReader(currentMapFilePath)) {
-                        string json = r.ReadToEnd();
-                        Holder.currentMap = JsonConvert.DeserializeObject<StarMap>(json);
-                    }
-                } else {
-                    Holder.currentMap = initializeNewMap();
-                }
-            }
-            StarMap result = Holder.currentMap;
-            return result;
-        }
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        // TODO: remove!
-        public static StarMap initializeNewMap() {
-            Logger.LogLine("Map Init Started");
-            StarMap map = new StarMap();
-            map.systems = new List<System>();
-
-            foreach (string filePaths in Directory.GetFiles(Helper.systemDataFilePath)) {
-                string originalJson = File.ReadAllText(filePaths);
-                JObject originalJObject = JObject.Parse(originalJson);
-                Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);
-
-                FactionControl ownerControl = new FactionControl();
-                ownerControl.faction = owner;
-                if (owner != Faction.NoFaction) {
-                    ownerControl.percentage = 100;
-                } else {
-                    ownerControl.percentage = 0;
-                }
-
-                System system = new System();
-                system.controlList = new List<FactionControl>();
-                system.name = (string)originalJObject["Description"]["Name"];
-                system.controlList.Add(ownerControl);
-
-                map.systems.Add(system);
-            }
-            return map;
-        }
-
-        public static void SaveCurrentMap(StarMap map) {
-            (new FileInfo(currentMapFilePath)).Directory.Create();
-            using (StreamWriter writer = new StreamWriter(currentMapFilePath, false)) {
-                string json = JsonConvert.SerializeObject(map);
-                writer.Write(json);
-            }
-            if(Holder.lastBackup.AddHours(Helper.LoadSettings().HoursPerBackup) < DateTime.UtcNow) {
-                using (StreamWriter writer = new StreamWriter(backupMapFilePath + DateTime.UtcNow.ToString(DateFormat) +".json", false)) {
-                    string json = JsonConvert.SerializeObject(map);
-                    writer.Write(json);
-                }
-                Holder.lastBackup = DateTime.UtcNow;
-            }
-        }
+        // Settings that have been previously read
+        private static Settings cachedSettings;
 
         public static Dictionary<Faction, List<ShopDefItem>> LoadCurrentInventories() {
             try {
@@ -95,7 +45,7 @@ namespace PersistentMapAPI {
                 Dictionary<Faction, List<ShopDefItem>> result = Holder.factionInventories;
                 return result;
             }catch(Exception e) {
-                Logger.LogError(e);
+                logger.Warn(e, "Failed to load current inventories.");
                 return null;
             }
         }
@@ -107,9 +57,6 @@ namespace PersistentMapAPI {
                 writer.Write(json);
             }
         }
-
-        // Settings that were previously read
-        private static Settings cachedSettings;
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static Settings LoadSettings(bool forceRefresh=false) {
@@ -126,12 +73,12 @@ namespace PersistentMapAPI {
                             using (StreamReader r = new StreamReader(settingsFilePath)) {
                                 string json = r.ReadToEnd();
                                 settings = JsonConvert.DeserializeObject<Settings>(json);
-                                Logger.LogLine("Reading settings from disk");
+                                logger.Debug("Reading settings from disk");
                             }
                             wasAbleToRead = true;
                         } catch (IOException) {
                             // Handle race conditions when the file has been modified (in an editor) but the lock isn't released yet.
-                            Logger.LogLine("Failed to open settings.json due to lock, waiting 5ms");
+                            logger.Trace("Failed to open settings.json due to lock, waiting 5ms");
                             Thread.Sleep(5);
                         }
                     }
@@ -142,45 +89,12 @@ namespace PersistentMapAPI {
                     using (StreamWriter writer = new StreamWriter(settingsFilePath, false)) {
                         string json = JsonConvert.SerializeObject(settings);
                         writer.Write(json);
-                        //Logger.LogLine("Writing new default settings");
+                        logger.Warn("Writing default settings");
                     }
                 }
                 cachedSettings = settings;
             }
             return settings;
-        }
-
-        public static string GetIP() {
-            OperationContext context = OperationContext.Current;
-            MessageProperties prop = context.IncomingMessageProperties;
-            RemoteEndpointMessageProperty endpoint =
-               prop[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
-            string ip = endpoint.Address;
-
-            return ip;
-
-        }
-
-        public static bool CheckUserInfo(string ip, string systemname, string companyName) {
-            if (Holder.connectionStore.ContainsKey(ip)) {
-                if (Holder.connectionStore[ip].LastDataSend.AddMinutes(LoadSettings().minMinutesBetweenPost) > DateTime.UtcNow) {
-                    return true;
-                }
-                else {
-                    Holder.connectionStore[ip].LastDataSend = DateTime.UtcNow;
-                    Holder.connectionStore[ip].lastSystemFoughtAt = systemname;
-                    Holder.connectionStore[ip].companyName = companyName;
-                }
-            }
-            else {
-                UserInfo info = new UserInfo();
-                info.LastDataSend = DateTime.UtcNow;
-                info.lastSystemFoughtAt = systemname;
-                info.companyName = companyName;
-                Holder.connectionStore.Add(ip, info);
-            }
-            return false;
-
         }
 
         public static List<ShopDefItem> GenerateNewShop(Faction realFaction) {
@@ -217,13 +131,48 @@ namespace PersistentMapAPI {
                     }
                 }
             }
+
             foreach(ShopDefItem item in newShop) {
-                Logger.Debug("Added " + item.ID + " Count" + item.Count);
+                logger.Debug($"Added {item.ID} count {item.Count}");
             }
+
             Holder.factionInventories[realFaction].RemoveAll(x => x.Count <= 0);
-            Logger.LogLine("New Shop generated for " + realFaction);
+            logger.Info($"New shop generated for faction ({realFaction})");
             return newShop;
 
+        }
+
+        // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc
+        // Note: Old method didn't account for load-balancer
+        public static string mapRequestIP() {
+            OperationContext context = OperationContext.Current;
+            MessageProperties properties = context.IncomingMessageProperties;
+            RemoteEndpointMessageProperty endpoint = properties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
+            string address = string.Empty;
+            if (properties.Keys.Contains(HttpRequestMessageProperty.Name)) {
+                HttpRequestMessageProperty endpointLoadBalancer = properties[HttpRequestMessageProperty.Name] as HttpRequestMessageProperty;
+                if (endpointLoadBalancer != null && endpointLoadBalancer.Headers["X-Forwarded-For"] != null)
+                    address = endpointLoadBalancer.Headers["X-Forwarded-For"];
+            }
+            if (string.IsNullOrEmpty(address)) {
+                address = endpoint.Address;
+            }
+            return address;
+        }
+
+
+        // Stolen from https://stackoverflow.com/questions/3984138/hash-string-in-c-sharp
+        internal static string HashAndTruncate(string text) {
+            if (String.IsNullOrEmpty(text))
+                return String.Empty;
+
+            using (var sha = new SysSecurity.Cryptography.SHA256Managed()) {
+                byte[] textData = SysText.Encoding.UTF8.GetBytes(text);
+                byte[] hash = sha.ComputeHash(textData);
+                String convertedHash = BitConverter.ToString(hash).Replace("-", String.Empty);
+                String truncatedHash = convertedHash.Length > 12 ? convertedHash.Substring(0, 11) : convertedHash.Substring(0, convertedHash.Length);
+                return truncatedHash + "...";
+            }
         }
 
         // TODO: Generates fake user activity for local testing
@@ -232,17 +181,20 @@ namespace PersistentMapAPI {
             List<UserInfo> randos = new List<UserInfo>(20);
             var random = new Random();
             int count = random.Next(5, 20); // No more than twenty
-            Console.WriteLine($"Generating {count} companies");
+            logger.Info($"Generating {count} companies");
+
+            // Ensure that the map has been loaded
+            StarMapBuilder.Build();
 
             int systemCount = Holder.currentMap.systems.Count;
             int numSystems = random.Next(1, count);
             List<string> systems = new List<string>(count);
             for (int i = 0; i < numSystems; i++) {
                 int systemId = random.Next(0, systemCount - 1);
-                Console.WriteLine($"Using systemID {systemId}");
+                logger.Info($"Using systemID {systemId}");
                 systems.Add(Holder.currentMap.systems.ElementAt(systemId).name);
             }
-            Console.WriteLine($"Generated {numSystems} systems");
+            logger.Info($"Generated {numSystems} systems");
 
             for (int i = 0; i < count; i++) {
                 UserInfo randomUser = new UserInfo();
@@ -252,7 +204,7 @@ namespace PersistentMapAPI {
                 int systemId = random.Next(0, systems.Count - 1);
                 randomUser.lastSystemFoughtAt = systems[systemId];
                 randos.Add(randomUser);
-                Console.WriteLine($"Adding randomUser - Company {randomUser.companyName} at system {randomUser.lastSystemFoughtAt}");
+                logger.Info($"Adding randomUser - Company {randomUser.companyName} at system {randomUser.lastSystemFoughtAt}");
             }
             return randos;
         }
