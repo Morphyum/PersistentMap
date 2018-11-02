@@ -73,6 +73,13 @@
     <Compile Include="API\Routing.cs" />
     <Compile Include="API\WarServices.cs" />
     <Compile Include="Attribute\UserQuotaAttribute.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="GZip\GZipBehavior.cs" />
+    <Compile Include="GZip\CompressOutputExtension.cs" />
+    <Compile Include="GZip\GZipMessageEncoderFactory.cs" />
+    <Compile Include="GZip\GZipMessageEncodingBindingElement.cs" />
+    <Compile Include="GZip\GZipMessageEncodingBindingElementImporter.cs" />
+    <Compile Include="GZip\GZipInspector.cs" />
     <Compile Include="Worker\HeartBeatMonitor.cs" />
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />

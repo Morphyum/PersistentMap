@@ -3,11 +3,21 @@ using PersistentMapServer.Behavior;
 using PersistentMapServer.Interceptor;
 using PersistentMapServer.Worker;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
+using System.Text;
 
 namespace PersistentMapServer {
+
+    class MyMapper : WebContentTypeMapper {
+        public override WebContentFormat GetMessageFormatForContentType(string contentType) {
+            return WebContentFormat.Json;
+        }
+    }
 
     class Program {
 
@@ -33,7 +43,7 @@ namespace PersistentMapServer {
                 heartbeatWorker.WorkerSupportsCancellation = true;
                 heartbeatWorker.DoWork += new DoWorkEventHandler(HeartBeatMonitor.DoWork);
                 heartbeatWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(HeartBeatMonitor.RunWorkerCompleted);
-                heartbeatWorker.RunWorkerAsync();
+                //heartbeatWorker.RunWorkerAsync();
 
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
@@ -52,15 +62,51 @@ namespace PersistentMapServer {
                 };
                 AppDomain.CurrentDomain.ProcessExit += BackupWorker.ProcessExitHandler;
 
-                WarServices warServices = new WarServices();
-                // Create an AOP proxy object that we can hang Castle.DynamicProxies upon. These are useful for operations across the whole
-                //   of the service, or for when we need to fail a message in a reasonable way. 
-                var proxy = new Castle.DynamicProxy.ProxyGenerator()
-                    .CreateClassProxyWithTarget<WarServices>(warServices, new UserQuotaInterceptor());
+                //WarServices warServices = new WarServices();
+                //// Create an AOP proxy object that we can hang Castle.DynamicProxies upon. These are useful for operations across the whole
+                ////   of the service, or for when we need to fail a message in a reasonable way. 
+                //var proxy = new Castle.DynamicProxy.ProxyGenerator()
+                //    .CreateClassProxyWithTarget<WarServices>(warServices, new UserQuotaInterceptor());
 
-                WebServiceHost _serviceHost = new WebServiceHost(proxy, new Uri(ServiceUrl));
+                WebServiceHost _serviceHost = new WebServiceHost(typeof(WarServices), new Uri(ServiceUrl));
                 addBehaviors(_serviceHost);
+                //_serviceHost.Description.Behaviors.Add(new InstanceProviderServiceBehaviorAttribute());        
+
+                var encoding = new GZipMessageEncodingBindingElement(new WebMessageEncodingBindingElement());
+                //var encoding = new WebMessageEncodingBindingElement();
+                var transport = new HttpTransportBindingElement();
+                transport.ManualAddressing = true;
+                transport.KeepAliveEnabled = false;
+                transport.AllowCookies = false;
+                var binding = new CustomBinding(encoding, transport);
+
+                ICollection<BindingElement> bindingElements = new List<BindingElement>();
+                WebMessageEncodingBindingElement webe = new WebMessageEncodingBindingElement();
+                GZipMessageEncodingBindingElement gzmebe = new GZipMessageEncodingBindingElement(webe);
+                webe.ContentTypeMapper = new MyMapper();
+                bindingElements.Add(gzmebe);
+                bindingElements.Add(transport);
+                CustomBinding customBinding = new CustomBinding(bindingElements);
+
+                //CustomBinding customBinding = new CustomBinding(new WebHttpBinding());
+                //for (int i = 0; i < customBinding.Elements.Count; i++) {
+                //    if (customBinding.Elements[i] is WebMessageEncodingBindingElement) {
+                //        WebMessageEncodingBindingElement webBE = (WebMessageEncodingBindingElement)customBinding.Elements[i];
+                //        //webBE.ContentTypeMapper = new MyMapper();
+                //        //customBinding.Elements[i] = new GZipMessageEncodingBindingElement(webBE);
+                //    } else if (customBinding.Elements[i] is TransportBindingElement) {
+                //        ((TransportBindingElement)customBinding.Elements[i]).MaxReceivedMessageSize = int.MaxValue;
+                //    }
+                //}
+                
+
+                var endpoint = _serviceHost.AddServiceEndpoint(typeof(IWarServices), customBinding, "");
+                endpoint.Behaviors.Add(new WebHttpBehavior());
+                endpoint.Behaviors.Add(new GZipBehavior());
+
                 _serviceHost.Open();
+
+                Console.WriteLine("ServiceHost singleton is:" + _serviceHost.SingletonInstance);
 
                 Console.WriteLine("Open Press Key to close");
                 Console.ReadKey();

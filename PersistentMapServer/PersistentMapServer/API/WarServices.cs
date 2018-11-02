@@ -1,5 +1,6 @@
 ﻿using BattleTech;
 using PersistentMapAPI.Objects;
+using PersistentMapServer;
 using PersistentMapServer.Attribute;
 using PersistentMapServer.Objects;
 using System;
@@ -12,6 +13,7 @@ using System.ServiceModel.Activation;
 namespace PersistentMapAPI {
 
     // Implementation of the current service methods used 
+    [InstanceProviderServiceBehavior]
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple, IncludeExceptionDetailInFaults = true)]
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class WarServices : API.DeprecatedWarServices {
