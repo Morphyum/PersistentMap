@@ -213,6 +213,8 @@ namespace PersistentMapClient {
                 }
 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_requestUrl);
+                request.AutomaticDecompression = DecompressionMethods.GZip;
+                request.AllowAutoRedirect = true;
                 request.Method = _requestMethod;
                 request.ContentType = "application/json; charset=utf-8";
                 request.Timeout = 30000; // 30s connection timeout
