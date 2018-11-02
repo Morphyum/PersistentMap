@@ -13,5 +13,6 @@
         public int MaxPlanetSupport = 20;
         public int MaxRep = 30;
         public bool Debug = false;
+        public string AdminKey = null;
     }
 }
