@@ -12,7 +12,7 @@ namespace PersistentMapServer.Worker {
      *  disk periodically. Currently manages backups for:
      *    * StarMap (and derived objects)
      */ 
-    class BackupWorker {
+    public class BackupWorker {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -35,7 +35,7 @@ namespace PersistentMapServer.Worker {
                 DateTime now = DateTime.UtcNow;
                 if (now.Subtract(backupTimeSpan) > lastBackupTime) {
                     logger.Debug("Performing scheduled backup");
-                    SaveStarMap();
+                    PeriodicBackup();
                     lastBackupTime = now;
                 }
 
@@ -53,26 +53,40 @@ namespace PersistentMapServer.Worker {
             logger.Info("Performing backups before process exit");
 
             logger.Info("Saving current StarMap");
-            SaveStarMap();
+            PeriodicBackup();
 
             lastBackupTime = DateTime.UtcNow;
             Thread.Sleep(10 * 1000);
         }
 
-        private static void SaveStarMap() {
+        private static void PeriodicBackup() {
             // Create the backup path if it doesn't exist
             (new FileInfo(Helper.currentMapFilePath)).Directory.Create();
             StarMap mapToSave = StarMapBuilder.Build();
 
+            SaveAsCurrent(mapToSave);
+            SaveAsBackup(mapToSave);
+        }
+
+        public static void SaveAsCurrent(StarMap mapToWrite) {
+            // Create the backup path if it doesn't exist
+            (new FileInfo(Helper.currentMapFilePath)).Directory.Create();
+
             // Write the map as current.json
-            string json = JsonConvert.SerializeObject(mapToSave);
+            string json = JsonConvert.SerializeObject(mapToWrite);
             logger.Debug("Writing current.json");
-            using (StreamWriter writer = new StreamWriter(Helper.currentMapFilePath, false)) {                
+            using (StreamWriter writer = new StreamWriter(Helper.currentMapFilePath, false)) {
                 writer.Write(json);
             }
+        }
 
-            // Write an additional backup file that's timestamped            
+        public static void SaveAsBackup(StarMap mapToWrite) {
+            // Create the backup path if it doesn't exist
+            (new FileInfo(Helper.currentMapFilePath)).Directory.Create();
+
+            // Writes the map as yyyy-dd-M--HH-mm-ss.json
             string backupPath = Helper.backupMapFilePath + DateTime.UtcNow.ToString(Helper.DateFormat) + ".json";
+            string json = JsonConvert.SerializeObject(mapToWrite);
             logger.Debug($"Writing backup file {backupPath}");
             using (StreamWriter writer = new StreamWriter(backupPath, false)) {
                 writer.Write(json);

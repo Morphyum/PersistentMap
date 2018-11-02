@@ -57,6 +57,10 @@ namespace PersistentMapAPI {
         [WebGet(UriTemplate = Routing.LoadTestData, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         void LoadTestData();
 
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = Routing.ResetStarMap, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        string ResetStarMap();
+
         //DEPRECATED
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = Routing.PostPurchaseForFactionDepricated, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
@@ -83,8 +87,6 @@ namespace PersistentMapAPI {
         [WebGet(UriTemplate = Routing.PostMissionResultDepricated, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult);
 
-        /*[OperationContract]
-         [WebInvoke(Method = "POST", UriTemplate = Routing.ResetStarMap, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-         string ResetStarMap();*/
+
     }
 }
