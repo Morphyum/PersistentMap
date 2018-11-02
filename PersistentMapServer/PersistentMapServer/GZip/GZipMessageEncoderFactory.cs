@@ -35,7 +35,6 @@ namespace PersistentMapServer {
         }
 
         class GZipMessageEncoder : MessageEncoder {
-            static string GZipContentType = "application/x-gzip";
 
             //This implementation wraps an inner encoder that actually converts a WCF Message
             //into textual XML, binary XML or some other format. This implementation then compresses the results.
