@@ -1,5 +1,6 @@
 ﻿using PersistentMapAPI.Objects;
 using PersistentMapServer.Attribute;
+using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,8 @@ namespace PersistentMapAPI.API {
 
     // Container to hold deprecated methods and keep them out of the main service class.
     public abstract class AdminWarServices : DeprecatedWarServices {
+
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         // Helper method to return data on current data sizes. Intended to help determine if some objects are growing out of bounds.
         [AdminKeyRequired]
@@ -36,7 +39,13 @@ namespace PersistentMapAPI.API {
             }
         }
 
-        
+        [AdminKeyRequired]
+        public override string ResetStarMap() {
+            logger.Warn("Resetting StarMap!");
+            StarMapBuilder.Reset();
+            logger.Info("Reset of StarMap complete.");
+            return "Reset Successfull";
+        }
 
     }
 }
