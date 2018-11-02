@@ -7,10 +7,7 @@ namespace PersistentMapServer.Attribute {
 
         public const string HeaderName = "X-RT-PMS-ADMIN-KEY";
 
-        public const string HeaderValue = "SmoothStones";
-
-        public AdminKeyRequiredAttribute() {
-        }
+        public AdminKeyRequiredAttribute() {}
 
     }
 }

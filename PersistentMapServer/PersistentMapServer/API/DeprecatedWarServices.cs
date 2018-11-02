@@ -24,6 +24,7 @@ namespace PersistentMapAPI.API {
         public abstract ServiceDataSnapshot GetServiceDataSnapshot();
         public abstract Dictionary<string, UserInfo> GetConnections();
         public abstract void LoadTestData();
+        public abstract string ResetStarMap();
 
         public System PostMissionResultDeprecated(string employer, string target, string systemName, string mresult) {
             logger.Warn("WARNING: Deprecated method invoked: PostMissionResultDeprecated");

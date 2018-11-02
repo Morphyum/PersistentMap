@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PersistentMapAPI;
+using PersistentMapServer.Worker;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,6 +42,17 @@ namespace PersistentMapServer.Objects {
                 }
             }
             return Holder.currentMap;
+        }
+
+        public static void Reset() {
+            lock(_deserializationLock) {
+                lock (_updateLock) {
+                    logger.Info("Backing up existing starmap");
+                    BackupWorker.SaveAsBackup(Holder.currentMap);
+                    Holder.currentMap = null;
+                    Holder.currentMap = initializeNewMap();
+                }
+            }
         }
 
         // Find all of the players that have been active within N minutes. Return their UserInfos keyed by system name

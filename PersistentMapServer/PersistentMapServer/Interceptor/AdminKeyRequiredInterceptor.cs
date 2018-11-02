@@ -21,12 +21,13 @@ namespace PersistentMapServer.Interceptor {
             foreach (System.Attribute attribute in invocation.GetConcreteMethod().GetCustomAttributes(false)) {
                 if (attribute.GetType() == typeof(AdminKeyRequiredAttribute)) {
                     // Method is decorated 
+                    var settings = Helper.LoadSettings();
                     var properties = OperationContext.Current.IncomingMessageProperties;
                     var property = properties[HttpRequestMessageProperty.Name] as HttpRequestMessageProperty;
                     WebHeaderCollection headers = property.Headers;
                     var headerValue = headers != null && headers.Get(AdminKeyRequiredAttribute.HeaderName) != null ?
                         headers.Get(AdminKeyRequiredAttribute.HeaderName) : "";
-                    if (!headerValue.Equals(AdminKeyRequiredAttribute.HeaderValue)) {
+                    if (!headerValue.Equals(settings.AdminKey)) {
                         // Header value doesn't match, block access. Otherwise, let it through
                         preventMethodInvocation = true;
                     }              
