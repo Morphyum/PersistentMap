@@ -35,7 +35,9 @@ namespace PersistentMapServer {
             // Create an AOP proxy object that we can hang Castle.DynamicProxies upon. These are useful for operations across the whole
             //   of the service, or for when we need to fail a message in a reasonable way. 
             var proxy = new Castle.DynamicProxy.ProxyGenerator()
-                .CreateClassProxyWithTarget<WarServices>(warServices, new UserQuotaInterceptor());
+                .CreateClassProxyWithTarget<WarServices>(warServices, new Castle.DynamicProxy.IInterceptor[] {
+                        new UserQuotaInterceptor(), new AdminKeyRequiredInterceptor()
+                });
             return proxy;
         }
 

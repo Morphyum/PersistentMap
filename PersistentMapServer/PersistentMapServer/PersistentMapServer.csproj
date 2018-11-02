@@ -68,10 +68,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\AdminWarServices.cs" />
     <Compile Include="API\DeprecatedWarServices.cs" />
     <Compile Include="API\IWarServices.cs" />
     <Compile Include="API\Routing.cs" />
     <Compile Include="API\WarServices.cs" />
+    <Compile Include="Attribute\AdminKeyAttribute.cs" />
     <Compile Include="Attribute\UserQuotaAttribute.cs" />
     <Compile Include="Behavior\InstanceProviderServiceBehavior.cs" />
     <Compile Include="Behavior\GZipBehavior.cs" />
@@ -83,6 +85,7 @@
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />
     <Compile Include="Interceptor\UserQuotaInterceptor.cs" />
+    <Compile Include="Interceptor\AdminKeyRequiredInterceptor.cs" />
     <Compile Include="MessageInspector\CorsWildcardInspector.cs" />
     <Compile Include="MessageInspector\RequestDurationLoggingInspector.cs" />
     <Compile Include="Objects\ServiceDataSnapshot.cs" />
@@ -92,7 +95,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\Helper.cs" />
     <Compile Include="Util\Holder.cs" />
-    <Compile Include="Util\Logger.cs" />
     <Compile Include="Util\Settings.cs" />
     <Compile Include="Worker\StarMapBackupWorker.cs" />
   </ItemGroup>

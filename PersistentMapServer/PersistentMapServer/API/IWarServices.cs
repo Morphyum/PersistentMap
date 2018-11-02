@@ -50,6 +50,10 @@ namespace PersistentMapAPI {
         ServiceDataSnapshot GetServiceDataSnapshot();
 
         [OperationContract]
+        [WebGet(UriTemplate = Routing.GetConnections, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        Dictionary<string, UserInfo> GetConnections();
+
+        [OperationContract]
         [WebGet(UriTemplate = Routing.LoadTestData, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         void LoadTestData();
 

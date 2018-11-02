@@ -2,7 +2,6 @@ using PersistentMapAPI;
 using PersistentMapServer.Behavior;
 using PersistentMapServer.Worker;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
@@ -76,6 +75,7 @@ namespace PersistentMapServer {
                 var endpoint = _serviceHost.AddServiceEndpoint(typeof(IWarServices), customBinding, "");
                 endpoint.Behaviors.Add(new WebHttpBehavior());
                 endpoint.Behaviors.Add(new GZipBehavior());
+
                 _serviceHost.Open();
 
                 Console.WriteLine("Open Press Key to close");

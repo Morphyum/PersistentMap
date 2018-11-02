@@ -75,7 +75,7 @@ namespace PersistentMapServer.Objects {
 
         // Create a new StarMap from InnerSphereMap system data
         private static StarMap initializeNewMap() {
-            logger.Info("Initializing map from InnerSphereMap system data.");
+            logger.Warn("Initializing map from InnerSphereMap system data.");
             StarMap map = new StarMap();
             map.systems = new List<PersistentMapAPI.System>();
 
