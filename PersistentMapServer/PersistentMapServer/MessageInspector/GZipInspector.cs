@@ -5,6 +5,9 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 
 namespace PersistentMapServer.MessageInspector {
+    /* MessageInpector that looks for requests that contain Accept-Encoding: gzip header. If that's set, returns the 
+     * response compressed.
+     */
     public class GZipInspector : IDispatchMessageInspector {
         public object AfterReceiveRequest(ref Message request, IClientChannel channel, System.ServiceModel.InstanceContext instanceContext) {
             try {

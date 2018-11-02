@@ -3,14 +3,13 @@
 //----------------------------------------------------------------
 
 using System;
-using System.Configuration;
 using System.ServiceModel.Channels;
-using System.ServiceModel.Configuration;
 using System.ServiceModel.Description;
-using System.Text;
 using System.Xml;
 
+// Most of this is stolen from the Microsoft examples, with some refinements.
 namespace PersistentMapServer {
+
     // This is constants for GZip message encoding policy.
     static class GZipMessageEncodingPolicyConstants {
         public const string GZipEncodingName = "GZipEncoding";

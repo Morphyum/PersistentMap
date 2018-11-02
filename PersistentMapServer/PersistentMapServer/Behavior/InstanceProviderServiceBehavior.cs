@@ -8,7 +8,10 @@ using System.ServiceModel.Dispatcher;
 
 namespace PersistentMapServer {
 
-    public class InstanceProviderServiceBehaviorAttribute : System.Attribute, IServiceBehavior {
+    /* Provides a proxy-wrapped version of WarServices when the ServiceHost loads. This indirection is necessary
+     * to allow customization of the ServiceEndpoint to allow GZIp behaviors. 
+     */
+    public class InstanceProviderServiceBehavior : IServiceBehavior {
         public void AddBindingParameters(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase, Collection<ServiceEndpoint> endpoints, BindingParameterCollection bindingParameters) {}
 
         public void ApplyDispatchBehavior(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase) {
@@ -16,14 +19,6 @@ namespace PersistentMapServer {
             var dispatchRuntime = cd.Endpoints[0].DispatchRuntime;
             dispatchRuntime.SingletonInstanceContext = new InstanceContext(serviceHostBase);
             dispatchRuntime.InstanceProvider = new WarServiceInstanceProvider();
-
-            //foreach (ChannelDispatcher cd in serviceHostBase.ChannelDispatchers) {
-            //    foreach (EndpointDispatcher ed in cd.Endpoints) {
-            //        if (!ed.IsSystemEndpoint) {
-            //            ed.DispatchRuntime.InstanceProvider = new WarServiceInstanceProvider();
-            //        }
-            //    }
-            //}
         }
 
         public void Validate(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase) {}

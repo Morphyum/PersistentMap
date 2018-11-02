@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
@@ -51,22 +50,13 @@ namespace PersistentMapServer {
                 innerEncoder = messageEncoder;
             }
 
-            //public override string CharSet
-            //{
-            //    get { return ""; }
-            //}
-
             public override string ContentType {
-                //get { return innerEncoder.ContentType; }
-                //get { return GZipContentType; }
                 // Has to be hard-coded, because it's apparently pulled before the messageEncoder fires
                 get { return "application/json; charset=utf-8"; }
             }
 
             public override string MediaType {
                 get { return innerEncoder.MediaType; }
-                //get { return GZipContentType; }
-                //get { return innerEncoder.MediaType; }
             }
 
             public override bool IsContentTypeSupported(string contentType) {
@@ -86,7 +76,6 @@ namespace PersistentMapServer {
                 using (GZipStream gzStream = new GZipStream(memoryStream, CompressionMode.Compress, true)) {
                     gzStream.Write(buffer.Array, messageOffset, buffer.Count);
                 }
-
 
                 byte[] compressedBytes = memoryStream.ToArray();
                 byte[] bufferedBytes = bufferManager.TakeBuffer(compressedBytes.Length);
@@ -129,13 +118,16 @@ namespace PersistentMapServer {
             }
 
 
+            // TODO: I've disabled reading compressed messages because we don't currently need this. If we need to start sending gzip'd messages
+            // from the client, we'd need to re-add this
             //One of the two main entry points into the encoder. Called by WCF to decode a buffered byte array into a Message.
             public override Message ReadMessage(ArraySegment<byte> buffer, BufferManager bufferManager, string contentType) {
+                //TODO: Decompression logic that is disabled
                 //Decompress the buffer
-                // TODO: Make conditional
                 //ArraySegment<byte> decompressedBuffer = DecompressBuffer(buffer, bufferManager);
                 //Use the inner encoder to decode the decompressed buffer
                 //Message returnMessage = innerEncoder.ReadMessage(decompressedBuffer, bufferManager);
+
                 Message returnMessage = innerEncoder.ReadMessage(buffer, bufferManager);
                 returnMessage.Properties.Encoder = this;
                 return returnMessage;
@@ -146,16 +138,10 @@ namespace PersistentMapServer {
                 //Use the inner encoder to encode a Message into a buffered byte array
                 ArraySegment<byte> buffer = innerEncoder.WriteMessage(message, maxMessageSize, bufferManager, messageOffset);
 
-                IncomingWebRequestContext request = WebOperationContext.Current.IncomingRequest;
-                WebHeaderCollection headers = request.Headers;
-                string header = headers["Accept-Encoding"];
-
                 WebOperationContext context = WebOperationContext.Current;
                 OutgoingWebResponseContext responseContext = WebOperationContext.Current.OutgoingResponse;
-                //bool compressResponse = responseContext.Headers[HttpResponseHeader.ContentEncoding] == "gzip";
                 bool compressResponse = OperationContext.Current.Extensions.OfType<CompressOutputExtension>().Any();
                 return compressResponse ? CompressBuffer(buffer, bufferManager, messageOffset) : buffer;
-
             }
 
             public override Message ReadMessage(System.IO.Stream stream, int maxSizeOfHeaders, string contentType) {
