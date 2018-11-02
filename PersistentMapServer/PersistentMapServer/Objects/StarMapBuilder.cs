@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PersistentMapAPI;
+using PersistentMapServer.Worker;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,10 +34,25 @@ namespace PersistentMapServer.Objects {
                         system.activePlayers = systemUsers.Count;
                         system.companies = systemUsers.Select(p => p.companyName).ToList();
                         logger.Trace($"Mapping {systemUsers.Count} activePlayers to {system} system.");
+                    } else {
+                        // Remove any expired records
+                        system.activePlayers = 0;
+                        system.companies = new List<string>();
                     }
                 }
             }
             return Holder.currentMap;
+        }
+
+        public static void Reset() {
+            lock(_deserializationLock) {
+                lock (_updateLock) {
+                    logger.Info("Backing up existing starmap");
+                    BackupWorker.SaveAsBackup(Holder.currentMap);
+                    Holder.currentMap = null;
+                    Holder.currentMap = initializeNewMap();
+                }
+            }
         }
 
         // Find all of the players that have been active within N minutes. Return their UserInfos keyed by system name
@@ -71,7 +87,7 @@ namespace PersistentMapServer.Objects {
 
         // Create a new StarMap from InnerSphereMap system data
         private static StarMap initializeNewMap() {
-            logger.Info("Initializing map from InnerSphereMap system data.");
+            logger.Warn("Initializing map from InnerSphereMap system data.");
             StarMap map = new StarMap();
             map.systems = new List<PersistentMapAPI.System>();
 

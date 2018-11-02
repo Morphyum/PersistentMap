@@ -3,8 +3,6 @@ using PersistentMapAPI;
 using PersistentMapServer.Attribute;
 using System;
 using System.Net;
-using System.ServiceModel;
-using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 
 namespace PersistentMapServer.Interceptor {
@@ -22,99 +20,89 @@ namespace PersistentMapServer.Interceptor {
 
         public void Intercept(IInvocation invocation) {
 
-            string requestIP = mapRequestIP();
-            string obfuscatedIP = HashAndTruncate(requestIP);
-
-            bool preventMethodInvocation = false;
+            UserQuotaAttribute quotaAttribute = null;
             foreach (System.Attribute attribute in invocation.GetConcreteMethod().GetCustomAttributes(false)) {
                 if (attribute.GetType() == typeof(UserQuotaAttribute)) {
-                    // Method is decorated with UserQuotaAttribute
-
-                    if (Holder.connectionStore.ContainsKey(requestIP) && Holder.connectionStore[requestIP].LastDataSend != null) {
-                        // We have seen this IP before
-                        UserInfo info = Holder.connectionStore[requestIP];
-                        PersistentMapAPI.Settings settings = Helper.LoadSettings();
-                        DateTime now = DateTime.UtcNow;
-                        DateTime blockedUntil = info.LastDataSend.AddMinutes(settings.minMinutesBetweenPost);
-                        TimeSpan delta = now.Subtract(info.LastDataSend);
-                        if (now >= blockedUntil) {
-                            // The user hasn't sent a message within the time limit, so just note it when tracing is enabled
-                            logger.Trace($"IP:{(settings.Debug ? requestIP : obfuscatedIP)} last send a request {delta.ToString()} ago.");
-                        } else {
-                            // User is flooding. We should send back a 429 (Too Many Requests) but WCF isn't there yet. Send back a 403 for now.
-                            // TODO: Verify this breaks the client as expected - with an error (cannot upload)
-                            // TOOD: Add a better error message on the client for this case
-                            if (((UserQuotaAttribute)attribute).enforcementPolicy == UserQuotaAttribute.EnforcementEnum.Block) {
-                                WebOperationContext context = WebOperationContext.Current;
-                                context.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
-                                context.OutgoingResponse.StatusDescription = $"Too many requests - try again later.";
-                                logger.Info($"IP: Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
-                                preventMethodInvocation = true;
-                            } else {
-                                // The attribute is marked as log only, so log a warning
-                                logger.Warn($"IP: Potential flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last request was {info.LastDataSend.ToString()} which was {delta.Seconds}s ago.");
-                            }
-                        }
-                    } else {
-                        // We haven't seen this IP before, so go ahead and let it through
-                        logger.Trace($"IP: Unrecognized IP, so allowing request.");
-                    }                    
+                    quotaAttribute = (UserQuotaAttribute)attribute;
                 }
             }
-            if (preventMethodInvocation) {
-                // Prevent the method from executing
-                invocation.ReturnValue = null;
-            } else {
-                // Add or set the userInfo
-                UserInfo info;
-                if (!Holder.connectionStore.ContainsKey(requestIP)) {
-                    info = new UserInfo();
-                    // Trust that any request beyond this adds the company name and lastSystemFoughtAt attributes. 
-                    // TODO: Improve this somehow, to identify users?
-                    info.lastSystemFoughtAt = "";
-                    info.companyName = "";                
-                    info.LastDataSend = DateTime.UtcNow;
-                    Holder.connectionStore.Add(requestIP, info);
+
+            if (quotaAttribute != null) {
+                UserQuotaAttribute.EnforcementEnum enforcementPolicy = quotaAttribute.enforcementPolicy;
+                // Method is decorated with UserQuotaAttribute
+                bool requestBlocked = CheckForFlooding(invocation, enforcementPolicy == UserQuotaAttribute.EnforcementEnum.Block);
+                if (requestBlocked) {
+                    // Prevent the method from executing
+                    WebOperationContext context = WebOperationContext.Current;
+                    context.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
+                    context.OutgoingResponse.StatusDescription = $"Too many requests - try again later.";
+                    invocation.ReturnValue = null;
                 } else {
-                    info = Holder.connectionStore[requestIP];
+                    // Add or set the userInfo
+                    string requestIP = Helper.mapRequestIP();
+
+                    UserInfo info;
+                    if (!Holder.connectionStore.ContainsKey(requestIP)) {
+                        // Trust that any request beyond this adds the company name and lastSystemFoughtAt attributes. 
+                        // TODO: Improve this somehow, to identify users?
+                        info = new UserInfo();
+                        info.lastSystemFoughtAt = "";
+                        info.companyName = "";
+                    } else {
+                        info = Holder.connectionStore[requestIP];
+                    }
                     info.LastDataSend = DateTime.UtcNow;
                     Holder.connectionStore[requestIP] = info;
+
+                    // Allow the method to execute normally
+                    invocation.Proceed();
                 }
-                
-                // Allow the method to execute normally
+            } else {
+                // No attribute, just continue
                 invocation.Proceed();
             }
-        }
+        }   
 
-        // Stolen from https://stackoverflow.com/questions/3984138/hash-string-in-c-sharp
-        internal static string HashAndTruncate(string text) {
-            if (String.IsNullOrEmpty(text))
-                return String.Empty;
+        private static bool CheckForFlooding(IInvocation invocation, Boolean blockWhenFlooding) {
 
-            using (var sha = new System.Security.Cryptography.SHA256Managed()) {
-                byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
-                byte[] hash = sha.ComputeHash(textData);
-                String convertedHash = BitConverter.ToString(hash).Replace("-", String.Empty);
-                String truncatedHash = convertedHash.Length > 12 ? convertedHash.Substring(0, 11) : convertedHash.Substring(0, convertedHash.Length);
-                return truncatedHash + "...";
-            }
-        }
+            bool blockRequest = false;
 
-        // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc
-        protected string mapRequestIP() {
-            OperationContext context = OperationContext.Current;
-            MessageProperties properties = context.IncomingMessageProperties;
-            RemoteEndpointMessageProperty endpoint = properties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
-            string address = string.Empty;
-            if (properties.Keys.Contains(HttpRequestMessageProperty.Name)) {
-                HttpRequestMessageProperty endpointLoadBalancer = properties[HttpRequestMessageProperty.Name] as HttpRequestMessageProperty;
-                if (endpointLoadBalancer != null && endpointLoadBalancer.Headers["X-Forwarded-For"] != null)
-                    address = endpointLoadBalancer.Headers["X-Forwarded-For"];
+            string requestIP = Helper.mapRequestIP();
+            string obfuscatedIP = Helper.HashAndTruncate(requestIP);
+
+            if (Holder.connectionStore.ContainsKey(requestIP) && Holder.connectionStore[requestIP].LastDataSend != null) {
+                // We have seen this IP before
+                PersistentMapAPI.Settings settings = Helper.LoadSettings();
+
+                UserInfo info = Holder.connectionStore[requestIP];
+                string lastDateSendISO = info.LastDataSend.ToString("u");
+                DateTime now = DateTime.UtcNow;
+                DateTime blockedUntil = info.LastDataSend.AddMinutes(settings.minMinutesBetweenPost);
+                TimeSpan delta = now.Subtract(info.LastDataSend);
+                string deltaS = $"{(int)delta.TotalMinutes}:{delta.Seconds:00}";
+
+                if (now >= blockedUntil) {
+                    // The user hasn't sent a message within the time limit, so just note it when tracing is enabled
+                    logger.Trace($"IP:{(settings.Debug ? requestIP : obfuscatedIP)} last send a request {deltaS} ago.");
+                } else {
+                    // User is flooding. We should send back a 429 (Too Many Requests) but WCF isn't there yet. Send back a 403 for now.
+                    // TODO: Verify this breaks the client as expected - with an error (cannot upload)
+                    // TOOD: Add a better error message on the client for this case
+                    string floodingMsg = $"IP: Flooding from IP:({(settings.Debug ? requestIP : obfuscatedIP)}) - last successful request was ({lastDateSendISO}) which was {deltaS} ago.";
+                    if (blockWhenFlooding) {
+                        logger.Info(floodingMsg);
+                        blockRequest = true;
+                    } else {
+                        // The attribute is marked as log only, so log a warning
+                        logger.Warn(floodingMsg);
+                    }
+                }
+            } else {
+                // We haven't seen this IP before, so go ahead and let it through
+                logger.Trace($"IP: Unrecognized IP, so allowing request.");
             }
-            if (string.IsNullOrEmpty(address)) {
-                address = endpoint.Address;
-            }
-            return address;
+
+            return blockRequest;            
         }
     }
 }

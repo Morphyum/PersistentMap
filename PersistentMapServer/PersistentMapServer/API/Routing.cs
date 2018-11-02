@@ -2,7 +2,6 @@
     public static class Routing {
         public const string GetStarMap = "/StarMap/";
         public const string GetSystem = "/StarMap/System/{name}";
-        public const string ResetStarMap = "/StarMap/Reset";
         public const string GetMissionResults = "/Mission/Results/?MinutesBack={MinutesBack}&MaxResults={MaxResults}";
         public const string GetActivePlayers = "Users/Active/?MinutesBack={MinutesBack}";
         public const string GetStartupTime = "/Info/StartupTime";
@@ -13,7 +12,9 @@
         
         // Admin functions
         public const string GetServiceDataSnapshot = "/Admin/ServiceDataSnapshot";
+        public const string GetConnections = "/Admin/Connections";
         public const string LoadTestData = "/Admin/loadTestData";
+        public const string ResetStarMap = "/Admin/StarMap/Reset";
 
         //DEPRECATED
         public const string PostPurchaseForFactionDepricated = "/Buy/?Faction={Faction}&ID={ID}";
