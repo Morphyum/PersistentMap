@@ -34,7 +34,7 @@ namespace PersistentMapServer {
                 heartbeatWorker.WorkerSupportsCancellation = true;
                 heartbeatWorker.DoWork += new DoWorkEventHandler(HeartBeatMonitor.DoWork);
                 heartbeatWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(HeartBeatMonitor.RunWorkerCompleted);
-                //heartbeatWorker.RunWorkerAsync();
+                heartbeatWorker.RunWorkerAsync();
 
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
