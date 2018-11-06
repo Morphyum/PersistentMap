@@ -22,7 +22,5 @@ namespace PersistentMapAPI {
         // All of the items a faction has for sale
         public static List<FactionShop> factionShops;
 
-        // When the last backup occurred
-        public static DateTime lastBackup = DateTime.MinValue;
     }
 }

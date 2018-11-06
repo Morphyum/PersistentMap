@@ -16,13 +16,9 @@ using PersistentMapServer.Objects;
 namespace PersistentMapAPI {
     public static class Helper {
 
-        public static string currentMapFilePath = $"../Map/current.json";
-        public static string backupMapFilePath = $"../Map/";
+        public static string ShopFileDirectory = $"../Shop/";
         public static string currentShopFilePath = $"../Shop/current.json";
         public static string settingsFilePath = $"../Settings/settings.json";
-        public static string systemDataFilePath = $"../StarSystems/";
-
-        public static readonly string DateFormat = "yyyy-dd-M--HH-mm-ss";
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

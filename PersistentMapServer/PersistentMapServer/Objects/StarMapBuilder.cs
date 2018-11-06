@@ -14,6 +14,9 @@ namespace PersistentMapServer.Objects {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        public static string MapFileDirectory = $"../Map/";
+        public static string systemDataFilePath = $"../StarSystems/";
+
         private static readonly object _deserializationLock = new Object();
         private static readonly object _updateLock = new Object();
 
@@ -44,11 +47,13 @@ namespace PersistentMapServer.Objects {
             return Holder.currentMap;
         }
 
+        // Replace the map with a new map from files
         public static void Reset() {
             lock(_deserializationLock) {
                 lock (_updateLock) {
                     logger.Info("Backing up existing starmap");
-                    BackupWorker.SaveAsBackup(Holder.currentMap);
+                    string mapToSave = JsonConvert.SerializeObject(Holder.currentMap);
+                    BackupWorker.WriteBoth(StarMapBuilder.MapFileDirectory, mapToSave);
                     Holder.currentMap = null;
                     Holder.currentMap = initializeNewMap();
                 }
@@ -73,8 +78,9 @@ namespace PersistentMapServer.Objects {
         // Read the system data from disk, or create a new copy
         private static void readOrInitialize() {
             StarMap mapFromDisk;
-            if (File.Exists(Helper.currentMapFilePath)) {
-                using (StreamReader r = new StreamReader(Helper.currentMapFilePath)) {
+            string mapFilePath = Path.Combine(StarMapBuilder.MapFileDirectory, "current.json");
+            if (File.Exists(mapFilePath)) {
+                using (StreamReader r = new StreamReader(mapFilePath)) {
                     string json = r.ReadToEnd();
                     mapFromDisk = JsonConvert.DeserializeObject<StarMap>(json);
                     Holder.currentMap = mapFromDisk;
@@ -91,7 +97,7 @@ namespace PersistentMapServer.Objects {
             StarMap map = new StarMap();
             map.systems = new List<PersistentMapAPI.System>();
 
-            foreach (string filePaths in Directory.GetFiles(Helper.systemDataFilePath)) {
+            foreach (string filePaths in Directory.GetFiles(StarMapBuilder.systemDataFilePath)) {
                 string originalJson = File.ReadAllText(filePaths);
                 JObject originalJObject = JObject.Parse(originalJson);
                 Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);

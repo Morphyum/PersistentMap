@@ -1,4 +1,5 @@
 ﻿using BattleTech;
+using PersistentMapServer.Worker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +60,7 @@ namespace PersistentMapAPI.Objects {
 
             // server data
             server_startup = Holder.startupTime;
-            server_last_backup = Holder.lastBackup;
+            server_last_backup = BackupWorker.lastBackupTime;
         }
     }
 }
