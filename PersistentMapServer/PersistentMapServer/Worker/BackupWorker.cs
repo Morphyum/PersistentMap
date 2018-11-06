@@ -1,9 +1,7 @@
-﻿using BattleTech;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PersistentMapAPI;
 using PersistentMapServer.Objects;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
@@ -14,7 +12,7 @@ namespace PersistentMapServer.Worker {
     /* BackgroundWorker responsible for backing up in-memory copies of system data and writing it to 
      *  disk periodically. Currently manages backups for:
      *    * StarMap (and derived objects)
-     */ 
+     */
     public class BackupWorker {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -71,19 +69,16 @@ namespace PersistentMapServer.Worker {
             (new FileInfo(StarMapBuilder.MapFileDirectory)).Directory.Create();
 
             // Save the map
-            StarMap mapToSave = StarMapBuilder.Build();
+            var mapToSave = StarMapBuilder.Build();
             string mapAsJson = JsonConvert.SerializeObject(mapToSave);
             logger.Info("Saving StarMap");
             WriteBoth(StarMapBuilder.MapFileDirectory, mapAsJson);
 
             // Save faction inventories
-            // TODO: Replace with builder like starmap
-            if (Holder.factionInventories != null) {
-                var factionInventories = new Dictionary<Faction, List<ShopDefItem>>(Holder.factionInventories);
-                string inventoryAsJson = JsonConvert.SerializeObject(factionInventories);
-                logger.Info("Saving Faction Inventories");
-                WriteBoth(Helper.ShopFileDirectory, inventoryAsJson);
-            }
+            var inventoriesToSave = FactionInventoryBuilder.Build();
+            string inventoryAsJson = JsonConvert.SerializeObject(inventoriesToSave);
+            logger.Info("Saving Faction Inventories");
+            WriteBoth(FactionInventoryBuilder.ShopFileDirectory, inventoryAsJson);
 
             lastBackupTime = DateTime.UtcNow;
         }

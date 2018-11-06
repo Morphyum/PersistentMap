@@ -76,6 +76,7 @@
     <Compile Include="Attribute\AdminKeyAttribute.cs" />
     <Compile Include="Attribute\UserQuotaAttribute.cs" />
     <Compile Include="Interceptor\AdminKeyRequiredInterceptor.cs" />
+    <Compile Include="Objects\FactionInventoryBuilder.cs" />
     <Compile Include="Worker\HeartBeatMonitor.cs" />
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />
