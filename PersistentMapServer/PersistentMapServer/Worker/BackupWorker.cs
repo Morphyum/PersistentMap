@@ -31,7 +31,7 @@ namespace PersistentMapServer.Worker {
         } 
 
         // When the last backup occurred
-        public static DateTime lastBackupTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(10));
+        public static DateTime lastBackupTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(1));
 
         public static void DoWork(object sender, DoWorkEventArgs e) {
             BackgroundWorker bw = sender as BackgroundWorker;
@@ -56,13 +56,14 @@ namespace PersistentMapServer.Worker {
         }
 
         // Invoked when the system is being shutdown
-        public static void ProcessExitHandler(object sender, EventArgs e) {
-            logger.Info("Performing backups before process exit");
+        public static void BackupOnExit() {
+            logger.Info("Performing backups before process exit...");
 
             PeriodicBackup();
 
             lastBackupTime = DateTime.UtcNow;
-            Thread.Sleep(10 * 1000);
+            Thread.Sleep(2 * 1000);
+            logger.Info("Complete!");
         }
 
         private static void PeriodicBackup() {
@@ -93,7 +94,7 @@ namespace PersistentMapServer.Worker {
 
             // Write as current.json
             string currentFilePath = Path.Combine(directory, $"current.json");
-            logger.Debug($"Writing {currentFilePath}");
+            logger.Trace($"Writing current file as {currentFilePath}");
             using (StreamWriter writer = new StreamWriter(currentFilePath, false)) {
                 writer.Write(objectAsJson);
             }
@@ -101,6 +102,7 @@ namespace PersistentMapServer.Worker {
             // Write compressed backup as backup.{dateStamp}.json.gz
             string dateFragment = DateTime.UtcNow.ToString(BackupWorker.DateFormat);
             string backupFilePath = Path.Combine(directory, $"backup.{dateFragment}.json.gz");
+            logger.Trace($"Writing backup file as {backupFilePath}");
             using (FileStream outFile = File.Create(backupFilePath))
             using (GZipStream compress = new GZipStream(outFile, CompressionMode.Compress))
             using (StreamWriter writer = new StreamWriter(compress)) {
