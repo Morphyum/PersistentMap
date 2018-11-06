@@ -44,14 +44,6 @@ namespace PersistentMapServer {
                 backupWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(BackupWorker.RunWorkerCompleted);
                 backupWorker.RunWorkerAsync();
 
-                // Mark events to end on process death
-                AppDomain.CurrentDomain.ProcessExit += (s, e) => {
-                    monitor.disable();
-                    heartbeatWorker.CancelAsync();
-                    backupWorker.CancelAsync();
-                };
-                AppDomain.CurrentDomain.ProcessExit += BackupWorker.ProcessExitHandler;
-
                 WarServices warServices = new WarServices();
                 // Create an AOP proxy object that we can hang Castle.DynamicProxies upon. These are useful for operations across the whole
                 //   of the service, or for when we need to fail a message in a reasonable way. 
@@ -70,11 +62,12 @@ namespace PersistentMapServer {
                 _serviceHost.Close();
                 Console.WriteLine("Connection Closed");
 
-                // TODO: Move to backup worker
-                Helper.SaveCurrentInventories(Helper.LoadCurrentInventories());
-                Console.WriteLine("Shops Saved");
+                // Cleanup any outstanding processes
+                monitor.disable();
+                heartbeatWorker.CancelAsync();
+                backupWorker.CancelAsync();
+                BackupWorker.BackupOnExit();
 
-                Console.ReadKey();
             } catch (Exception e) {
                 Console.WriteLine(e);
                 Console.ReadKey();
