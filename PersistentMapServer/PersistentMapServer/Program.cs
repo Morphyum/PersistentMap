@@ -1,6 +1,7 @@
 using PersistentMapAPI;
 using PersistentMapServer.Behavior;
 using PersistentMapServer.Interceptor;
+using PersistentMapServer.Objects;
 using PersistentMapServer.Worker;
 using System;
 using System.ComponentModel;
@@ -49,6 +50,11 @@ namespace PersistentMapServer {
                 backupWorker.DoWork += new DoWorkEventHandler(BackupWorker.DoWork);
                 backupWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(BackupWorker.RunWorkerCompleted);
                 backupWorker.RunWorkerAsync();
+
+                // Preload the data to allow any necessary initialization to happen
+                StarMapStateManager.Build();
+                FactionInventoryStateManager.Build();
+                PlayerStateManager.Build();
 
                 WarServices warServices = new WarServices();
                 // Create an AOP proxy object that we can hang Castle.DynamicProxies upon. These are useful for operations across the whole
