@@ -16,10 +16,10 @@ namespace PersistentMapServer.Worker {
         public static readonly string DateFormat = "yyyy-MM-ddTHH-mm-ssZ";
 
         // The amount of time after which the files will be pruned
-        private static TimeSpan pruneAfterSpan = TimeSpan.FromHours(12);
+        private static readonly TimeSpan pruneAfterSpan = TimeSpan.FromHours(12);
 
         // The number of days to retain history for
-        private static int MaxRetentionInDays = 30;
+        private static readonly int MaxRetentionInDays = 30;
 
         // When the last pruning occured occurred
         public static DateTime lastPrune = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(1));
