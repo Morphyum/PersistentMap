@@ -1,5 +1,6 @@
 ﻿using BattleTech;
 using Newtonsoft.Json;
+using PersistentMapAPI.Objects;
 using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
@@ -59,6 +60,35 @@ namespace PersistentMapAPI {
                 cachedSettings = settings;
             }
             return settings;
+        }
+
+        // Records a player's mission result in all the places that needs it
+        public static void RecordPlayerActivity(MissionResult mresult, string clientId, string companyName, DateTime resultTime) {
+            // For backwards compatibility, record this in the connectionStore for now.
+            Holder.connectionStore[clientId].companyName = companyName;
+            Holder.connectionStore[clientId].lastSystemFoughtAt = mresult.systemName;
+
+            // For now, the player Id is their IP address
+            var companyActivity = new CompanyActivity {
+                employer = mresult.employer,
+                target = mresult.target,
+                systemId = mresult.systemName,
+                companyName = companyName,
+                resultTime = resultTime,
+                result = mresult.result
+            };
+
+            var history = Holder.playerHistory.SingleOrDefault(x => clientId.Equals(x.Id));
+            if (history == null) {
+                history = new PlayerHistory {
+                    Id = clientId,
+                    lastActive = resultTime
+                };
+            }
+            history.lastActive = resultTime;
+            history.activities.Add(companyActivity);
+
+            Holder.playerHistory.Add(history);
         }
 
         public static List<ShopDefItem> GenerateNewShop(Faction realFaction) {
