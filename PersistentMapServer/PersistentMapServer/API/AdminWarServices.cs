@@ -1,4 +1,5 @@
-﻿using PersistentMapAPI.Objects;
+﻿using BattleTech;
+using PersistentMapAPI.Objects;
 using PersistentMapServer.Attribute;
 using PersistentMapServer.Objects;
 using System;
@@ -34,8 +35,18 @@ namespace PersistentMapAPI.API {
 
             // TODO: Remove after testing
             List<UserInfo> randos = Helper.GenerateFakeActivity();
+            var mresult = new MissionResult {
+                employer = Faction.Steiner,
+                target = Faction.Liao,
+                result = BattleTech.MissionResult.Victory,
+                systemName = "FOOBAR",
+                difficulty = 3,
+                awardedRep = 0,
+                planetSupport = 0,
+            };                 
             foreach (UserInfo rando in randos) {
                 Holder.connectionStore.Add(rando.companyName, rando);
+                Helper.RecordPlayerActivity(mresult, rando.companyName, rando.companyName, DateTime.UtcNow);
             }
         }
 
