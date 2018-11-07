@@ -3,7 +3,7 @@ using System;
 using System.Globalization;
 using System.Runtime.Serialization;
 
-namespace PersistentMapAPI {
+namespace PersistentMapAPI.Objects {
     public class HistoryResult {
         public DateTime? date;
         public string DateString;
