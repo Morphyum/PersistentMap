@@ -13,6 +13,8 @@ namespace PersistentMapAPI.API {
 
         public abstract int GetActivePlayers(string MinutesBack);
         public abstract List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults);
+        public abstract Dictionary<string, List<string>> GetPlayerCompanies();
+        public abstract List<CompanyActivity> GetPlayerActivity(string PlayerId);
         public abstract List<ShopDefItem> GetShopForFaction(string Faction);
         public abstract StarMap GetStarmap();
         public abstract string GetStartupTime();

@@ -38,8 +38,14 @@ namespace PersistentMapAPI {
         public override System PostMissionResult(MissionResult mresult, string companyName) {
             lock (_missionResultLock) {
                 try {
-                    int realDifficulty = Math.Min(10, mresult.difficulty);
+                    // TODO: Update connection data in a cleaner fashion
                     string ip = Helper.mapRequestIP();
+                    DateTime reportTime = DateTime.UtcNow;
+                    // TODO: For now, use the IP as the playerId. In the future, GUID
+                    Helper.RecordPlayerActivity(mresult, ip, companyName, reportTime);
+
+                    // Check to see if the post is suspicious
+                    int realDifficulty = Math.Min(10, mresult.difficulty);
                     int realPlanets = Math.Min(Helper.LoadSettings().MaxPlanetSupport, mresult.planetSupport);
                     int realRep = Math.Min(Helper.LoadSettings().MaxRep, mresult.awardedRep);
                     if ((Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets > 50) {
@@ -50,13 +56,9 @@ namespace PersistentMapAPI {
                             $" with result:({mresult.result})"
                             );
                     }
-                    // TODO: Add unique id (guid?) for each result, to allow easy correlation in the logs?
-                    HistoryResult hresult = new HistoryResult();
-                    hresult.date = DateTime.UtcNow;
-
-                    // TODO: Update connection data in a cleaner fashion
-                    Holder.connectionStore[ip].companyName = companyName;
-                    Holder.connectionStore[ip].lastSystemFoughtAt = mresult.systemName;
+                    HistoryResult hresult = new HistoryResult {
+                        date = reportTime
+                    };
 
                     logger.Info($"New Mission Result for ({companyName}) on ({mresult.systemName})");
                     logger.Debug($"New MissionResult - ({companyName}) fought for ({mresult.employer}) against ({mresult.target})" +
@@ -127,7 +129,6 @@ namespace PersistentMapAPI {
             }
         }
 
-        // Thread-safe; returns copy of list
         // TODO: Test with large # of results
         public override List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults) {
             List<HistoryResult> resultList = Holder.resultHistory
@@ -138,12 +139,35 @@ namespace PersistentMapAPI {
             return resultList;
         }
 
-        // Thread-safe; returns count only
         // TODO: Test with large # of 
         public override int GetActivePlayers(string MinutesBack) {
             return Holder.connectionStore
                 .Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow)
                 .Count();
+        }
+
+        // Returns all the companies that are known. Values are the playerIds that have used that company name.
+        public override Dictionary<string, List<string>> GetPlayerCompanies() {
+
+            var playerCompanies = new Dictionary<string, HashSet<string>>();
+            foreach (PlayerHistory history in Holder.playerHistory) {
+                foreach (string companyName in history.CompanyNames()) {
+                    if (playerCompanies.ContainsKey(companyName)) {
+                        playerCompanies[companyName].Add(history.Id);
+                    } else {
+                        playerCompanies[companyName] = new HashSet<string> { history.Id };
+                    }
+                }
+            }
+
+            return playerCompanies.ToDictionary(item => item.Key, item => item.Value.ToList());
+        }
+
+        public override List<CompanyActivity> GetPlayerActivity(string PlayerId) {
+            var playerHistory = Holder.playerHistory.SingleOrDefault(x => x.Id.Equals(PlayerId));
+            return playerHistory != null ? 
+                playerHistory.activities.ToList() 
+                : new List<CompanyActivity>();
         }
 
         // Thread-safe; returns simple value.
