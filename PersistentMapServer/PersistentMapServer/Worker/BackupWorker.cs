@@ -66,20 +66,24 @@ namespace PersistentMapServer.Worker {
 
         private static void PeriodicBackup() {
             // Create the backup path if it doesn't exist
-            (new FileInfo(StarMapBuilder.MapFileDirectory)).Directory.Create();
+            (new FileInfo(StarMapStateManager.MapFileDirectory)).Directory.Create();
 
             // Save the map
-            var mapToSave = StarMapBuilder.Build();
+            var mapToSave = StarMapStateManager.Build();
             string mapAsJson = JsonConvert.SerializeObject(mapToSave);
             logger.Info("Saving StarMap");
-            WriteBoth(StarMapBuilder.MapFileDirectory, mapAsJson);
+            WriteBoth(StarMapStateManager.MapFileDirectory, mapAsJson);
 
             // Save faction inventories
-            var inventoriesToSave = FactionInventoryBuilder.Build();
+            var inventoriesToSave = FactionInventoryStateManager.Build();
             string inventoryAsJson = JsonConvert.SerializeObject(inventoriesToSave);
             logger.Info("Saving Faction Inventories");
-            WriteBoth(FactionInventoryBuilder.ShopFileDirectory, inventoryAsJson);
+            WriteBoth(FactionInventoryStateManager.ShopFileDirectory, inventoryAsJson);
 
+            // Save player histories
+            var historiesToSave = PlayerStateManager.Build();
+            string historyAsJson = JsonConvert.SerializeObject(historiesToSave);
+            logger.Info("Saving player history");
             lastBackupTime = DateTime.UtcNow;
         }
 

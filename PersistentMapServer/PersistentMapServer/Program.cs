@@ -38,6 +38,12 @@ namespace PersistentMapServer {
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
+                BackgroundWorker playerHistoryPruner = new BackgroundWorker();
+                playerHistoryPruner.WorkerSupportsCancellation = true;
+                playerHistoryPruner.DoWork += new DoWorkEventHandler(PlayerHistoryPruner.DoWork);
+                playerHistoryPruner.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PlayerHistoryPruner.RunWorkerCompleted);
+                playerHistoryPruner.RunWorkerAsync();
+
                 BackgroundWorker backupWorker = new BackgroundWorker();
                 backupWorker.WorkerSupportsCancellation = true;
                 backupWorker.DoWork += new DoWorkEventHandler(BackupWorker.DoWork);
@@ -64,7 +70,12 @@ namespace PersistentMapServer {
 
                 // Cleanup any outstanding processes
                 monitor.disable();
+
                 heartbeatWorker.CancelAsync();
+
+                playerHistoryPruner.CancelAsync();
+                PlayerHistoryPruner.PruneOnExit();
+
                 backupWorker.CancelAsync();
                 BackupWorker.BackupOnExit();
 
