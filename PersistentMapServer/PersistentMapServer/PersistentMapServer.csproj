@@ -77,6 +77,9 @@
     <Compile Include="Attribute\UserQuotaAttribute.cs" />
     <Compile Include="Interceptor\AdminKeyRequiredInterceptor.cs" />
     <Compile Include="Objects\FactionInventoryBuilder.cs" />
+    <Compile Include="Objects\FactionShop.cs" />
+    <Compile Include="Objects\Player.cs" />
+    <Compile Include="Objects\HistoryResult.cs" />
     <Compile Include="Worker\HeartBeatMonitor.cs" />
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />
