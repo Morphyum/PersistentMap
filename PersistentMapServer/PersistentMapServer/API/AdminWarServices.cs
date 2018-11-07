@@ -52,7 +52,7 @@ namespace PersistentMapAPI.API {
         [AdminKeyRequired]
         public override string ResetStarMap() {
             logger.Warn("Resetting StarMap!");
-            StarMapBuilder.Reset();
+            StarMapStateManager.Reset();
             logger.Info("Reset of StarMap complete.");
             return "Reset Successfull";
         }

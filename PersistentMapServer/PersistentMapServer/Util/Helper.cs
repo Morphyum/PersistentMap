@@ -94,7 +94,7 @@ namespace PersistentMapAPI {
             List<ShopDefItem> newShop = new List<ShopDefItem>();
             Random rand = new Random();
             if (Holder.factionInventories == null) {
-                Holder.factionInventories = FactionInventoryBuilder.Build();                
+                Holder.factionInventories = FactionInventoryStateManager.Build();                
             }
             if (!Holder.factionInventories.ContainsKey(realFaction)) {
                 Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());
@@ -177,7 +177,7 @@ namespace PersistentMapAPI {
             logger.Info($"Generating {count} companies");
 
             // Ensure that the map has been loaded
-            StarMapBuilder.Build();
+            StarMapStateManager.Build();
 
             int systemCount = Holder.currentMap.systems.Count;
             int numSystems = random.Next(1, count);

@@ -24,13 +24,13 @@ namespace PersistentMapAPI {
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override StarMap GetStarmap() {
-            StarMap builtMap = StarMapBuilder.Build();
+            StarMap builtMap = StarMapStateManager.Build();
             return builtMap;
         }
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override System GetSystem(string name) {
-            StarMap builtMap = StarMapBuilder.Build();            
+            StarMap builtMap = StarMapStateManager.Build();            
             return builtMap.FindSystemByName(name);
         }
 
@@ -64,7 +64,7 @@ namespace PersistentMapAPI {
                     logger.Debug($"New MissionResult - ({companyName}) fought for ({mresult.employer}) against ({mresult.target})" +
                         $" on ({mresult.systemName}) and achieved ({mresult.result})");
                   
-                    StarMap builtMap = StarMapBuilder.Build();
+                    StarMap builtMap = StarMapStateManager.Build();
                     System system = builtMap.FindSystemByName(mresult.systemName);
                     
                     FactionControl oldOwnerControl = system.FindHighestControl();
@@ -205,7 +205,7 @@ namespace PersistentMapAPI {
             lock(_salvageLock) {
                 Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
                 if (Holder.factionInventories == null) {
-                    Holder.factionInventories = FactionInventoryBuilder.Build();
+                    Holder.factionInventories = FactionInventoryStateManager.Build();
                 }
                 if (!Holder.factionInventories.ContainsKey(realFaction)) {
                     Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());
