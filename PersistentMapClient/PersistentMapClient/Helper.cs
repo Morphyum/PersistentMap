@@ -83,8 +83,8 @@ namespace PersistentMapClient {
             }
         }
 
-        public static Settings LoadSettings(string settingsPath) {
-            string _settingsPath = settingsPath != null ? settingsPath : $"{ PersistentMapClient.ModDirectory}/settings.json";
+        public static Settings LoadSettings() {
+            string _settingsPath = $"{PersistentMapClient.ModDirectory}/settings.json";
             try {
                 using (StreamReader r = new StreamReader(_settingsPath)) {
                     string json = r.ReadToEnd();
@@ -576,7 +576,7 @@ namespace PersistentMapClient {
                 AccessTools.Field(typeof(SimGameState), "singlePlayerTypes");
                 ContractType[] singlePlayerTypes = (ContractType[])AccessTools.Field(typeof(SimGameState), "singlePlayerTypes").GetValue(Sim);
                 using (MetadataDatabase metadataDatabase = new MetadataDatabase()) {
-                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRange(Difficulty - 1, Difficulty + 1)) {
+                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScopeAndOwnership(Difficulty - 1, Difficulty + 1, Sim.ContractScope, true)) {
                         ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
                         if (singlePlayerTypes.Contains(contractType)) {
                             if (!contractTypes.Contains(contractType)) {
