@@ -238,14 +238,16 @@ namespace PersistentMapClient {
     public static class Contract_CompleteContract_Patch {
         static void Postfix(Contract __instance, BattleTech.MissionResult result) {
             try {
-                GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
-                StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
-                int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
-                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.InitialContractReputation * __instance.PercentageContractReputation), planetSupport);
-                bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
-                if (!postSuccessfull) {
-                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
-                    interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                if (!__instance.IsFlashpointContract) {
+                    GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
+                    StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
+                    int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
+                    PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.InitialContractReputation * __instance.PercentageContractReputation), planetSupport);
+                    bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
+                    if (!postSuccessfull) {
+                        SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                        interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                    }
                 }
                 return;
             }

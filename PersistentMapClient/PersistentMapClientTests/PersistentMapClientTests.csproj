@@ -5,7 +5,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{05F4D9C0-1CBB-4D77-ADBF-8E9F2C22F30D}</ProjectGuid>
+    <ProjectGuid>{B7C957A9-9A74-467F-8535-9EA8BC9F35C5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PersistentMapClientTests</RootNamespace>
