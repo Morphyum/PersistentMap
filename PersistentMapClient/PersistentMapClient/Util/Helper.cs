@@ -18,6 +18,8 @@ namespace PersistentMapClient {
 
     public class Helper {
 
+        public const string GeneratedSettingsFile = "generatedSettings.json";
+
         public static Faction getfaction(string faction) {
             return (Faction)Enum.Parse(typeof(Faction), faction, true);
         }
@@ -83,34 +85,50 @@ namespace PersistentMapClient {
             }
         }
 
-        public static Settings LoadSettings(string settingsPath) {
-            string _settingsPath = settingsPath != null && !settingsPath.Equals("{}")? 
-                settingsPath : $"{ PersistentMapClient.ModDirectory}/settings.json";
-            try {
-                // Load the settings file
-                Settings settings = null;
-                using (StreamReader r = new StreamReader(_settingsPath)) {
-                    string json = r.ReadToEnd();
-                    settings = JsonConvert.DeserializeObject<Settings>(json);
-                }
+        // Read the clientID (a GUID) from a place that should persist across installs.
+        public static void FetchClientID(string modDirectoryPath) {
+            // Starting path should be battletech\mods\PersistMapClient
+            string[] directories = modDirectoryPath.Split(Path.DirectorySeparatorChar);
+            DirectoryInfo modsDir = Directory.GetParent(modDirectoryPath);
+            DirectoryInfo battletechDir = modsDir.Parent;
 
-                // If there is no clientID, generate one
-                if (settings != null && (settings.ClientID == null || settings.ClientID.Equals(""))) {
-                    Guid clientId = Guid.NewGuid();
-                    settings.ClientID = clientId.ToString();
-                    using (StreamWriter writer = new StreamWriter(_settingsPath, false)) {
-                        string json = JsonConvert.SerializeObject(settings);
-                        writer.Write(json);
+            // We want to write to Battletech/ModSaves/PersistentMapClient directory
+            DirectoryInfo modSavesDir = battletechDir.CreateSubdirectory("ModSaves");
+            DirectoryInfo clientDir = battletechDir.CreateSubdirectory("PersistentMapClient");
+
+            // Finally see if the file exists
+            FileInfo clientIDFile = new FileInfo(Path.Combine(clientDir.FullName, Helper.GeneratedSettingsFile));
+            if (clientIDFile.Exists) {
+                // Attempt to read the file
+                try {
+                    GeneratedSettings generatedSettings = null;
+                    using (StreamReader r = new StreamReader(clientIDFile.FullName)) {
+                        string json = r.ReadToEnd();
+                        generatedSettings = JsonConvert.DeserializeObject<GeneratedSettings>(json);
                     }
-                    Logger.LogLine($"Created new ClientId ({settings.ClientID}).");
-                } else {
-                    Logger.LogLine($"ClientID was: ({settings.ClientID})");
+                    Fields.settings.ClientID = generatedSettings.ClientID;
+                } catch (Exception e) {
+                    Logger.LogLine($"Failed to read clientID from {clientIDFile}, will overwrite!");
+                    Logger.LogError(e);
                 }
+            }
 
-                return settings;
-            } catch (Exception ex) {
-                Logger.LogError(ex);
-                return null;
+            // If the clientID hasn't been written at this point, something went wrong. Generate a new one.
+            Guid clientID = Guid.NewGuid();
+            try {
+                GeneratedSettings newSettings = new GeneratedSettings {
+                    ClientID = clientID.ToString()
+                };
+                using (StreamWriter writer = new StreamWriter(clientIDFile.FullName, false)) {
+                    string json = JsonConvert.SerializeObject(newSettings);
+                    writer.Write(json);
+                }
+                Fields.settings.ClientID = clientID.ToString();
+                Logger.LogLine($"Write new clientID ({Fields.settings.ClientID}) to path:{clientIDFile.FullName}.");
+            } catch (Exception e) {
+                Logger.LogLine("FATAL ERROR: Failed to write clientID, cannot continue!");
+                Logger.LogError(e);
+                // TODO: Figure out a failure strategy...
             }
         }
 
@@ -389,7 +407,7 @@ namespace PersistentMapClient {
                 AccessTools.Field(typeof(SimGameState), "singlePlayerTypes");
                 ContractType[] singlePlayerTypes = (ContractType[])AccessTools.Field(typeof(SimGameState), "singlePlayerTypes").GetValue(Sim);
                 using (MetadataDatabase metadataDatabase = new MetadataDatabase()) {
-                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRange(Difficulty - 1, Difficulty + 1)) {
+                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScopeAndOwnership(Difficulty - 1, Difficulty + 1, Sim.ContractScope, true)) {
                         ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
                         if (singlePlayerTypes.Contains(contractType)) {
                             if (!contractTypes.Contains(contractType)) {

@@ -221,7 +221,7 @@ namespace PersistentMapClient {
 
                 if (_postJSON != null) {
                     // TODO: Why are we ASCII encoding instead of UTF-8?
-                    byte[] testarray = Encoding.ASCII.GetBytes(_postJSON);
+                    byte[] testarray = Encoding.UTF8.GetBytes(_postJSON);
                     request.ContentLength = testarray.Length;
 
                     Stream dataStream = request.GetRequestStream();
