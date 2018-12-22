@@ -3,6 +3,7 @@ using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
+using System.ServiceModel.Web;
 
 namespace PersistentMapServer.MessageInspector {
     /* MessageInpector that looks for requests that contain Accept-Encoding: gzip header. If that's set, returns the 
@@ -22,10 +23,8 @@ namespace PersistentMapServer.MessageInspector {
         }
 
         public void BeforeSendReply(ref System.ServiceModel.Channels.Message reply, object correlationState) {
-            if (OperationContext.Current.Extensions.OfType<CompressOutputExtension>().Any()) {
-                HttpResponseMessageProperty httpResponseProperty = new HttpResponseMessageProperty();
-                httpResponseProperty.Headers.Add(HttpResponseHeader.ContentEncoding, "gzip");
-                reply.Properties[HttpResponseMessageProperty.Name] = httpResponseProperty;
+            if (OperationContext.Current.Extensions.OfType<CompressOutputExtension>().Any()) {                
+                WebOperationContext.Current.OutgoingResponse.Headers.Add($"Content-Encoding:gzip");
             }
         }
     }
