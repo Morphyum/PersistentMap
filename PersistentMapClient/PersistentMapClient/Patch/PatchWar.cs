@@ -2,7 +2,6 @@
 using BattleTech.Framework;
 using BattleTech.Save;
 using BattleTech.UI;
-using BattleTech.UI.Tooltips;
 using Harmony;
 using HBS;
 using PersistentMapAPI;
@@ -29,7 +28,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -52,7 +51,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
@@ -65,7 +64,7 @@ namespace PersistentMapClient {
                 AccessTools.Field(typeof(SimGameState), "globalContracts").SetValue(__instance.Sim, new List<Contract>());
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -79,7 +78,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -97,7 +96,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -144,7 +143,7 @@ namespace PersistentMapClient {
                 }
              }
              catch (Exception e) {
-                 Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
              }
          }
      }
@@ -231,7 +230,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
 
@@ -274,7 +273,7 @@ namespace PersistentMapClient {
                 return;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -352,7 +351,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }

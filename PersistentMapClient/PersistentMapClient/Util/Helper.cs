@@ -24,7 +24,7 @@ namespace PersistentMapClient {
             return (Faction)Enum.Parse(typeof(Faction), faction, true);
         }
 
-        public static bool meetsNewReqs(StarSystem instance, TagSet reqTags, TagSet exTags, TagSet curTags) {
+        public static bool MeetsNewReqs(StarSystem instance, TagSet reqTags, TagSet exTags, TagSet curTags) {
             try {
                 if (!curTags.ContainsAny(exTags, false)) {
                     //Check exclution for time and rep
@@ -70,7 +70,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return false;
             }
         }
@@ -80,7 +80,7 @@ namespace PersistentMapClient {
                 return FactionDef.GetFactionDefByEnum(manager, faction).ShortName.Replace("the ", "").Replace("The ", "");
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return null;
             }
         }
@@ -94,41 +94,46 @@ namespace PersistentMapClient {
 
             // We want to write to Battletech/ModSaves/PersistentMapClient directory
             DirectoryInfo modSavesDir = battletechDir.CreateSubdirectory("ModSaves");
-            DirectoryInfo clientDir = battletechDir.CreateSubdirectory("PersistentMapClient");
-
+            DirectoryInfo clientDir = modSavesDir.CreateSubdirectory("PersistentMapClient");
+            
             // Finally see if the file exists
-            FileInfo clientIDFile = new FileInfo(Path.Combine(clientDir.FullName, Helper.GeneratedSettingsFile));
-            if (clientIDFile.Exists) {
-                // Attempt to read the file
+            FileInfo GeneratedSettingsFile = new FileInfo(Path.Combine(clientDir.FullName, Helper.GeneratedSettingsFile));
+            if (GeneratedSettingsFile.Exists) {
+                // Attempt to read the file                
                 try {
                     GeneratedSettings generatedSettings = null;
-                    using (StreamReader r = new StreamReader(clientIDFile.FullName)) {
+                    using (StreamReader r = new StreamReader(GeneratedSettingsFile.FullName)) {
                         string json = r.ReadToEnd();
                         generatedSettings = JsonConvert.DeserializeObject<GeneratedSettings>(json);
-                    }
+                    }                    
                     Fields.settings.ClientID = generatedSettings.ClientID;
+                    PersistentMapClient.Logger.Log($"Fetched clientID:({Fields.settings.ClientID}).");
                 } catch (Exception e) {
-                    Logger.LogLine($"Failed to read clientID from {clientIDFile}, will overwrite!");
-                    Logger.LogError(e);
+                    PersistentMapClient.Logger.Log($"Failed to read clientID from {GeneratedSettingsFile}, will overwrite!");
+                    PersistentMapClient.Logger.LogError(e);
                 }
+            } else {
+                PersistentMapClient.Logger.Log($"GeneratedSettings file at path:{GeneratedSettingsFile.FullName} does not exist, will be created.");
             }
 
             // If the clientID hasn't been written at this point, something went wrong. Generate a new one.
-            Guid clientID = Guid.NewGuid();
-            try {
-                GeneratedSettings newSettings = new GeneratedSettings {
-                    ClientID = clientID.ToString()
-                };
-                using (StreamWriter writer = new StreamWriter(clientIDFile.FullName, false)) {
-                    string json = JsonConvert.SerializeObject(newSettings);
-                    writer.Write(json);
+            if (Fields.settings.ClientID == null || Fields.settings.ClientID.Equals("")) {
+                Guid clientID = Guid.NewGuid();                
+                try {
+                    GeneratedSettings newSettings = new GeneratedSettings {
+                        ClientID = clientID.ToString()
+                    };
+                    using (StreamWriter writer = new StreamWriter(GeneratedSettingsFile.FullName, false)) {
+                        string json = JsonConvert.SerializeObject(newSettings);
+                        writer.Write(json);
+                    }
+                    Fields.settings.ClientID = clientID.ToString();
+                    PersistentMapClient.Logger.Log($"Wrote new clientID ({Fields.settings.ClientID}) to generatedSettings at:{GeneratedSettingsFile.FullName}.");
+                } catch (Exception e) {
+                    PersistentMapClient.Logger.Log("FATAL ERROR: Failed to write clientID, cannot continue!");
+                    PersistentMapClient.Logger.LogError(e);
+                    // TODO: Figure out a failure strategy...
                 }
-                Fields.settings.ClientID = clientID.ToString();
-                Logger.LogLine($"Write new clientID ({Fields.settings.ClientID}) to path:{clientIDFile.FullName}.");
-            } catch (Exception e) {
-                Logger.LogLine("FATAL ERROR: Failed to write clientID, cannot continue!");
-                Logger.LogError(e);
-                // TODO: Figure out a failure strategy...
             }
         }
 
@@ -137,7 +142,7 @@ namespace PersistentMapClient {
                 return "planet_faction_" + faction.ToString().ToLower();
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return null;
             }
         }
@@ -158,7 +163,7 @@ namespace PersistentMapClient {
                 return result;
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return false;
             }
         }
@@ -185,7 +190,7 @@ namespace PersistentMapClient {
                 return system;
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return null;
             }
         }
@@ -195,7 +200,7 @@ namespace PersistentMapClient {
                 return FactionDef.GetFactionDefByEnum(manager, faction).Name.Replace("the ", "").Replace("The ", "");
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return null;
             }
         }
@@ -206,7 +211,7 @@ namespace PersistentMapClient {
                 return Math.Sqrt(Math.Pow(targetSystem.Position.x - currPosition.Position.x, 2) + Math.Pow(targetSystem.Position.y - currPosition.Position.y, 2));
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return 0;
             }
         }
@@ -216,7 +221,7 @@ namespace PersistentMapClient {
                 return Math.Sqrt(Math.Pow(targetSystem.Position.x - currPosition.Position.x, 2) + Math.Pow(targetSystem.Position.y - currPosition.Position.y, 2));
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return 0;
             }
         }
@@ -247,7 +252,7 @@ namespace PersistentMapClient {
                 return employees.ToList();
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return null;
             }
         }
@@ -276,7 +281,7 @@ namespace PersistentMapClient {
                 return targets;
             }
             catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
                 return null;
             }
         }
@@ -335,14 +340,14 @@ namespace PersistentMapClient {
                     isCapital = (systemFaction == faction);
                 }                
             } catch (Exception ex) {
-                Logger.LogError(ex);
+                PersistentMapClient.Logger.LogError(ex);
             }
             return isCapital;
         }
 
         public static int CalculatePlanetSupport(SimGameState Sim, StarSystem attackSystem, Faction attacker, Faction defender) {
             int support = 0;
-            Logger.LogLine("Calculating planet support");
+            PersistentMapClient.Logger.Log("Calculating planet support");
             List<StarSystem> neighbours = new List<StarSystem>();
             foreach (StarSystem possibleSystem in Sim.StarSystems) {
                 if (GetDistanceInLY(attackSystem, possibleSystem) <= Sim.Constants.Travel.MaxJumpDistance && !possibleSystem.Name.Equals(attackSystem.Name)) {
@@ -427,11 +432,11 @@ namespace PersistentMapClient {
                     }
                 }
                 if (contractMaps.Count == 0) {
-                    Logger.LogLine("Maps0 break");
+                    PersistentMapClient.Logger.Log("Maps0 break");
                     break;
                 }
                 if (potentialOverrides.Count == 0) {
-                    Logger.LogLine("Overrides0 break");
+                    PersistentMapClient.Logger.Log("Overrides0 break");
                     break;
                 }
                 contractMaps.Reset(false);
@@ -567,7 +572,7 @@ namespace PersistentMapClient {
                     }
                     else {
                         debugCount = 1000;
-                        Logger.LogLine(string.Format("[CONTRACT] Unable to find any valid contracts for available map pool. Alert designers.", new object[0]));
+                        PersistentMapClient.Logger.Log(string.Format("[CONTRACT] Unable to find any valid contracts for available map pool. Alert designers.", new object[0]));
                     }
                 }
                 else {
@@ -613,7 +618,7 @@ namespace PersistentMapClient {
                 }
             }
             if (debugCount >= 1000) {
-                Logger.LogLine("Unable to fill contract list. Please inform AJ Immediately");
+                PersistentMapClient.Logger.Log("Unable to fill contract list. Please inform AJ Immediately");
             }
             return contractList[0];
         }

@@ -34,7 +34,7 @@ namespace PersistentMapClient {
                 return items;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return null;
             }
         }
@@ -116,7 +116,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return false;
             }
         }
@@ -135,7 +135,7 @@ namespace PersistentMapClient {
                 return map;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return null;
             }
         }
@@ -153,7 +153,7 @@ namespace PersistentMapClient {
                 return true;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return false;
             }
         }
@@ -166,7 +166,7 @@ namespace PersistentMapClient {
             private string _faction;
             private string _companyName;
             private string _postJSON;
-            private WarService _service;
+            private readonly WarService _service;
 
             public RequestBuilder(WarService service) {
                 this._service = service;
