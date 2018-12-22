@@ -88,6 +88,30 @@ namespace PersistentMapClient {
         static void Postfix(SimGameState __instance, Contract __result) {
             try {
                 if (Fields.warmission) {
+                    if (__result == null) {
+                        Logger.LogLine("No Contract");
+                    }
+                    if (__result.Override == null) {
+                        Logger.LogLine(__result.Name + " Does not have an ovveride");
+                    }
+                    if (__result.InitialContractValue == null) {
+                        Logger.LogLine(__result.Name + " Does not have an InitialContractValue");
+                    }
+                    if (__instance.Constants == null) {
+                        Logger.LogLine("No Constants");
+                    }
+                    if (__instance.Constants.Salvage == null) {
+                        Logger.LogLine("No Salvage Constants");
+                    }
+                    if (__instance.Constants.Salvage.PrioritySalvageModifier == null) {
+                        Logger.LogLine("No PrioritySalvageModifier");
+                    }
+                    if (Fields.settings == null) {
+                        Logger.LogLine("No Settings");
+                    }
+                    if (Fields.settings.priorityContactPayPercentage == null) {
+                        Logger.LogLine("No priorityContactPayPercentage");
+                    }
                     __result.SetInitialReward(Mathf.RoundToInt(__result.InitialContractValue * Fields.settings.priorityContactPayPercentage));
                     int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
                     __result.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(__result.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
