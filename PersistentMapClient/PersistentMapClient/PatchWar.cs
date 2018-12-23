@@ -263,17 +263,28 @@ namespace PersistentMapClient {
         static void Postfix(Contract __instance, BattleTech.MissionResult result) {
             try {
                 if (!__instance.IsFlashpointContract) {
+                    bool updated = false;
                     GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                     StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
-                    int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
-                    PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
-                    if (!game.Simulation.IsFactionAlly(mresult.employer)) {
-                        mresult.awardedRep /= 2;
+                    foreach (StarSystem potential in game.Simulation.StarSystems) {
+                        if (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y,system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance) {
+                            int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
+                            PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
+                            if (!game.Simulation.IsFactionAlly(mresult.employer)) {
+                                mresult.awardedRep /= 2;
+                            }
+                            bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
+                            if (!postSuccessfull) {
+                                SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                                interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                            }
+                            updated = true;
+                            break;
+                        }
                     }
-                    bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
-                    if (!postSuccessfull) {
+                    if (!updated) {
                         SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
-                        interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                        interruptQueue.QueueGenericPopup_NonImmediate("You are surrounded!", "There is no more neighbor system in your factions control, so you didnt earn any influence here.", true);
                     }
                 }
                 return;
