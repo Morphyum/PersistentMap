@@ -8,6 +8,7 @@ namespace PersistentMapClient {
         public string ServerURL = "http://localhost:8000/";
         public bool debug = false;
         public float priorityContactPayPercentage = 2f;
+        public int priorityContractsPerAlly = 2;
     }
 
     public static class Fields {

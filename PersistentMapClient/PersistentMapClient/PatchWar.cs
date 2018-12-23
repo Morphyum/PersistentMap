@@ -292,25 +292,9 @@ namespace PersistentMapClient {
                 __instance.Sim.GlobalContracts.Clear();
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
                     if (!Fields.excludedFactions.Contains(pair.Key)) {
-                        SimGameReputation rep = __instance.Sim.GetReputation(pair.Key);
-                        int numberOfContracts;
-                        switch (rep) {
-                            case SimGameReputation.LIKED: {
-                                    numberOfContracts = 1;
-                                    break;
-                                }
-                            case SimGameReputation.FRIENDLY: {
-                                    numberOfContracts = 2;
-                                    break;
-                                }
-                            case SimGameReputation.ALLIED: {
-                                    numberOfContracts = 3;
-                                    break;
-                                }
-                            default: {
-                                    numberOfContracts = 0;
-                                    break;
-                                }
+                        int numberOfContracts = 0;
+                        if(__instance.Sim.IsFactionAlly(pair.Key, null)) {
+                            numberOfContracts = Fields.settings.priorityContractsPerAlly;
                         }
                         if (numberOfContracts > 0) {
                             List<ParseSystem> targets = new List<ParseSystem>();
