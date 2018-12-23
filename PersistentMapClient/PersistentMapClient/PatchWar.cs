@@ -126,9 +126,9 @@ namespace PersistentMapClient {
     }
 
     [HarmonyPatch(typeof(SGSystemViewPopulator), "UpdateRoutedSystem")]
-     public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
-         static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem) {
-             try {
+    public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
+        static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem) {
+            try {
                 if (GameObject.Find("COMPANYNAMES") == null) {
                     GameObject old = GameObject.Find("uixPrfPanl_NAV_systemStats-Element-MANAGED");
                     if (old != null) {
@@ -165,12 +165,12 @@ namespace PersistentMapClient {
                         companietext.SetText("");
                     }
                 }
-             }
-             catch (Exception e) {
-                 Logger.LogError(e);
-             }
-         }
-     }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
@@ -267,6 +267,9 @@ namespace PersistentMapClient {
                     StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                     int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
                     PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
+                    if (!game.Simulation.IsFactionAlly(mresult.employer)) {
+                        mresult.awardedRep /= 2;
+                    }
                     bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
                     if (!postSuccessfull) {
                         SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
@@ -293,7 +296,7 @@ namespace PersistentMapClient {
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
                     if (!Fields.excludedFactions.Contains(pair.Key)) {
                         int numberOfContracts = 0;
-                        if(__instance.Sim.IsFactionAlly(pair.Key, null)) {
+                        if (__instance.Sim.IsFactionAlly(pair.Key, null)) {
                             numberOfContracts = Fields.settings.priorityContractsPerAlly;
                         }
                         if (numberOfContracts > 0) {
