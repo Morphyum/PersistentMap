@@ -267,7 +267,7 @@ namespace PersistentMapClient {
                     GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                     StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                     foreach (StarSystem potential in game.Simulation.StarSystems) {
-                        if (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y,system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance) {
+                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y,system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
                             int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
                             PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
                             if (!game.Simulation.IsFactionAlly(mresult.employer)) {
