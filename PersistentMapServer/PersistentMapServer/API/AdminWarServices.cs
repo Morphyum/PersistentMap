@@ -1,4 +1,4 @@
-﻿using PersistentMapAPI.Objects;
+﻿using BattleTech;
 using PersistentMapServer.Attribute;
 using PersistentMapServer.Objects;
 using System;
@@ -34,15 +34,26 @@ namespace PersistentMapAPI.API {
 
             // TODO: Remove after testing
             List<UserInfo> randos = Helper.GenerateFakeActivity();
+            var mresult = new MissionResult {
+                employer = Faction.Steiner,
+                target = Faction.Liao,
+                result = BattleTech.MissionResult.Victory,
+                systemName = "FOOBAR",
+                difficulty = 3,
+                awardedRep = 0,
+                planetSupport = 0,
+            };                 
             foreach (UserInfo rando in randos) {
-                Holder.connectionStore.Add(rando.companyName, rando);
+                string hashedID = String.Format("{0:X}", rando.companyName.GetHashCode());
+                Holder.connectionStore.Add(hashedID, rando);                
+                Helper.RecordPlayerActivity(mresult, hashedID, rando.companyName, DateTime.UtcNow);
             }
         }
 
         [AdminKeyRequired]
         public override string ResetStarMap() {
             logger.Warn("Resetting StarMap!");
-            StarMapBuilder.Reset();
+            StarMapStateManager.Reset();
             logger.Info("Reset of StarMap complete.");
             return "Reset Successfull";
         }

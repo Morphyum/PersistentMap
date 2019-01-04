@@ -1,9 +1,11 @@
 ﻿using BattleTech;
+using PersistentMapAPI;
+using PersistentMapServer.Worker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PersistentMapAPI.Objects {
+namespace PersistentMapServer.Objects {
     // Point in time overview of the size of internal data elements
     public class ServiceDataSnapshot {
 
@@ -21,7 +23,7 @@ namespace PersistentMapAPI.Objects {
         DateTime server_last_backup;
 
         public ServiceDataSnapshot() {
-            Settings settings = Helper.LoadSettings();
+            var settings = Helper.LoadSettings();
             DateTime activeOnOrAfter = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(settings.MinutesForActive));
 
             // user data
@@ -59,7 +61,7 @@ namespace PersistentMapAPI.Objects {
 
             // server data
             server_startup = Holder.startupTime;
-            server_last_backup = Holder.lastBackup;
+            server_last_backup = BackupWorker.lastBackupTime;
         }
     }
 }

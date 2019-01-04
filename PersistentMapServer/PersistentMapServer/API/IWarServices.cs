@@ -1,5 +1,5 @@
 ﻿using BattleTech;
-using PersistentMapAPI.Objects;
+using PersistentMapServer.Objects;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -43,6 +43,14 @@ namespace PersistentMapAPI {
         [OperationContract]
         [WebGet(UriTemplate = Routing.GetShopForFaction, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         List<ShopDefItem> GetShopForFaction(string Faction);
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.GetPlayerCompanies, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        Dictionary<string, List<string>> GetPlayerCompanies();
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.GetPlayerHistory, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        List<CompanyActivity> GetPlayerActivity(string PlayerId);
 
         // Admin functions
         [OperationContract]
