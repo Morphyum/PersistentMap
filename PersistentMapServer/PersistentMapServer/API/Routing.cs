@@ -3,7 +3,7 @@
         public const string GetStarMap = "/StarMap/";
         public const string GetSystem = "/StarMap/System/{name}";
         public const string GetMissionResults = "/Mission/Results/?MinutesBack={MinutesBack}&MaxResults={MaxResults}";
-        public const string GetActivePlayers = "Users/Active/?MinutesBack={MinutesBack}";
+        public const string GetActivePlayers = "/Users/Active/?MinutesBack={MinutesBack}";
         public const string GetStartupTime = "/Info/StartupTime";
         public const string GetShopForFaction = "/Shop/{Faction}";
         public const string PostMissionResult = "/Mission/?CompanyName={CompanyName}";

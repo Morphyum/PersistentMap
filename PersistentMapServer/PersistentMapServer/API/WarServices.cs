@@ -1,6 +1,4 @@
 ﻿using BattleTech;
-using PersistentMapAPI.Objects;
-using PersistentMapServer;
 using PersistentMapServer.Attribute;
 using PersistentMapServer.Objects;
 using System;
@@ -183,7 +181,7 @@ namespace PersistentMapAPI {
             lock(_salvageLock) {
                 Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
                 if (Holder.factionInventories == null) {
-                    Helper.LoadCurrentInventories();
+                    Holder.factionInventories = FactionInventoryBuilder.Build();
                 }
                 if (!Holder.factionInventories.ContainsKey(realFaction)) {
                     Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());

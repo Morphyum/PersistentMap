@@ -1,62 +1,26 @@
 ﻿using BattleTech;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using PersistentMapServer.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using SysSecurity = System.Security;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using SysText = System.Text;
 using System.Threading;
-using PersistentMapServer.Objects;
+using SysSecurity = System.Security;
+using SysText = System.Text;
 
 namespace PersistentMapAPI {
     public static class Helper {
 
-        public static string currentMapFilePath = $"../Map/current.json";
-        public static string backupMapFilePath = $"../Map/";
-        public static string currentShopFilePath = $"../Shop/current.json";
         public static string settingsFilePath = $"../Settings/settings.json";
-        public static string systemDataFilePath = $"../StarSystems/";
-
-        public static readonly string DateFormat = "yyyy-dd-M--HH-mm-ss";
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         // Settings that have been previously read
         private static Settings cachedSettings;
-
-        public static Dictionary<Faction, List<ShopDefItem>> LoadCurrentInventories() {
-            try {
-                if (Holder.factionInventories == null) {
-                    if (File.Exists(currentShopFilePath)) {
-                        using (StreamReader r = new StreamReader(currentShopFilePath)) {
-                            string json = r.ReadToEnd();
-                            Holder.factionInventories = JsonConvert.DeserializeObject<Dictionary<Faction, List<ShopDefItem>>>(json);
-                        }
-                    }
-                    else {
-                        Holder.factionInventories = new Dictionary<Faction, List<ShopDefItem>>();
-                    }
-                }
-                Dictionary<Faction, List<ShopDefItem>> result = Holder.factionInventories;
-                return result;
-            }catch(Exception e) {
-                logger.Warn(e, "Failed to load current inventories.");
-                return null;
-            }
-        }
-
-        public static void SaveCurrentInventories(Dictionary<Faction, List<ShopDefItem>> shop) {
-            (new FileInfo(currentShopFilePath)).Directory.Create();
-            using (StreamWriter writer = new StreamWriter(currentShopFilePath, false)) {
-                string json = JsonConvert.SerializeObject(shop);
-                writer.Write(json);
-            }
-        }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static Settings LoadSettings(bool forceRefresh=false) {
@@ -101,7 +65,7 @@ namespace PersistentMapAPI {
             List<ShopDefItem> newShop = new List<ShopDefItem>();
             Random rand = new Random();
             if (Holder.factionInventories == null) {
-                Helper.LoadCurrentInventories();
+                Holder.factionInventories = FactionInventoryBuilder.Build();                
             }
             if (!Holder.factionInventories.ContainsKey(realFaction)) {
                 Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());

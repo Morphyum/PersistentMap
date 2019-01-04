@@ -88,6 +88,7 @@
     <Compile Include="Interceptor\AdminKeyRequiredInterceptor.cs" />
     <Compile Include="MessageInspector\CorsWildcardInspector.cs" />
     <Compile Include="MessageInspector\RequestDurationLoggingInspector.cs" />
+    <Compile Include="Objects\FactionInventoryBuilder.cs" />
     <Compile Include="Objects\ServiceDataSnapshot.cs" />
     <Compile Include="Objects\StarMapBuilder.cs" />
     <Compile Include="SettingsFileMonitor.cs" />
@@ -96,7 +97,7 @@
     <Compile Include="Util\Helper.cs" />
     <Compile Include="Util\Holder.cs" />
     <Compile Include="Util\Settings.cs" />
-    <Compile Include="Worker\StarMapBackupWorker.cs" />
+    <Compile Include="Worker\BackupWorker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
