@@ -39,7 +39,8 @@ namespace PersistentMapAPI {
             lock (_missionResultLock) {
                 try {
                     // TODO: Update connection data in a cleaner fashion
-                    string ip = Helper.mapRequestIP();
+                    string ip = Helper.MapRequestIP();
+                    string hashedIP = String.Format("{0:X}", ip.GetHashCode());
                     DateTime reportTime = DateTime.UtcNow;
                     // TODO: For now, use the IP as the playerId. In the future, GUID
                     Helper.RecordPlayerActivity(mresult, ip, companyName, reportTime);

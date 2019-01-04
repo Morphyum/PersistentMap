@@ -67,7 +67,7 @@ namespace PersistentMapAPI {
             Holder.connectionStore[clientId].companyName = companyName;
             Holder.connectionStore[clientId].lastSystemFoughtAt = mresult.systemName;
 
-            // For now, the player Id is their IP address
+            // For now, the player Id is their hashed IP address
             var companyActivity = new CompanyActivity {
                 employer = mresult.employer,
                 target = mresult.target,
@@ -137,7 +137,7 @@ namespace PersistentMapAPI {
 
         // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc
         // Note: Old method didn't account for load-balancer
-        public static string mapRequestIP() {
+        public static string MapRequestIP() {
             OperationContext context = OperationContext.Current;
             MessageProperties properties = context.IncomingMessageProperties;
             RemoteEndpointMessageProperty endpoint = properties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
@@ -190,9 +190,10 @@ namespace PersistentMapAPI {
             logger.Info($"Generated {numSystems} systems");
 
             for (int i = 0; i < count; i++) {
-                UserInfo randomUser = new UserInfo();
-                randomUser.companyName = GenerateFakeCompanyName(random);
-                randomUser.LastDataSend = DateTime.UtcNow;
+                UserInfo randomUser = new UserInfo {
+                    companyName = GenerateFakeCompanyName(random),
+                    LastDataSend = DateTime.UtcNow
+                };
 
                 int systemId = random.Next(0, systems.Count - 1);
                 randomUser.lastSystemFoughtAt = systems[systemId];

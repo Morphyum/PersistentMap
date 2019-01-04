@@ -44,8 +44,9 @@ namespace PersistentMapAPI.API {
                 planetSupport = 0,
             };                 
             foreach (UserInfo rando in randos) {
-                Holder.connectionStore.Add(rando.companyName, rando);
-                Helper.RecordPlayerActivity(mresult, rando.companyName, rando.companyName, DateTime.UtcNow);
+                string hashedID = String.Format("{0:X}", rando.companyName.GetHashCode());
+                Holder.connectionStore.Add(hashedID, rando);                
+                Helper.RecordPlayerActivity(mresult, hashedID, rando.companyName, DateTime.UtcNow);
             }
         }
 

@@ -19,7 +19,7 @@ namespace PersistentMapServer.Objects {
         public static HashSet<PlayerHistory> Build() {
             // If the holder is empty, we're on startup. Deserialize the most recent backup, or initialize a collection
             lock(_deserializationLock) {
-                if (Holder.playerHistory == null) {
+                if (Holder.playerHistory == null || Holder.playerHistory.Count == 0) {
                     ReadOrInitialize();
                 }
             }
@@ -43,6 +43,11 @@ namespace PersistentMapServer.Objects {
         // Read the system data from disk, or create a new copy
         private static void ReadOrInitialize() {
             List<PlayerHistory> historyFromDisk;
+
+            if (!File.Exists(PlayerStateManager.StoragePath)) {
+                Directory.CreateDirectory(PlayerStateManager.StoragePath);
+            }
+
             string filePath = Path.Combine(PlayerStateManager.StoragePath, "current.json");
             if (File.Exists(filePath)) {
                 using (StreamReader r = new StreamReader(filePath)) {
@@ -50,7 +55,7 @@ namespace PersistentMapServer.Objects {
                     historyFromDisk = JsonConvert.DeserializeObject<List<PlayerHistory>>(json);                    
                 }
             } else {
-                logger.Debug("No player history found, initializing as empty.");
+                logger.Info("No player history found, initializing as empty.");
                 historyFromDisk = new List<PlayerHistory>();
             }
             Holder.playerHistory = new HashSet<PlayerHistory>(historyFromDisk);
