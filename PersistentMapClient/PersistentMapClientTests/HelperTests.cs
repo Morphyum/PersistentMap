@@ -1,18 +1,13 @@
 ﻿using BattleTech;
-using HBS.Collections;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System.Collections.Generic;
-using static BattleTech.StarSystemDef;
 
 namespace PersistentMapClientTests {
 
-
-    [TestClass]
+    [TestFixture]
     public class HelperTests {
 
-
-
-        [TestMethod]
+        [Test]        
         public void TestIsCapital() {
             Dictionary<Faction, string> testCapitals = new Dictionary<Faction, string> {
             { Faction.Kurita, "Luthien" },

@@ -20,7 +20,10 @@ namespace PersistentMapClient {
                 settingsE = e;
                 Fields.settings = new Settings();
             }
+
+            // Add a hook to dispose of logging on shutdown
             Logger = new Logger(directory, "persistent_map_client", Fields.settings.debug);
+            System.AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) => Logger.Close();
 
             if (settingsE != null) {
                 Logger.Log($"Using default settings due to exception reading modTek settings: {settingsE.Message}");
@@ -41,6 +44,11 @@ namespace PersistentMapClient {
             
             var harmony = HarmonyInstance.Create("de.morphyum.PersistentMapClient");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
+
+        // Used for Unit Tests only
+        public static void Dispose() {
+            Logger.Close();
         }
     }
 }

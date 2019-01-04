@@ -17,7 +17,7 @@ namespace PersistentMapClient {
 
     [HarmonyBefore(new string[] { "de.morphyum.MercDeployments" })]
     [HarmonyPatch(typeof(SimGameState), "Rehydrate")]
-    public static class SimGameState_Rehydrate_Patch {
+    public static class SimGameState_Rehydrate_Patch {        
         static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
             try {
                 foreach (Contract contract in __instance.GlobalContracts) {
@@ -47,7 +47,8 @@ namespace PersistentMapClient {
                     interruptQueue.QueueFinancialReport();
                 }
                 __instance.RoomManager.RefreshDisplay();
-                AccessTools.Method(typeof(SimGameState), "OnNewQuarterBegin").Invoke(__instance, new object[] { });
+                AccessTools.Method(typeof(SimGameState), "OnNewQuarterBegin")
+                    .Invoke(__instance, new object[] { });
                 return false;
             }
             catch (Exception e) {
@@ -61,7 +62,8 @@ namespace PersistentMapClient {
     public static class StarSystem_ResetContracts_Patch {
         static void Postfix(StarSystem __instance) {
             try {
-                AccessTools.Field(typeof(SimGameState), "globalContracts").SetValue(__instance.Sim, new List<Contract>());
+                AccessTools.Field(typeof(SimGameState), "globalContracts")
+                    .SetValue(__instance.Sim, new List<Contract>());
             }
             catch (Exception e) {
                 PersistentMapClient.Logger.LogError(e);
@@ -91,7 +93,8 @@ namespace PersistentMapClient {
                     __result.SetInitialReward(Mathf.RoundToInt(__result.InitialContractValue * Fields.settings.priorityContactPayPercentage));
                     int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
                     __result.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(__result.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
-                    AccessTools.Method(typeof(Contract), "set_SalvagePotential").Invoke(__result, new object[] { __result.Override.salvagePotential });
+                    AccessTools.Method(typeof(Contract), "set_SalvagePotential")
+                        .Invoke(__result, new object[] { __result.Override.salvagePotential });
                     Fields.warmission = false;
                 }
             }
