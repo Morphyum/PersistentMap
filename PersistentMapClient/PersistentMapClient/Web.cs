@@ -69,7 +69,7 @@ namespace PersistentMapClient {
             }
             if (items.Count > 0) {
                 string testjson = JsonConvert.SerializeObject(items);
-                byte[] testarray = Encoding.ASCII.GetBytes(testjson);
+                byte[] testarray = Encoding.UTF8.GetBytes(testjson);
                 string URL = Fields.settings.ServerURL + "warServices/Salvage/" + faction;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
@@ -94,7 +94,7 @@ namespace PersistentMapClient {
                 item.Count = 1;
             }
             string testjson = JsonConvert.SerializeObject(items);
-            byte[] testarray = Encoding.ASCII.GetBytes(testjson);
+            byte[] testarray = Encoding.UTF8.GetBytes(testjson);
             string URL = Fields.settings.ServerURL + "warServices/Salvage/" + faction;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
             request.ContentType = "application/json; charset=utf-8";
@@ -115,7 +115,7 @@ namespace PersistentMapClient {
         public static bool PostBuyItems(List<string> ids, Faction owner) {
             try {
                 string testjson = JsonConvert.SerializeObject(ids);
-                byte[] testarray = Encoding.ASCII.GetBytes(testjson);
+                byte[] testarray = Encoding.UTF8.GetBytes(testjson);
                 string URL = Fields.settings.ServerURL + "warServices/Buy/" + owner;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";
@@ -163,7 +163,7 @@ namespace PersistentMapClient {
         public static bool PostMissionResult(PersistentMapAPI.MissionResult mresult, string companyName) {
             try {
                 string testjson = JsonConvert.SerializeObject(mresult);
-                byte[] testarray = Encoding.ASCII.GetBytes(testjson);
+                byte[] testarray = Encoding.UTF8.GetBytes(testjson);
                 string URL = Fields.settings.ServerURL + "warServices/Mission/?CompanyName=" + companyName;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
                 request.ContentType = "application/json; charset=utf-8";

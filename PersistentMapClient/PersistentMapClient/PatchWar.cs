@@ -88,6 +88,30 @@ namespace PersistentMapClient {
         static void Postfix(SimGameState __instance, Contract __result) {
             try {
                 if (Fields.warmission) {
+                    if (__result == null) {
+                        Logger.LogLine("No Contract");
+                    }
+                    if (__result.Override == null) {
+                        Logger.LogLine(__result.Name + " Does not have an ovveride");
+                    }
+                    if (__result.InitialContractValue == null) {
+                        Logger.LogLine(__result.Name + " Does not have an InitialContractValue");
+                    }
+                    if (__instance.Constants == null) {
+                        Logger.LogLine("No Constants");
+                    }
+                    if (__instance.Constants.Salvage == null) {
+                        Logger.LogLine("No Salvage Constants");
+                    }
+                    if (__instance.Constants.Salvage.PrioritySalvageModifier == null) {
+                        Logger.LogLine("No PrioritySalvageModifier");
+                    }
+                    if (Fields.settings == null) {
+                        Logger.LogLine("No Settings");
+                    }
+                    if (Fields.settings.priorityContactPayPercentage == null) {
+                        Logger.LogLine("No priorityContactPayPercentage");
+                    }
                     __result.SetInitialReward(Mathf.RoundToInt(__result.InitialContractValue * Fields.settings.priorityContactPayPercentage));
                     int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
                     __result.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(__result.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
@@ -102,9 +126,9 @@ namespace PersistentMapClient {
     }
 
     [HarmonyPatch(typeof(SGSystemViewPopulator), "UpdateRoutedSystem")]
-     public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
-         static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem) {
-             try {
+    public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
+        static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem) {
+            try {
                 if (GameObject.Find("COMPANYNAMES") == null) {
                     GameObject old = GameObject.Find("uixPrfPanl_NAV_systemStats-Element-MANAGED");
                     if (old != null) {
@@ -141,12 +165,12 @@ namespace PersistentMapClient {
                         companietext.SetText("");
                     }
                 }
-             }
-             catch (Exception e) {
-                 Logger.LogError(e);
-             }
-         }
-     }
+            }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
@@ -238,14 +262,30 @@ namespace PersistentMapClient {
     public static class Contract_CompleteContract_Patch {
         static void Postfix(Contract __instance, BattleTech.MissionResult result) {
             try {
-                GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
-                StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
-                int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
-                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.InitialContractReputation * __instance.PercentageContractReputation), planetSupport);
-                bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
-                if (!postSuccessfull) {
-                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
-                    interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                if (!__instance.IsFlashpointContract) {
+                    bool updated = false;
+                    GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
+                    StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
+                    foreach (StarSystem potential in game.Simulation.StarSystems) {
+                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y,system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
+                            int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
+                            PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
+                            if (!game.Simulation.IsFactionAlly(mresult.employer)) {
+                                mresult.awardedRep /= 2;
+                            }
+                            bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
+                            if (!postSuccessfull) {
+                                SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                                interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                            }
+                            updated = true;
+                            break;
+                        }
+                    }
+                    if (!updated) {
+                        SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                        interruptQueue.QueueGenericPopup_NonImmediate("You are surrounded!", "There is no more neighbor system in your factions control, so you didnt earn any influence here.", true);
+                    }
                 }
                 return;
             }
@@ -266,25 +306,9 @@ namespace PersistentMapClient {
                 __instance.Sim.GlobalContracts.Clear();
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
                     if (!Fields.excludedFactions.Contains(pair.Key)) {
-                        SimGameReputation rep = __instance.Sim.GetReputation(pair.Key);
-                        int numberOfContracts;
-                        switch (rep) {
-                            case SimGameReputation.LIKED: {
-                                    numberOfContracts = 1;
-                                    break;
-                                }
-                            case SimGameReputation.FRIENDLY: {
-                                    numberOfContracts = 2;
-                                    break;
-                                }
-                            case SimGameReputation.ALLIED: {
-                                    numberOfContracts = 3;
-                                    break;
-                                }
-                            default: {
-                                    numberOfContracts = 0;
-                                    break;
-                                }
+                        int numberOfContracts = 0;
+                        if (__instance.Sim.IsFactionAlly(pair.Key, null)) {
+                            numberOfContracts = Fields.settings.priorityContractsPerAlly;
                         }
                         if (numberOfContracts > 0) {
                             List<ParseSystem> targets = new List<ParseSystem>();
@@ -313,7 +337,7 @@ namespace PersistentMapClient {
                                                 target = Faction.AuriganPirates;
                                             }
                                         }
-                                        Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.Difficulty, pair.Key, target, realSystem);
+                                        Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.GetDifficulty(__instance.Sim.SimGameMode), pair.Key, target, realSystem);
                                         contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
                                         contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
                                         int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
