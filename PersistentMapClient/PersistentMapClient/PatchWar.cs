@@ -205,6 +205,20 @@ namespace PersistentMapClient {
                     }
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
+                        if (Helper.IsBorder(system2, simGame)) {
+                            GameObject starObject = GameObject.Find(system.name);
+                            Logger.LogLine(system2.Name + "Letsgo");
+                            Transform temp = starObject.transform.FindRecursive("vfxPrfPrtl_flashpointAvailable_loop-MANAGED");
+                            GameObject warmarker = GameObject.Instantiate(temp.gameObject, temp.parent, true);
+                            warmarker.name = "WarMarker";
+                            for (int i = 0; i < warmarker.transform.childCount; i++) {
+                                GameObject child = warmarker.transform.GetChild(i).gameObject;
+                                if (child != null)
+                                    child.SetActive(false);
+                            }
+                            warmarker.transform.Find("innerCircle").gameObject.SetActive(true);
+                            warmarker.SetActive(true);
+                        }
                         Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
                         Faction oldOwner = system2.Owner;
                         AccessTools.Method(typeof(StarSystemDef), "set_Owner").Invoke(system2.Def, new object[] {
