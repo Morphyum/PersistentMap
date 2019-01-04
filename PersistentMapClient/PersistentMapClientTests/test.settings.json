@@ -1,5 +1,5 @@
 {
-  "ServerURL": "http://localhost:8001/",
+  "ServerURL": "http://localhost:8000/",
   "debug": false,
   "priorityContactPayPercentage": 1.5
 }

@@ -10,7 +10,7 @@ using System.Linq;
 using UnityEngine;
 
 namespace PersistentMapClient {
-
+    /*
     [HarmonyPatch(typeof(SGTravelManager), "DisplayEnteredOrbitPopup")]
     public static class SGTravelManager_DisplayEnteredOrbitPopup_Patch {
         static bool Prefix(SGTravelManager __instance, SimGameState ___simState) {
@@ -340,4 +340,5 @@ namespace PersistentMapClient {
             }
         }
     }
+    */
 }

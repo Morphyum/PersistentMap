@@ -5,6 +5,7 @@ using PersistentMapServer.Objects;
 using PersistentMapServer.Worker;
 using System;
 using System.ComponentModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 
@@ -12,7 +13,7 @@ namespace PersistentMapServer {
 
     class Program {
 
-        public static string ServiceUrl = "http://localhost:8001/warServices";
+        public static string ServiceUrl = "http://localhost:8000/warServices";
 
         /*
          *Application that uses Windows Communications Foundation (WCF) to provide a RESTful API that allows persistence of Morphyum's WarTech.
@@ -30,8 +31,9 @@ namespace PersistentMapServer {
         static void Main(string[] args) {
             try {
                 // Start a heart-beat monitor to check the server status
-                BackgroundWorker heartbeatWorker = new BackgroundWorker();
-                heartbeatWorker.WorkerSupportsCancellation = true;
+                BackgroundWorker heartbeatWorker = new BackgroundWorker {
+                    WorkerSupportsCancellation = true
+                };
                 heartbeatWorker.DoWork += new DoWorkEventHandler(HeartBeatMonitor.DoWork);
                 heartbeatWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(HeartBeatMonitor.RunWorkerCompleted);
                 heartbeatWorker.RunWorkerAsync();
@@ -39,14 +41,17 @@ namespace PersistentMapServer {
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
-                BackgroundWorker playerHistoryPruner = new BackgroundWorker();
-                playerHistoryPruner.WorkerSupportsCancellation = true;
+                BackgroundWorker playerHistoryPruner = new BackgroundWorker {
+                    WorkerSupportsCancellation = true
+                };
                 playerHistoryPruner.DoWork += new DoWorkEventHandler(PlayerHistoryPruner.DoWork);
                 playerHistoryPruner.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PlayerHistoryPruner.RunWorkerCompleted);
                 playerHistoryPruner.RunWorkerAsync();
 
-                BackgroundWorker backupWorker = new BackgroundWorker();
-                backupWorker.WorkerSupportsCancellation = true;
+                BackgroundWorker backupWorker = new BackgroundWorker {
+                    WorkerSupportsCancellation = true
+                };
+
                 backupWorker.DoWork += new DoWorkEventHandler(BackupWorker.DoWork);
                 backupWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(BackupWorker.RunWorkerCompleted);
                 backupWorker.RunWorkerAsync();
@@ -64,8 +69,32 @@ namespace PersistentMapServer {
                         new UserQuotaInterceptor(), new AdminKeyRequiredInterceptor()
                     });
 
-                WebServiceHost _serviceHost = new WebServiceHost(proxy, new Uri(ServiceUrl));
-                addBehaviors(_serviceHost);
+                // Create a RESTful service host. The service instance is automatically, through 
+                //   the WarServiceInstanceProviderBehaviorAttribute. We create the singleton this way to give
+                //   us the chance to customize the binding 
+                WebServiceHost _serviceHost = new WebServiceHost(typeof(WarServices), new Uri(ServiceUrl));
+                AddServiceBehaviors(_serviceHost);
+
+                // Create a binding that wraps the default WebMessageEncodingBindingElement with a BindingElement
+                //   that can GZip compress responses when a client requests it.
+                WebMessageEncodingBindingElement innerEncoding = new WebMessageEncodingBindingElement {
+                    ContentTypeMapper = new ForceJsonWebContentMapper()
+                };
+                GZipMessageEncodingBindingElement encodingWrapper = new GZipMessageEncodingBindingElement(innerEncoding);
+
+                var transport = new HttpTransportBindingElement {
+                    ManualAddressing = true,
+                    KeepAliveEnabled = false,
+                    AllowCookies = false
+                };
+
+                var customBinding = new CustomBinding(encodingWrapper, transport);
+
+                // Create a default endpoint with the JSON/XML behaviors and the behavior to check the incoming headers for GZIP requests
+                var endpoint = _serviceHost.AddServiceEndpoint(typeof(IWarServices), customBinding, "");
+                endpoint.Behaviors.Add(new WebHttpBehavior());
+                endpoint.Behaviors.Add(new GZipBehavior());                
+
                 _serviceHost.Open();
 
                 Console.WriteLine("Open Press Key to close");
@@ -91,11 +120,12 @@ namespace PersistentMapServer {
             }
         }
 
-        private static void addBehaviors(WebServiceHost _serviceHost) {
-            ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior();
-                throttlingBehavior.MaxConcurrentCalls = 64; // Recommendation is 16 * Processors so 4*16=64
-                throttlingBehavior.MaxConcurrentInstances = 9999; // Using a singleton instance, so this doesn't matter
-                throttlingBehavior.MaxConcurrentSessions = 9999; // Not using HTTP sessions, so this doesn't matter
+        private static void AddServiceBehaviors(WebServiceHost _serviceHost) {
+            ServiceThrottlingBehavior throttlingBehavior = new ServiceThrottlingBehavior {
+                MaxConcurrentCalls = 64, // Recommendation is 16 * Processors so 4*16=64
+                MaxConcurrentInstances = 9999, // Using a singleton instance, so this doesn't matter
+                MaxConcurrentSessions = 9999 // Not using HTTP sessions, so this doesn't matter
+            };
             _serviceHost.Description.Behaviors.Add(throttlingBehavior);
 
             RequestLoggingBehavior loggingBehavior = new RequestLoggingBehavior();
@@ -103,6 +133,16 @@ namespace PersistentMapServer {
 
             CorsWildcardForAllResponsesBehavior corsBehavior = new CorsWildcardForAllResponsesBehavior();
             _serviceHost.Description.Behaviors.Add(corsBehavior);
+
+            InstanceProviderServiceBehavior instanceProviderBehavior = new InstanceProviderServiceBehavior();
+            _serviceHost.Description.Behaviors.Add(instanceProviderBehavior);
+
+        }
+
+        class ForceJsonWebContentMapper : WebContentTypeMapper {
+            public override WebContentFormat GetMessageFormatForContentType(string contentType) {
+                return WebContentFormat.Json;
+            }
         }
     }
 }
