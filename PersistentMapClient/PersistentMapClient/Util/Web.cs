@@ -122,10 +122,13 @@ namespace PersistentMapClient {
         }
 
         // Fetch the current state of the starmap
-        public static PersistentMapAPI.StarMap GetStarMap() {
+        public static StarMap GetStarMap() {
             try {
                 HttpWebRequest request = new RequestBuilder(WarService.GetStarMap).Build();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                watch.Stop();
+                PersistentMapClient.Logger.LogIfDebug($"GetStarMap took: {watch.ElapsedMilliseconds}ms.");
                 StarMap map;
                 using (Stream responseStream = response.GetResponseStream()) {
                     StreamReader reader = new StreamReader(responseStream);
@@ -145,7 +148,10 @@ namespace PersistentMapClient {
             try {
                 string testjson = JsonConvert.SerializeObject(mresult);           
                 HttpWebRequest request = new RequestBuilder(WarService.PostMissionResult).CompanyName(companyName).PostData(testjson).Build();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                watch.Stop();                
+                PersistentMapClient.Logger.LogIfDebug($"PostMissionResult took: {watch.ElapsedMilliseconds}ms.");
                 using (Stream responseStream = response.GetResponseStream()) {
                     StreamReader reader = new StreamReader(responseStream);
                     string mapstring = reader.ReadToEnd();
