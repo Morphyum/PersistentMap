@@ -2,13 +2,13 @@
 using BattleTech.Framework;
 using BattleTech.Save;
 using BattleTech.UI;
-using BattleTech.UI.Tooltips;
 using Harmony;
 using HBS;
 using PersistentMapAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +17,7 @@ namespace PersistentMapClient {
 
     [HarmonyBefore(new string[] { "de.morphyum.MercDeployments" })]
     [HarmonyPatch(typeof(SimGameState), "Rehydrate")]
-    public static class SimGameState_Rehydrate_Patch {
+    public static class SimGameState_Rehydrate_Patch {        
         static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
             try {
                 foreach (Contract contract in __instance.GlobalContracts) {
@@ -28,7 +28,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -47,11 +47,12 @@ namespace PersistentMapClient {
                     interruptQueue.QueueFinancialReport();
                 }
                 __instance.RoomManager.RefreshDisplay();
-                AccessTools.Method(typeof(SimGameState), "OnNewQuarterBegin").Invoke(__instance, new object[] { });
+                AccessTools.Method(typeof(SimGameState), "OnNewQuarterBegin")
+                    .Invoke(__instance, new object[] { });
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
@@ -61,10 +62,11 @@ namespace PersistentMapClient {
     public static class StarSystem_ResetContracts_Patch {
         static void Postfix(StarSystem __instance) {
             try {
-                AccessTools.Field(typeof(SimGameState), "globalContracts").SetValue(__instance.Sim, new List<Contract>());
+                AccessTools.Field(typeof(SimGameState), "globalContracts")
+                    .SetValue(__instance.Sim, new List<Contract>());
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -78,7 +80,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -89,38 +91,39 @@ namespace PersistentMapClient {
             try {
                 if (Fields.warmission) {
                     if (__result == null) {
-                        Logger.LogLine("No Contract");
+                        PersistentMapClient.Logger.Log("No Contract");
                     }
                     if (__result.Override == null) {
-                        Logger.LogLine(__result.Name + " Does not have an ovveride");
+                        PersistentMapClient.Logger.Log(__result.Name + " Does not have an ovveride");
                     }
                     if (__result.InitialContractValue == null) {
-                        Logger.LogLine(__result.Name + " Does not have an InitialContractValue");
+                        PersistentMapClient.Logger.Log(__result.Name + " Does not have an InitialContractValue");
                     }
                     if (__instance.Constants == null) {
-                        Logger.LogLine("No Constants");
+                        PersistentMapClient.Logger.Log("No Constants");
                     }
                     if (__instance.Constants.Salvage == null) {
-                        Logger.LogLine("No Salvage Constants");
+                        PersistentMapClient.Logger.Log("No Salvage Constants");
                     }
                     if (__instance.Constants.Salvage.PrioritySalvageModifier == null) {
-                        Logger.LogLine("No PrioritySalvageModifier");
+                        PersistentMapClient.Logger.Log("No PrioritySalvageModifier");
                     }
                     if (Fields.settings == null) {
-                        Logger.LogLine("No Settings");
+                        PersistentMapClient.Logger.Log("No Settings");
                     }
                     if (Fields.settings.priorityContactPayPercentage == null) {
-                        Logger.LogLine("No priorityContactPayPercentage");
+                        PersistentMapClient.Logger.Log("No priorityContactPayPercentage");
                     }
                     __result.SetInitialReward(Mathf.RoundToInt(__result.InitialContractValue * Fields.settings.priorityContactPayPercentage));
                     int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
                     __result.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(__result.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
-                    AccessTools.Method(typeof(Contract), "set_SalvagePotential").Invoke(__result, new object[] { __result.Override.salvagePotential });
+                    AccessTools.Method(typeof(Contract), "set_SalvagePotential")
+                        .Invoke(__result, new object[] { __result.Override.salvagePotential });
                     Fields.warmission = false;
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -157,7 +160,7 @@ namespace PersistentMapClient {
                 GameObject companyObject = GameObject.Find("COMPANYNAMES");
                 if (companyObject != null) {
                     TextMeshProUGUI companietext = companyObject.transform.FindRecursive("txt-owner").GetComponent<TextMeshProUGUI>();
-                    ParseSystem system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
+                    PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
                     if (system != null && companietext != null) {
                         companietext.SetText(string.Join(Environment.NewLine, system.companies.ToArray()));
                     }
@@ -165,96 +168,116 @@ namespace PersistentMapClient {
                         companietext.SetText("");
                     }
                 }
-            }
-            catch (Exception e) {
-                Logger.LogError(e);
-            }
-        }
-    }
+             }
+             catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+             }
+         }
+     }
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
+
+        private static MethodInfo methodSetOwner = AccessTools.Method(typeof(StarSystemDef), "set_Owner");
+        private static MethodInfo methodSetContractEmployers = AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers");
+        private static MethodInfo methodSetContractTargets = AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets");
+        private static MethodInfo methodSetDescription = AccessTools.Method(typeof(StarSystemDef), "set_Description");
+        private static FieldInfo fieldSimGameInterruptManager = AccessTools.Field(typeof(SimGameState), "interruptQueue");
+
         static void Postfix(Starmap __instance, SimGameState simGame) {
             try {
                 Fields.currentMap = Web.GetStarMap();
-                List<StarSystem> needUpdates = new List<StarSystem>();
                 if (Fields.currentMap == null) {
-                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
                     return;
                 }
-                List<string> changes = new List<string>();
-                foreach (ParseSystem system in Fields.currentMap.systems) {
+
+                List<string> changeNotifications = new List<string>();
+                List<StarSystem> transitiveContractUpdateTargets = new List<StarSystem>();
+                foreach (PersistentMapAPI.System system in Fields.currentMap.systems) {
                     if (system.activePlayers > 0) {
-                        GameObject starObject = GameObject.Find(system.name);
-                        Transform argoMarker = starObject.transform.Find("ArgoMarker");
-                        argoMarker.gameObject.SetActive(true);
-                        argoMarker.localScale = new Vector3(4f, 4f, 4f);
-                        argoMarker.GetComponent<MeshRenderer>().material.color = Color.grey;
-                        GameObject playerNumber = new GameObject();
-                        playerNumber.transform.parent = argoMarker;
-                        playerNumber.name = "PlayerNumberText";
-                        playerNumber.layer = 25;
-                        TextMeshPro textComponent = playerNumber.AddComponent<TextMeshPro>();
-                        textComponent.SetText(system.activePlayers.ToString());
-                        textComponent.transform.localPosition = new Vector3(0, -0.35f, -0.05f);
-                        textComponent.fontSize = 6;
-                        textComponent.alignment = TextAlignmentOptions.Center;
-                        textComponent.faceColor = Color.black;
-                        textComponent.fontStyle = FontStyles.Bold;
+                        AddActivePlayersBadgeToSystem(system);
                     }
+
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
                         Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
                         Faction oldOwner = system2.Owner;
-                        AccessTools.Method(typeof(StarSystemDef), "set_Owner").Invoke(system2.Def, new object[] {
-                            newOwner });
-                        AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers").Invoke(system2.Def, new object[] {
-                            Helper.GetEmployees(system2, simGame) });
-                        AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(system2.Def, new object[] {
-                            Helper.GetTargets(system2, simGame) });
+                        // Update control to the new faction
+                        methodSetOwner.Invoke(system2.Def, new object[] { newOwner });
                         system2.Tags.Remove(Helper.GetFactionTag(oldOwner));
                         system2.Tags.Add(Helper.GetFactionTag(newOwner));
+                        system2 = Helper.ChangeWarDescription(system2, simGame, system);
 
+                        // Update the contracts on the system
+                        methodSetContractEmployers.Invoke(system2.Def, new object[] { Helper.GetEmployees(system2, simGame) });
+                        methodSetContractTargets.Invoke(system2.Def, new object[] { Helper.GetTargets(system2, simGame) });
+
+                        // If the system is next to enemy factions, update the map to show the border
                         if (Helper.IsBorder(system2, simGame) && simGame.Starmap != null) {
                             system2.Tags.Add("planet_other_battlefield");
-                        }
-                        else {
+                        } else {
                             system2.Tags.Remove("planet_other_battlefield");
                         }
-                        system2 = Helper.ChangeWarDescription(system2, simGame, system);
+
+                        // If the owner changes, add a notice to the player and mark neighbors for contract updates
                         if (newOwner != oldOwner) {
-                            changes.Add(Helper.GetFactionShortName(newOwner, simGame.DataManager) + " took " + system2.Name + " from " + Helper.GetFactionShortName(oldOwner, simGame.DataManager));
+                            string newOwnerName = Helper.GetFactionShortName(newOwner, simGame.DataManager);
+                            string oldOwnerName = Helper.GetFactionShortName(oldOwner, simGame.DataManager);
+                            changeNotifications.Add($"{newOwnerName} took {system2.Name} from {oldOwnerName}");
                             foreach (StarSystem changedSystem in simGame.Starmap.GetAvailableNeighborSystem(system2)) {
-                                if (!needUpdates.Contains(changedSystem)) {
-                                    needUpdates.Add(changedSystem);
+                                if (!transitiveContractUpdateTargets.Contains(changedSystem)) {
+                                    transitiveContractUpdateTargets.Add(changedSystem);
                                 }
                             }
                         }
                     }
                 }
-                foreach (StarSystem changedSystem in needUpdates) {
-                    AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers").Invoke(changedSystem.Def, new object[] {
-                            Helper.GetEmployees(changedSystem, simGame) });
-                    AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets").Invoke(changedSystem.Def, new object[] {
-                            Helper.GetTargets(changedSystem, simGame) });
-                    ParseSystem system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
+
+                // For each system neighboring a system whose ownership changed, update their contracts as well
+                foreach (StarSystem changedSystem in transitiveContractUpdateTargets) {
+                    methodSetContractEmployers.Invoke(changedSystem.Def, new object[] { Helper.GetEmployees(changedSystem, simGame) });
+                    methodSetContractTargets.Invoke(changedSystem.Def, new object[] { Helper.GetTargets(changedSystem, simGame) });
+
+                    // Update the description on these systems to show the new contract options
+                    PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
                     if (system != null) {
-                        AccessTools.Method(typeof(StarSystemDef), "set_Description").Invoke(changedSystem.Def, new object[] {
-                            Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description});
+                        methodSetDescription.Invoke(changedSystem.Def, 
+                            new object[] { Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description} );
                     }
                 }
-                if (changes.Count > 0 && !Fields.firstpass) {
-                    SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(simGame);
-                    interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changes.ToArray()), true);
-                }
-                else {
+
+                if (changeNotifications.Count > 0 && !Fields.firstpass) {
+                    SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
+                    interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changeNotifications.ToArray()), true);
+                } else {
                     Fields.firstpass = false;
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
+        }
+
+        // Creates the argo marker for player activity
+        private static void AddActivePlayersBadgeToSystem(PersistentMapAPI.System system) {
+            GameObject starObject = GameObject.Find(system.name);
+            Transform argoMarker = starObject.transform.Find("ArgoMarker");
+            argoMarker.gameObject.SetActive(true);
+            argoMarker.localScale = new Vector3(4f, 4f, 4f);
+            argoMarker.GetComponent<MeshRenderer>().material.color = Color.grey;
+            GameObject playerNumber = new GameObject();
+            playerNumber.transform.parent = argoMarker;
+            playerNumber.name = "PlayerNumberText";
+            playerNumber.layer = 25;
+            TextMeshPro textComponent = playerNumber.AddComponent<TextMeshPro>();
+            textComponent.SetText(system.activePlayers.ToString());
+            textComponent.transform.localPosition = new Vector3(0, -0.35f, -0.05f);
+            textComponent.fontSize = 6;
+            textComponent.alignment = TextAlignmentOptions.Center;
+            textComponent.faceColor = Color.black;
+            textComponent.fontStyle = FontStyles.Bold;
         }
     }
 
@@ -290,7 +313,7 @@ namespace PersistentMapClient {
                 return;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -311,8 +334,8 @@ namespace PersistentMapClient {
                             numberOfContracts = Fields.settings.priorityContractsPerAlly;
                         }
                         if (numberOfContracts > 0) {
-                            List<ParseSystem> targets = new List<ParseSystem>();
-                            foreach (ParseSystem potentialTarget in Fields.currentMap.systems) {
+                            List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
+                            foreach (PersistentMapAPI.System potentialTarget in Fields.currentMap.systems) {
                                 FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
                                 if (control != null && control.percentage < 100 && control.percentage != 0) {
                                     targets.Add(potentialTarget);
@@ -352,7 +375,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }

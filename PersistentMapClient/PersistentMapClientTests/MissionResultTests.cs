@@ -1,27 +1,35 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using PersistentMapClient;
+using System;
 
 namespace PersistentMapClientTests {
 
-    [TestClass]
+    [TestFixture, NonParallelizable]
     public class MissionResultTests {
-        [TestMethod]
-        //[Timeout(5000)]
-        public void TestPostMissionResult() {
-            PersistentMapClient.PersistentMapClient.Init(".", "test.settings.json");
 
-            PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult();
-            mresult.employer = BattleTech.Faction.Davion;
-            mresult.target = BattleTech.Faction.Liao;
-            mresult.result = BattleTech.MissionResult.Victory;
-            mresult.systemName = "Acrux";
-            mresult.difficulty = 2;
-            mresult.awardedRep = 2;
-            mresult.planetSupport = 0;
+        [Test]
+        public void TestPostMissionResult() {
+            PersistentMapClient.PersistentMapClient.Init(TestContext.CurrentContext.TestDirectory, "test.settings.json");
+
+            PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult {
+                employer = BattleTech.Faction.Davion,
+                target = BattleTech.Faction.Liao,
+                result = BattleTech.MissionResult.Victory,
+                systemName = "Acrux",
+                difficulty = 2,
+                awardedRep = 2,
+                planetSupport = 0
+            };
 
             const string companyName = "Test Company";
             bool success = Web.PostMissionResult(mresult, companyName);
-            Assert.IsTrue(success);            
+            Assert.IsTrue(success);
+        }
+
+        [TearDown]
+        public void Cleanup() {
+            PersistentMapClient.PersistentMapClient.Dispose();
         }
     }
+
 }
