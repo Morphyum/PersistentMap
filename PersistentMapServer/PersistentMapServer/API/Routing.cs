@@ -2,14 +2,20 @@
     public static class Routing {
         public const string GetStarMap = "/StarMap/";
         public const string GetSystem = "/StarMap/System/{name}";
+
         public const string GetMissionResults = "/Mission/Results/?MinutesBack={MinutesBack}&MaxResults={MaxResults}";
         public const string GetActivePlayers = "/Users/Active/?MinutesBack={MinutesBack}";
-        public const string GetStartupTime = "/Info/StartupTime";
         public const string GetShopForFaction = "/Shop/{Faction}";
+
         public const string PostMissionResult = "/Mission/?CompanyName={CompanyName}";
         public const string PostSalvageForFaction = "/Salvage/{Faction}";
         public const string PostPurchaseForFaction = "/Buy/{Faction}";
-        
+
+        public const string GetStartupTime = "/Info/StartupTime";
+
+        public const string GetPlayerCompanies = "/Player/";
+        public const string GetPlayerHistory = "/Player/{PlayerId}/History/";
+
         // Admin functions
         public const string GetServiceDataSnapshot = "/Admin/ServiceDataSnapshot";
         public const string GetConnections = "/Admin/Connections";

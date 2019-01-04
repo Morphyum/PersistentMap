@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace PersistentMapServer.Objects {
 
-    class StarMapBuilder {
+    class StarMapStateManager {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -53,7 +53,7 @@ namespace PersistentMapServer.Objects {
                 lock (_updateLock) {
                     logger.Info("Backing up existing starmap");
                     string mapToSave = JsonConvert.SerializeObject(Holder.currentMap);
-                    BackupWorker.WriteBoth(StarMapBuilder.MapFileDirectory, mapToSave);
+                    BackupWorker.WriteBoth(StarMapStateManager.MapFileDirectory, mapToSave);
                     Holder.currentMap = null;
                     Holder.currentMap = InitializeNewMap();
                 }
@@ -78,7 +78,7 @@ namespace PersistentMapServer.Objects {
         // Read the system data from disk, or create a new copy
         private static void ReadOrInitialize() {
             StarMap mapFromDisk;
-            string mapFilePath = Path.Combine(StarMapBuilder.MapFileDirectory, "current.json");
+            string mapFilePath = Path.Combine(StarMapStateManager.MapFileDirectory, "current.json");
             if (File.Exists(mapFilePath)) {
                 using (StreamReader r = new StreamReader(mapFilePath)) {
                     string json = r.ReadToEnd();
@@ -97,7 +97,7 @@ namespace PersistentMapServer.Objects {
             StarMap map = new StarMap();
             map.systems = new List<PersistentMapAPI.System>();
 
-            foreach (string filePaths in Directory.GetFiles(StarMapBuilder.systemDataFilePath)) {
+            foreach (string filePaths in Directory.GetFiles(StarMapStateManager.systemDataFilePath)) {
                 string originalJson = File.ReadAllText(filePaths);
                 JObject originalJObject = JObject.Parse(originalJson);
                 Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);

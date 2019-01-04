@@ -88,9 +88,14 @@
     <Compile Include="Interceptor\AdminKeyRequiredInterceptor.cs" />
     <Compile Include="MessageInspector\CorsWildcardInspector.cs" />
     <Compile Include="MessageInspector\RequestDurationLoggingInspector.cs" />
-    <Compile Include="Objects\FactionInventoryBuilder.cs" />
+    <Compile Include="Objects\FactionInventoryStateManager.cs" />
+    <Compile Include="Objects\FactionShop.cs" />
+    <Compile Include="Objects\Player.cs" />
+    <Compile Include="Objects\HistoryResult.cs" />
+    <Compile Include="Objects\PlayerStateManager.cs" />
+    <Compile Include="Worker\PlayerHistoryWorkers.cs" />
     <Compile Include="Objects\ServiceDataSnapshot.cs" />
-    <Compile Include="Objects\StarMapBuilder.cs" />
+    <Compile Include="Objects\StarMapStateManager.cs" />
     <Compile Include="SettingsFileMonitor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

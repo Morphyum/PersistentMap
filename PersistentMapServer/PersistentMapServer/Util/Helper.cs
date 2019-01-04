@@ -61,11 +61,40 @@ namespace PersistentMapAPI {
             return settings;
         }
 
+        // Records a player's mission result in all the places that needs it
+        public static void RecordPlayerActivity(MissionResult mresult, string clientId, string companyName, DateTime resultTime) {
+            // For backwards compatibility, record this in the connectionStore for now.
+            Holder.connectionStore[clientId].companyName = companyName;
+            Holder.connectionStore[clientId].lastSystemFoughtAt = mresult.systemName;
+
+            // For now, the player Id is their hashed IP address
+            var companyActivity = new CompanyActivity {
+                employer = mresult.employer,
+                target = mresult.target,
+                systemId = mresult.systemName,
+                companyName = companyName,
+                resultTime = resultTime,
+                result = mresult.result
+            };
+
+            var history = Holder.playerHistory.SingleOrDefault(x => clientId.Equals(x.Id));
+            if (history == null) {
+                history = new PlayerHistory {
+                    Id = clientId,
+                    lastActive = resultTime
+                };
+            }
+            history.lastActive = resultTime;
+            history.activities.Add(companyActivity);
+
+            Holder.playerHistory.Add(history);
+        }
+
         public static List<ShopDefItem> GenerateNewShop(Faction realFaction) {
             List<ShopDefItem> newShop = new List<ShopDefItem>();
             Random rand = new Random();
             if (Holder.factionInventories == null) {
-                Holder.factionInventories = FactionInventoryBuilder.Build();                
+                Holder.factionInventories = FactionInventoryStateManager.Build();                
             }
             if (!Holder.factionInventories.ContainsKey(realFaction)) {
                 Holder.factionInventories.Add(realFaction, new List<ShopDefItem>());
@@ -108,7 +137,7 @@ namespace PersistentMapAPI {
 
         // Stolen from https://stackoverflow.com/questions/33166679/get-client-ip-address-using-wcf-4-5-remoteendpointmessageproperty-in-load-balanc
         // Note: Old method didn't account for load-balancer
-        public static string mapRequestIP() {
+        public static string MapRequestIP() {
             OperationContext context = OperationContext.Current;
             MessageProperties properties = context.IncomingMessageProperties;
             RemoteEndpointMessageProperty endpoint = properties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
@@ -148,7 +177,7 @@ namespace PersistentMapAPI {
             logger.Info($"Generating {count} companies");
 
             // Ensure that the map has been loaded
-            StarMapBuilder.Build();
+            StarMapStateManager.Build();
 
             int systemCount = Holder.currentMap.systems.Count;
             int numSystems = random.Next(1, count);
@@ -161,9 +190,10 @@ namespace PersistentMapAPI {
             logger.Info($"Generated {numSystems} systems");
 
             for (int i = 0; i < count; i++) {
-                UserInfo randomUser = new UserInfo();
-                randomUser.companyName = GenerateFakeCompanyName(random);
-                randomUser.LastDataSend = DateTime.UtcNow;
+                UserInfo randomUser = new UserInfo {
+                    companyName = GenerateFakeCompanyName(random),
+                    LastDataSend = DateTime.UtcNow
+                };
 
                 int systemId = random.Next(0, systems.Count - 1);
                 randomUser.lastSystemFoughtAt = systems[systemId];

@@ -8,7 +8,7 @@ using System.IO;
 
 namespace PersistentMapServer.Objects {
 
-    class FactionInventoryBuilder {
+    class FactionInventoryStateManager {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -34,7 +34,7 @@ namespace PersistentMapServer.Objects {
                 lock (_updateLock) {
                     logger.Info("Backing up existing inventory data");
                     string inventoryToSave = JsonConvert.SerializeObject(Holder.factionInventories);
-                    BackupWorker.WriteBoth(FactionInventoryBuilder.ShopFileDirectory, inventoryToSave);
+                    BackupWorker.WriteBoth(FactionInventoryStateManager.ShopFileDirectory, inventoryToSave);
                     Holder.factionInventories = new Dictionary<Faction, List<ShopDefItem>>();
                 }
             }
@@ -43,7 +43,7 @@ namespace PersistentMapServer.Objects {
         // Read the system data from disk, or create a new copy
         private static void ReadOrInitialize() {
             Dictionary<Faction, List<ShopDefItem>> inventoryFromDisk = new Dictionary<Faction, List<ShopDefItem>>();
-            string filePath = Path.Combine(FactionInventoryBuilder.ShopFileDirectory, "current.json");
+            string filePath = Path.Combine(FactionInventoryStateManager.ShopFileDirectory, "current.json");
             if (File.Exists(filePath)) {
                 using (StreamReader r = new StreamReader(filePath)) {
                     string json = r.ReadToEnd();

@@ -42,7 +42,7 @@ namespace PersistentMapServer.Interceptor {
 
                 IncomingWebRequestContext requestContext = WebOperationContext.Current.IncomingRequest;
                 string serviceMethod = requestContext.UriTemplateMatch != null ? requestContext.UriTemplateMatch.Data.ToString() : "UNMAPPED";
-                string requestIP = Helper.mapRequestIP();
+                string requestIP = Helper.MapRequestIP();
                 string obfuscatedIP = Helper.HashAndTruncate(requestIP);
                 PersistentMapAPI.Settings settings = Helper.LoadSettings();
                 logger.Warn($"Prevented unauthorized access from ({( settings.Debug ? requestIP : obfuscatedIP )}) to method {serviceMethod}");

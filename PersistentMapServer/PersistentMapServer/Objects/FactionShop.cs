@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PersistentMapAPI {
+namespace PersistentMapServer.Objects {
     // Contains all of the items currently available for sale unique to a specific faction.
     public class FactionShop {
 
