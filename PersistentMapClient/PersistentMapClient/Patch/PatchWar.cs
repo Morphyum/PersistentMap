@@ -17,7 +17,7 @@ namespace PersistentMapClient {
 
     [HarmonyBefore(new string[] { "de.morphyum.MercDeployments" })]
     [HarmonyPatch(typeof(SimGameState), "Rehydrate")]
-    public static class SimGameState_Rehydrate_Patch {        
+    public static class SimGameState_Rehydrate_Patch {
         static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
             try {
                 foreach (Contract contract in __instance.GlobalContracts) {
@@ -168,12 +168,12 @@ namespace PersistentMapClient {
                         companietext.SetText("");
                     }
                 }
-             }
-             catch (Exception e) {
+            }
+            catch (Exception e) {
                 PersistentMapClient.Logger.LogError(e);
-             }
-         }
-     }
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
@@ -202,20 +202,6 @@ namespace PersistentMapClient {
 
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
-                        if (Helper.IsBorder(system2, simGame)) {
-                            GameObject starObject = GameObject.Find(system.name);
-                            Logger.LogLine(system2.Name + "Letsgo");
-                            Transform temp = starObject.transform.FindRecursive("vfxPrfPrtl_flashpointAvailable_loop-MANAGED");
-                            GameObject warmarker = GameObject.Instantiate(temp.gameObject, temp.parent, true);
-                            warmarker.name = "WarMarker";
-                            for (int i = 0; i < warmarker.transform.childCount; i++) {
-                                GameObject child = warmarker.transform.GetChild(i).gameObject;
-                                if (child != null)
-                                    child.SetActive(false);
-                            }
-                            warmarker.transform.Find("innerCircle").gameObject.SetActive(true);
-                            warmarker.SetActive(true);
-                        }
                         Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
                         Faction oldOwner = system2.Owner;
                         // Update control to the new faction
@@ -227,13 +213,6 @@ namespace PersistentMapClient {
                         // Update the contracts on the system
                         methodSetContractEmployers.Invoke(system2.Def, new object[] { Helper.GetEmployees(system2, simGame) });
                         methodSetContractTargets.Invoke(system2.Def, new object[] { Helper.GetTargets(system2, simGame) });
-
-                        // If the system is next to enemy factions, update the map to show the border
-                        if (Helper.IsBorder(system2, simGame) && simGame.Starmap != null) {
-                            system2.Tags.Add("planet_other_battlefield");
-                        } else {
-                            system2.Tags.Remove("planet_other_battlefield");
-                        }
 
                         // If the owner changes, add a notice to the player and mark neighbors for contract updates
                         if (newOwner != oldOwner) {
@@ -257,15 +236,51 @@ namespace PersistentMapClient {
                     // Update the description on these systems to show the new contract options
                     PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
                     if (system != null) {
-                        methodSetDescription.Invoke(changedSystem.Def, 
-                            new object[] { Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description} );
+                        methodSetDescription.Invoke(changedSystem.Def,
+                            new object[] { Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description });
+                    }
+                }
+
+                // If the system is next to enemy factions, update the map to show the border
+                foreach (PersistentMapAPI.System system in Fields.currentMap.systems) {
+                    StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
+                    if (system2 != null) {
+                        if (Helper.IsWarBorder(system2, simGame)) {
+                            system2.Tags.Add("planet_other_battlefield");
+                            GameObject starObject = GameObject.Find(system.name);
+                            if (starObject != null) {
+                                Transform temp = starObject.transform.FindRecursive("vfxPrfPrtl_flashpointAvailable_loop-MANAGED");
+                                if (temp != null) {
+                                    GameObject warmarker = GameObject.Instantiate(temp.gameObject, temp.parent, true);
+                                    warmarker.name = "WarMarker";
+                                    for (int i = 0; i < warmarker.transform.childCount; i++) {
+                                        GameObject child = warmarker.transform.GetChild(i).gameObject;
+                                        if (child != null)
+                                            child.SetActive(false);
+                                    }
+                                    warmarker.transform.Find("innerCircle").gameObject.SetActive(true);
+                                    warmarker.SetActive(true);
+                                } else {
+                                    PersistentMapClient.Logger.Log("temp null: " + system.name);
+                                }
+                            } else {
+                                PersistentMapClient.Logger.Log("StarObject null: " + system.name);
+                            }
+                        }
+                        else {
+                            system2.Tags.Remove("planet_other_battlefield");
+                        }
+                    }
+                    else {
+                        PersistentMapClient.Logger.Log("System not found: " + system.name);
                     }
                 }
 
                 if (changeNotifications.Count > 0 && !Fields.firstpass) {
                     SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
                     interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changeNotifications.ToArray()), true);
-                } else {
+                }
+                else {
                     Fields.firstpass = false;
                 }
             }
@@ -304,7 +319,7 @@ namespace PersistentMapClient {
                     GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                     StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                     foreach (StarSystem potential in game.Simulation.StarSystems) {
-                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y,system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
+                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y, system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
                             int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
                             PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
                             if (!game.Simulation.IsFactionAlly(mresult.employer)) {

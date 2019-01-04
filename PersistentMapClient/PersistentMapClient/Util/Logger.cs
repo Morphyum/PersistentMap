@@ -31,7 +31,7 @@ namespace PersistentMapClient {
 
         public void LogError(Exception error) {
             string now = DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture);
-            LogStream.WriteLine($"{now} - {error.Message}");
+            LogStream.WriteLine($"{now} - {error}");
         }
 
         public void Close() {

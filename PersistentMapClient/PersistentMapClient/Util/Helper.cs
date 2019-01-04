@@ -27,6 +27,19 @@ namespace PersistentMapClient {
             return (Faction)Enum.Parse(typeof(Faction), faction, true);
         }
 
+        public static Settings LoadSettings() {
+            try {
+                using (StreamReader r = new StreamReader($"{PersistentMapClient.ModDirectory}/settings.json")) {
+                    string json = r.ReadToEnd();
+                    return JsonConvert.DeserializeObject<Settings>(json);
+                }
+            }
+            catch (Exception ex) {
+                PersistentMapClient.Logger.LogError(ex);
+                return null;
+            }
+        }
+
         public static bool MeetsNewReqs(StarSystem instance, TagSet reqTags, TagSet exTags, TagSet curTags) {
             try {
                 if (!curTags.ContainsAny(exTags, false)) {
@@ -98,7 +111,7 @@ namespace PersistentMapClient {
             // We want to write to Battletech/ModSaves/PersistentMapClient directory
             DirectoryInfo modSavesDir = battletechDir.CreateSubdirectory("ModSaves");
             DirectoryInfo clientDir = modSavesDir.CreateSubdirectory("PersistentMapClient");
-            
+
             // Finally see if the file exists
             FileInfo GeneratedSettingsFile = new FileInfo(Path.Combine(clientDir.FullName, Helper.GeneratedSettingsFile));
             if (GeneratedSettingsFile.Exists) {
@@ -108,20 +121,22 @@ namespace PersistentMapClient {
                     using (StreamReader r = new StreamReader(GeneratedSettingsFile.FullName)) {
                         string json = r.ReadToEnd();
                         generatedSettings = JsonConvert.DeserializeObject<GeneratedSettings>(json);
-                    }                    
+                    }
                     Fields.settings.ClientID = generatedSettings.ClientID;
                     PersistentMapClient.Logger.Log($"Fetched clientID:({Fields.settings.ClientID}).");
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     PersistentMapClient.Logger.Log($"Failed to read clientID from {GeneratedSettingsFile}, will overwrite!");
                     PersistentMapClient.Logger.LogError(e);
                 }
-            } else {
+            }
+            else {
                 PersistentMapClient.Logger.Log($"GeneratedSettings file at path:{GeneratedSettingsFile.FullName} does not exist, will be created.");
             }
 
             // If the clientID hasn't been written at this point, something went wrong. Generate a new one.
             if (Fields.settings.ClientID == null || Fields.settings.ClientID.Equals("")) {
-                Guid clientID = Guid.NewGuid();                
+                Guid clientID = Guid.NewGuid();
                 try {
                     GeneratedSettings newSettings = new GeneratedSettings {
                         ClientID = clientID.ToString()
@@ -132,7 +147,8 @@ namespace PersistentMapClient {
                     }
                     Fields.settings.ClientID = clientID.ToString();
                     PersistentMapClient.Logger.Log($"Wrote new clientID ({Fields.settings.ClientID}) to generatedSettings at:{GeneratedSettingsFile.FullName}.");
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     PersistentMapClient.Logger.Log("FATAL ERROR: Failed to write clientID, cannot continue!");
                     PersistentMapClient.Logger.LogError(e);
                     // TODO: Figure out a failure strategy...
@@ -157,6 +173,28 @@ namespace PersistentMapClient {
                     if (system.Owner != Faction.NoFaction) {
                         foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
                             if (system.Owner != neigbourSystem.Owner && neigbourSystem.Owner != Faction.NoFaction) {
+                                result = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
+            catch (Exception ex) {
+                PersistentMapClient.Logger.LogError(ex);
+                return false;
+            }
+        }
+
+        public static bool IsWarBorder(StarSystem system, SimGameState Sim) {
+            try {
+                FactionDef factiondef = Sim.FactionsDict[system.Owner];
+                bool result = false;
+                if (Sim.Starmap != null) {
+                    if (system.Owner != Faction.NoFaction) {
+                        foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
+                            if (factiondef.Enemies.Contains(neigbourSystem.Owner) && neigbourSystem.Owner != Faction.NoFaction) {
                                 result = true;
                                 break;
                             }
@@ -337,12 +375,13 @@ namespace PersistentMapClient {
         private static ILookup<string, Faction> capitalsBySystemName = capitalsByFaction.ToLookup(pair => pair.Value, pair => pair.Key);
         public static bool IsCapital(StarSystem system, Faction faction) {
             bool isCapital = false;
-            try {                
+            try {
                 if (capitalsBySystemName.Contains(system.Name)) {
                     Faction systemFaction = capitalsBySystemName[system.Name].First();
                     isCapital = (systemFaction == faction);
-                }                
-            } catch (Exception ex) {
+                }
+            }
+            catch (Exception ex) {
                 PersistentMapClient.Logger.LogError(ex);
             }
             return isCapital;
