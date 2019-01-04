@@ -12,9 +12,8 @@ namespace PersistentMapServer.Worker {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private const string CategoryName_ServiceModelService = "ServiceModelService 4.0.0.0";
-
-        // TODO: Pull 'WarServicesProxy' from the instance, instead of hard-coding it like this.
-        private static string InstanceName_WarServices = "WarServicesProxy@" + Program.ServiceUrl.Replace("/", "|");
+        
+        private static string InstanceName_WarServices = "WarServices@" + Program.ServiceUrl.Replace("/", "|");
 
         private static TimeSpan reportingTimeSpan = TimeSpan.FromSeconds(60);
 

@@ -17,8 +17,11 @@ namespace PersistentMapClient {
     }
 
     public class Helper {
-
         public const string GeneratedSettingsFile = "generatedSettings.json";
+
+        public static double GetDistanceInLY(float x1, float y1, float x2, float y2) {
+            return Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
+        }
 
         public static Faction getfaction(string faction) {
             return (Faction)Enum.Parse(typeof(Faction), faction, true);

@@ -4,18 +4,20 @@ using System;
 using System.Collections.Generic;
 
 namespace PersistentMapClient {
+
     public class Settings {
         public string ServerURL = "http://localhost:8000/";
         public bool debug = false;
         public float priorityContactPayPercentage = 2f;
+        public int priorityContractsPerAlly = 2;
         public string ClientID = "";
 
         public override string ToString() {
-            return $"ServerURL:({ServerURL}) ClientID:({ClientID}) Debug:({debug}) PriorityContractPay%:({priorityContactPayPercentage})";
+            return $"ServerURL:({ServerURL}) ClientID:({ClientID}) Debug:({debug}) PriorityContractPay%:({priorityContactPayPercentage}) PriorityContractsPerAlly:{priorityContractsPerAlly}";
         }
     }
 
-    public class GeneratedSettings {
+    public class GeneratedSettings {         
         public string ClientID = "";
     }
 
