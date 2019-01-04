@@ -1,5 +1,7 @@
 using PersistentMapAPI;
 using PersistentMapServer.Behavior;
+using PersistentMapServer.Interceptor;
+using PersistentMapServer.Objects;
 using PersistentMapServer.Worker;
 using System;
 using System.ComponentModel;
@@ -39,20 +41,33 @@ namespace PersistentMapServer {
                 SettingsFileMonitor monitor = new SettingsFileMonitor();
                 monitor.enable();
 
+                BackgroundWorker playerHistoryPruner = new BackgroundWorker {
+                    WorkerSupportsCancellation = true
+                };
+                playerHistoryPruner.DoWork += new DoWorkEventHandler(PlayerHistoryPruner.DoWork);
+                playerHistoryPruner.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PlayerHistoryPruner.RunWorkerCompleted);
+                playerHistoryPruner.RunWorkerAsync();
+
                 BackgroundWorker backupWorker = new BackgroundWorker {
                     WorkerSupportsCancellation = true
                 };
+
                 backupWorker.DoWork += new DoWorkEventHandler(BackupWorker.DoWork);
                 backupWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(BackupWorker.RunWorkerCompleted);
                 backupWorker.RunWorkerAsync();
 
-                // Mark events to end on process death
-                AppDomain.CurrentDomain.ProcessExit += (s, e) => {
-                    monitor.disable();
-                    heartbeatWorker.CancelAsync();
-                    backupWorker.CancelAsync();
-                };
-                AppDomain.CurrentDomain.ProcessExit += BackupWorker.ProcessExitHandler;
+                // Preload the data to allow any necessary initialization to happen
+                StarMapStateManager.Build();
+                FactionInventoryStateManager.Build();
+                PlayerStateManager.Build();
+
+                WarServices warServices = new WarServices();
+                // Create an AOP proxy object that we can hang Castle.DynamicProxies upon. These are useful for operations across the whole
+                //   of the service, or for when we need to fail a message in a reasonable way. 
+                var proxy = new Castle.DynamicProxy.ProxyGenerator()
+                    .CreateClassProxyWithTarget<WarServices>(warServices, new Castle.DynamicProxy.IInterceptor[] {
+                        new UserQuotaInterceptor(), new AdminKeyRequiredInterceptor()
+                    });
 
                 // Create a RESTful service host. The service instance is automatically, through 
                 //   the WarServiceInstanceProviderBehaviorAttribute. We create the singleton this way to give
@@ -88,11 +103,17 @@ namespace PersistentMapServer {
                 _serviceHost.Close();
                 Console.WriteLine("Connection Closed");
 
-                // TODO: Move to backup worker
-                Helper.SaveCurrentInventories(Helper.LoadCurrentInventories());
-                Console.WriteLine("Shops Saved");
+                // Cleanup any outstanding processes
+                monitor.disable();
 
-                Console.ReadKey();
+                heartbeatWorker.CancelAsync();
+
+                playerHistoryPruner.CancelAsync();
+                PlayerHistoryPruner.PruneOnExit();
+
+                backupWorker.CancelAsync();
+                BackupWorker.BackupOnExit();
+
             } catch (Exception e) {
                 Console.WriteLine(e);
                 Console.ReadKey();

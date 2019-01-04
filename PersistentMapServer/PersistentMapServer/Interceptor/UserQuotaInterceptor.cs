@@ -39,7 +39,7 @@ namespace PersistentMapServer.Interceptor {
                     invocation.ReturnValue = null;
                 } else {
                     // Add or set the userInfo
-                    string requestIP = Helper.mapRequestIP();
+                    string requestIP = Helper.MapRequestIP();
 
                     UserInfo info;
                     if (!Holder.connectionStore.ContainsKey(requestIP)) {
@@ -67,7 +67,7 @@ namespace PersistentMapServer.Interceptor {
 
             bool blockRequest = false;
 
-            string requestIP = Helper.mapRequestIP();
+            string requestIP = Helper.MapRequestIP();
             string obfuscatedIP = Helper.HashAndTruncate(requestIP);
 
             if (Holder.connectionStore.ContainsKey(requestIP) && Holder.connectionStore[requestIP].LastDataSend != null) {

@@ -42,7 +42,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
@@ -63,7 +63,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -75,7 +75,7 @@ namespace PersistentMapClient {
                 Web.PostUnusedSalvage(___finalPotentialSalvage, __instance.Override.employerTeam.faction);
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -145,7 +145,7 @@ namespace PersistentMapClient {
                 Fields.LastUpdate[___system.Owner] = DateTime.UtcNow;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -157,7 +157,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
@@ -170,7 +170,7 @@ namespace PersistentMapClient {
                 resetShops = false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -198,7 +198,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
                 return false;
             }
         }
@@ -216,7 +216,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -243,7 +243,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -260,7 +260,7 @@ namespace PersistentMapClient {
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -276,7 +276,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
@@ -289,7 +289,7 @@ namespace PersistentMapClient {
                 purchaseType = Shop.PurchaseType.Special;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
             }
         }
     }
@@ -313,7 +313,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
@@ -335,7 +335,7 @@ namespace PersistentMapClient {
                 return false;
             }
             catch (Exception e) {
-                Logger.LogError(e);
+               PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }

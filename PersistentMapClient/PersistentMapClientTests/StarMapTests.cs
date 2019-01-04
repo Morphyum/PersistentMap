@@ -1,17 +1,24 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using PersistentMapClient;
 
 namespace PersistentMapClientTests {
 
-    [TestClass]
+    [TestFixture, NonParallelizable]
     public class StarMapTests {
-        [TestMethod]
-        [Timeout(2000)]
+
+        [Test, Timeout(2000)]        
         public void TestGetStarmap() {
-            PersistentMapClient.PersistentMapClient.Init(".", "test.settings.json");
-            ParseMap parsedMap = Web.GetStarMap();
+            PersistentMapClient.PersistentMapClient.Init(TestContext.CurrentContext.TestDirectory, 
+                "test.settings.json");
+            PersistentMapAPI.StarMap parsedMap = Web.GetStarMap();
             Assert.IsNotNull(parsedMap);
-            Assert.AreEqual(parsedMap.systems.Count, 3359);
+            Assert.AreEqual(3337, parsedMap.systems.Count);
+            
+        }
+
+        [TearDown]
+        public void Cleanup() {
+            PersistentMapClient.PersistentMapClient.Dispose();
         }
     }
 }
