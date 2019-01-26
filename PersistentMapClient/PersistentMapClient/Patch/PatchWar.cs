@@ -202,7 +202,7 @@ namespace PersistentMapClient {
 
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
-                        Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
+                        Faction newOwner = system.invasionsState.defender;
                         Faction oldOwner = system2.Owner;
                         // Update control to the new faction
                         methodSetOwner.Invoke(system2.Def, new object[] { newOwner });
@@ -260,10 +260,12 @@ namespace PersistentMapClient {
                                     }
                                     warmarker.transform.Find("innerCircle").gameObject.SetActive(true);
                                     warmarker.SetActive(true);
-                                } else {
+                                }
+                                else {
                                     PersistentMapClient.Logger.Log("temp null: " + system.name);
                                 }
-                            } else {
+                            }
+                            else {
                                 PersistentMapClient.Logger.Log("StarObject null: " + system.name);
                             }
                         }
@@ -365,8 +367,7 @@ namespace PersistentMapClient {
                         if (numberOfContracts > 0) {
                             List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
                             foreach (PersistentMapAPI.System potentialTarget in Fields.currentMap.systems) {
-                                FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
-                                if (control != null && control.percentage < 100 && control.percentage != 0) {
+                                if (potentialTarget.invasionsState.currentlyInvaded && (potentialTarget.invasionsState.attacker == pair.Key || potentialTarget.invasionsState.defender == pair.Key)) {
                                     targets.Add(potentialTarget);
                                 }
                             }
@@ -378,16 +379,7 @@ namespace PersistentMapClient {
                                     if (realSystem != null) {
                                         Faction target = realSystem.Owner;
                                         if (pair.Key == target || Fields.excludedFactions.Contains(target)) {
-                                            List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
-                                            if (ownerlist.Count > 1) {
-                                                target = ownerlist[1].faction;
-                                                if (Fields.excludedFactions.Contains(target)) {
-                                                    target = Faction.AuriganPirates;
-                                                }
-                                            }
-                                            else {
-                                                target = Faction.AuriganPirates;
-                                            }
+                                            target = targets[i].invasionsState.attacker;
                                         }
                                         Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.GetDifficulty(__instance.Sim.SimGameMode), pair.Key, target, realSystem);
                                         contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
