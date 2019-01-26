@@ -211,18 +211,16 @@ namespace PersistentMapClient {
 
         public static StarSystem ChangeWarDescription(StarSystem system, SimGameState Sim, PersistentMapAPI.System warsystem) {
             try {
-                if (IsBorder(system, Sim)) {
-                    List<string> factionList = new List<string>();
-                    factionList.Add("Current Control:");
-                    foreach (FactionControl fc in warsystem.controlList) {
-                        if (fc.percentage != 0) {
-                            factionList.Add(GetFactionName(fc.faction, Sim.DataManager) + ": " + fc.percentage + "%");
-                        }
-                    }
+
+                if (warsystem.invasionsState.currentlyInvaded) {
+                    List<string> infoList = new List<string>();
+                    infoList.Add("Current Invasion: " + warsystem.invasionsState.attacker + " VS " + warsystem.invasionsState.defender);
+                    infoList.Add("Stage: " + warsystem.invasionsState.stage);
+                    infoList.Add("StagePercentage: " + warsystem.invasionsState.percentage);
                     if (!Fields.FluffDescriptions.ContainsKey(system.Name)) {
                         Fields.FluffDescriptions.Add(system.Name, system.Def.Description.Details);
                     }
-                    AccessTools.Method(typeof(DescriptionDef), "set_Details").Invoke(system.Def.Description, new object[] { string.Join("\n", factionList.ToArray()) });
+                    AccessTools.Method(typeof(DescriptionDef), "set_Details").Invoke(system.Def.Description, new object[] { string.Join("\n", infoList.ToArray()) });
                 }
                 else if (Fields.FluffDescriptions.ContainsKey(system.Name)) {
                     AccessTools.Method(typeof(DescriptionDef), "set_Details").Invoke(system.Def.Description, new object[] { Fields.FluffDescriptions[system.Name] });
