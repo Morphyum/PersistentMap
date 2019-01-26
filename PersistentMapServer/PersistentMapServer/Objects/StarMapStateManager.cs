@@ -102,18 +102,12 @@ namespace PersistentMapServer.Objects {
                 JObject originalJObject = JObject.Parse(originalJson);
                 Faction owner = (Faction)Enum.Parse(typeof(Faction), (string)originalJObject["Owner"]);
 
-                FactionControl ownerControl = new FactionControl();
-                ownerControl.faction = owner;
-                if (owner != Faction.NoFaction) {
-                    ownerControl.percentage = 100;
-                } else {
-                    ownerControl.percentage = 0;
-                }
+                InvasionState invasionState = new InvasionState();
+                invasionState.defender = owner;
 
                 PersistentMapAPI.System system = new PersistentMapAPI.System();
-                system.controlList = new List<FactionControl>();
                 system.name = (string)originalJObject["Description"]["Name"];
-                system.controlList.Add(ownerControl);
+                system.invasionsState = invasionState;
 
                 map.systems.Add(system);
             }

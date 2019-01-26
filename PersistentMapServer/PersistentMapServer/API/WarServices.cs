@@ -67,54 +67,25 @@ namespace PersistentMapAPI {
                   
                     StarMap builtMap = StarMapStateManager.Build();
                     System system = builtMap.FindSystemByName(mresult.systemName);
-                    
-                    FactionControl oldOwnerControl = system.FindHighestControl();
-                    Faction oldOwner = Faction.INVALID_UNSET;
-                    if (oldOwnerControl != null) {
-                        oldOwner = oldOwnerControl.faction;
-                    }
-                    FactionControl employerControl = system.FindFactionControlByFaction(mresult.employer);
-                    FactionControl targetControl = system.FindFactionControlByFaction(mresult.target);
+
+                    Faction oldOwner = system.invasionsState.defender;
 
                     if (mresult.result == BattleTech.MissionResult.Victory) {
-                        int realChange = Math.Min(
-                            Math.Abs(employerControl.percentage - 100), 
-                            Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets)
-                            );
-                        hresult.winner = employerControl.faction;
-                        hresult.loser = targetControl.faction;
+                        int realChange = Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets);
+                        hresult.winner = mresult.employer;
+                        hresult.loser = mresult.target;
                         hresult.pointsTraded = realChange;
-                        employerControl.percentage += realChange;
-                        targetControl.percentage -= realChange;
+                        system.invasionsState.changePercentage(realChange);
                         logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser}) - {realChange} points were traded.");                        
-                        if (targetControl.percentage < 0) {
-                            int leftoverChange = Math.Abs(targetControl.percentage);
-                            logger.Debug($"{leftoverChange} points could not be removed from ({hresult.loser}) - distributing them to other factions.");                            
-                            targetControl.percentage = 0;
-                            int debugcounter = leftoverChange;
-                            while (leftoverChange > 0 && debugcounter != 0) {
-                                foreach (FactionControl leftOverFaction in system.controlList) {
-                                    if (leftOverFaction.faction != mresult.employer && leftOverFaction.faction != mresult.target && 
-                                        leftOverFaction.percentage > 0 && leftoverChange > 0) {
-                                        leftOverFaction.percentage--;
-                                        leftoverChange--;
-                                        logger.Debug($"Removed {leftoverChange} points {leftOverFaction.faction.ToString()}.");
-                                    }
-                                }
-                                debugcounter--;
-                            }
-                        }
                     } else {
-                        int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
-                        hresult.winner = targetControl.faction;
-                        hresult.loser = employerControl.faction;
+                        int realChange = Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2);
+                        hresult.winner = mresult.target;
+                        hresult.loser = mresult.employer;
                         hresult.pointsTraded = realChange;
-                        employerControl.percentage -= realChange;
-                        targetControl.percentage += realChange;
+                        system.invasionsState.changePercentage(0 - realChange);
                         logger.Debug($"Loss for ({hresult.loser}) against ({hresult.winner}) - {realChange} points were traded.");
                     }
-                    FactionControl afterBattleOwnerControl = system.FindHighestControl();
-                    Faction newOwner = afterBattleOwnerControl.faction;
+                    Faction newOwner = system.invasionsState.defender;
                     if (oldOwner != newOwner) {
                         hresult.planetSwitched = true;
                     } else {

@@ -4,12 +4,13 @@ using System.Linq;
 
 namespace PersistentMapAPI {
     public class System {
-        public List<FactionControl> controlList;
+        public InvasionState invasionsState;
+        //public List<FactionControl> controlList;
         public string name;
         public int activePlayers;
         public List<string> companies;
 
-        public FactionControl FindFactionControlByFaction(Faction faction) {
+       /* public FactionControl FindFactionControlByFaction(Faction faction) {
             if(controlList == null) {
                 controlList = new List<FactionControl>();
             }
@@ -29,6 +30,6 @@ namespace PersistentMapAPI {
             }
             FactionControl result = controlList.OrderByDescending(x => x.percentage).First();
             return result;
-        }
+        }*/
     }
 }
