@@ -44,19 +44,6 @@ namespace PersistentMapClient {
             return (Faction)Enum.Parse(typeof(Faction), faction, true);
         }
 
-        public static Settings LoadSettings() {
-            try {
-                using (StreamReader r = new StreamReader($"{PersistentMapClient.ModDirectory}/settings.json")) {
-                    string json = r.ReadToEnd();
-                    return JsonConvert.DeserializeObject<Settings>(json);
-                }
-            }
-            catch (Exception ex) {
-                PersistentMapClient.Logger.LogError(ex);
-                return null;
-            }
-        }
-
         public static bool MeetsNewReqs(StarSystem instance, TagSet reqTags, TagSet exTags, TagSet curTags) {
             try {
                 if (!curTags.ContainsAny(exTags, false)) {
