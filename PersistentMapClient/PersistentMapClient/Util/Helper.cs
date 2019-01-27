@@ -259,7 +259,7 @@ namespace PersistentMapClient {
                     // Look across neighboring systems, and add employees of factions that border this system
                     List<Faction> distinctNeighbors = Sim.Starmap.GetAvailableNeighborSystem(system)
                         .Select(s => s.Owner)
-                        .Where(f => f != Faction.NoFaction && f != system.Owner)
+                        .Where(f => f != Faction.NoFaction && f != system.Owner && f != Faction.Locals)
                         .Distinct()
                         .ToList();
                     employees.AddRange(distinctNeighbors);
