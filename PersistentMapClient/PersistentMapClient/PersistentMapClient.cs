@@ -15,7 +15,8 @@ namespace PersistentMapClient {
 
             Exception settingsE = null;
             try {
-                Fields.settings = JsonConvert.DeserializeObject<Settings>(settingsJSON);
+                Fields.settings = Helper.LoadSettings();
+
             } catch (Exception e) {
                 settingsE = e;
                 Fields.settings = new Settings();

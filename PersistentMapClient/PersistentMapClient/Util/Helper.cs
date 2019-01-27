@@ -19,6 +19,23 @@ namespace PersistentMapClient {
     public class Helper {
         public const string GeneratedSettingsFile = "generatedSettings.json";
 
+        public static Settings LoadSettings() {
+            string _settingsPath = $"{ PersistentMapClient.ModDirectory}/settings.json";
+            try {
+                // Load the settings file
+                Settings settings = null;
+                using (StreamReader r = new StreamReader(_settingsPath)) {
+                    string json = r.ReadToEnd();
+                    settings = JsonConvert.DeserializeObject<Settings>(json);
+                }
+                return settings;
+            }
+            catch (Exception ex) {
+                PersistentMapClient.Logger.LogError(ex);
+                return null;
+            }
+        }
+
         public static double GetDistanceInLY(float x1, float y1, float x2, float y2) {
             return Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
         }
