@@ -17,7 +17,7 @@ namespace PersistentMapClient {
 
     [HarmonyBefore(new string[] { "de.morphyum.MercDeployments" })]
     [HarmonyPatch(typeof(SimGameState), "Rehydrate")]
-    public static class SimGameState_Rehydrate_Patch {        
+    public static class SimGameState_Rehydrate_Patch {
         static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
             try {
                 foreach (Contract contract in __instance.GlobalContracts) {
@@ -158,7 +158,7 @@ namespace PersistentMapClient {
                     }
                 }
                 GameObject companyObject = GameObject.Find("COMPANYNAMES");
-                if (companyObject != null) {
+                if (companyObject != null && Fields.currentMap != null) {
                     TextMeshProUGUI companietext = companyObject.transform.FindRecursive("txt-owner").GetComponent<TextMeshProUGUI>();
                     PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
                     if (system != null && companietext != null) {
@@ -167,13 +167,14 @@ namespace PersistentMapClient {
                     else {
                         companietext.SetText("");
                     }
+
                 }
-             }
-             catch (Exception e) {
+            }
+            catch (Exception e) {
                 PersistentMapClient.Logger.LogError(e);
-             }
-         }
-     }
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
@@ -229,7 +230,8 @@ namespace PersistentMapClient {
                         // If the system is next to enemy factions, update the map to show the border
                         if (Helper.IsBorder(system2, simGame) && simGame.Starmap != null) {
                             system2.Tags.Add("planet_other_battlefield");
-                        } else {
+                        }
+                        else {
                             system2.Tags.Remove("planet_other_battlefield");
                         }
 
@@ -255,15 +257,16 @@ namespace PersistentMapClient {
                     // Update the description on these systems to show the new contract options
                     PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(changedSystem.Name));
                     if (system != null) {
-                        methodSetDescription.Invoke(changedSystem.Def, 
-                            new object[] { Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description} );
+                        methodSetDescription.Invoke(changedSystem.Def,
+                            new object[] { Helper.ChangeWarDescription(changedSystem, simGame, system).Def.Description });
                     }
                 }
 
                 if (changeNotifications.Count > 0 && !Fields.firstpass) {
                     SimGameInterruptManager interruptQueue2 = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
                     interruptQueue2.QueueGenericPopup_NonImmediate("War Activities", string.Join("\n", changeNotifications.ToArray()), true);
-                } else {
+                }
+                else {
                     Fields.firstpass = false;
                 }
             }
@@ -302,7 +305,7 @@ namespace PersistentMapClient {
                     GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                     StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                     foreach (StarSystem potential in game.Simulation.StarSystems) {
-                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y,system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
+                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y, system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
                             int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
                             PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
                             if (!game.Simulation.IsFactionAlly(mresult.employer)) {
@@ -334,10 +337,6 @@ namespace PersistentMapClient {
     public static class StarSystem_GenerateInitialContracts_Patch {
         static void Postfix(StarSystem __instance) {
             try {
-                if (Fields.settings.debug) {
-                    AccessTools.Method(typeof(SimGameState), "SetReputation").Invoke(__instance.Sim, new object[] {
-                        Faction.Steiner, 100, StatCollection.StatOperation.Set, null });
-                }
                 __instance.Sim.GlobalContracts.Clear();
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
                     if (!Fields.excludedFactions.Contains(pair.Key)) {
@@ -347,38 +346,40 @@ namespace PersistentMapClient {
                         }
                         if (numberOfContracts > 0) {
                             List<PersistentMapAPI.System> targets = new List<PersistentMapAPI.System>();
-                            foreach (PersistentMapAPI.System potentialTarget in Fields.currentMap.systems) {
-                                FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
-                                if (control != null && control.percentage < 100 && control.percentage != 0) {
-                                    targets.Add(potentialTarget);
+                            if (Fields.currentMap != null) {
+                                foreach (PersistentMapAPI.System potentialTarget in Fields.currentMap.systems) {
+                                    FactionControl control = potentialTarget.controlList.FirstOrDefault(x => x.faction == pair.Key);
+                                    if (control != null && control.percentage < 100 && control.percentage != 0) {
+                                        targets.Add(potentialTarget);
+                                    }
                                 }
-                            }
-                            if (targets.Count() > 0) {
-                                targets = targets.OrderBy(x => Helper.GetDistanceInLY(__instance.Sim.CurSystem, x, __instance.Sim.StarSystems)).ToList();
-                                numberOfContracts = Mathf.Min(numberOfContracts, targets.Count);
-                                for (int i = 0; i < numberOfContracts; i++) {
-                                    StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
-                                    if (realSystem != null) {
-                                        Faction target = realSystem.Owner;
-                                        if (pair.Key == target || Fields.excludedFactions.Contains(target)) {
-                                            List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
-                                            if (ownerlist.Count > 1) {
-                                                target = ownerlist[1].faction;
-                                                if (Fields.excludedFactions.Contains(target)) {
+                                if (targets.Count() > 0) {
+                                    targets = targets.OrderBy(x => Helper.GetDistanceInLY(__instance.Sim.CurSystem, x, __instance.Sim.StarSystems)).ToList();
+                                    numberOfContracts = Mathf.Min(numberOfContracts, targets.Count);
+                                    for (int i = 0; i < numberOfContracts; i++) {
+                                        StarSystem realSystem = __instance.Sim.StarSystems.FirstOrDefault(x => x.Name.Equals(targets[i].name));
+                                        if (realSystem != null) {
+                                            Faction target = realSystem.Owner;
+                                            if (pair.Key == target || Fields.excludedFactions.Contains(target)) {
+                                                List<FactionControl> ownerlist = targets[i].controlList.OrderByDescending(x => x.percentage).ToList();
+                                                if (ownerlist.Count > 1) {
+                                                    target = ownerlist[1].faction;
+                                                    if (Fields.excludedFactions.Contains(target)) {
+                                                        target = Faction.AuriganPirates;
+                                                    }
+                                                }
+                                                else {
                                                     target = Faction.AuriganPirates;
                                                 }
                                             }
-                                            else {
-                                                target = Faction.AuriganPirates;
-                                            }
+                                            Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.GetDifficulty(__instance.Sim.SimGameMode), pair.Key, target, realSystem);
+                                            contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
+                                            contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
+                                            int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
+                                            contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
+                                            contract.Override.negotiatedSalvage = 1f;
+                                            __instance.Sim.GlobalContracts.Add(contract);
                                         }
-                                        Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.GetDifficulty(__instance.Sim.SimGameMode), pair.Key, target, realSystem);
-                                        contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
-                                        contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
-                                        int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
-                                        contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
-                                        contract.Override.negotiatedSalvage = 1f;
-                                        __instance.Sim.GlobalContracts.Add(contract);
                                     }
                                 }
                             }
