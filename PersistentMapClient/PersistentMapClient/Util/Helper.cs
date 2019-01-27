@@ -263,6 +263,7 @@ namespace PersistentMapClient {
                         .Distinct()
                         .ToList();
                     employees.AddRange(distinctNeighbors);
+
                     // If a capital is occupied, add the faction that originally owned the capital to the employer list
                     if (Helper.capitalsBySystemName.Contains(system.Name)) {
                         Faction originalCapitalFaction = Helper.capitalsBySystemName[system.Name].First();
