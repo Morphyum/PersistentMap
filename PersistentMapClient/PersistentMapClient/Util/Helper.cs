@@ -248,7 +248,7 @@ namespace PersistentMapClient {
 
         public static List<Faction> GetEmployees(StarSystem system, SimGameState Sim) {
             try {
-                HashSet<Faction> employees = new HashSet<Faction>();
+                List<Faction> employees = new List<Faction>();
                 if (Sim.Starmap != null) {
                     // If a faction owns the planet, add the owning faction and local government
                     if (system.Owner != Faction.NoFaction) {
@@ -262,14 +262,14 @@ namespace PersistentMapClient {
                         .Where(f => f != Faction.NoFaction && f != system.Owner)
                         .Distinct()
                         .ToList();
-
+                    employees.AddRange(distinctNeighbors);
                     // If a capital is occupied, add the faction that originally owned the capital to the employer list
                     if (Helper.capitalsBySystemName.Contains(system.Name)) {
                         Faction originalCapitalFaction = Helper.capitalsBySystemName[system.Name].First();
                         employees.Add(originalCapitalFaction);
                     }
                 }
-                return employees.ToList();
+                return employees;
             }
             catch (Exception ex) {
                 PersistentMapClient.Logger.LogError(ex);
