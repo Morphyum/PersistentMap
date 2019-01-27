@@ -27,11 +27,11 @@ namespace PersistentMapClient {
             System.AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) => Logger.Close();
 
             if (settingsE != null) {
-                Logger.Log($"Using default settings due to exception reading modTek settings: {settingsE.Message}");
+                Logger.Log($"Using default settings due to exception reading settings: {settingsE.Message}");
             }
 
             
-            Logger.LogIfDebug($"Mod settings are:({settingsJSON})");
+            Logger.LogIfDebug($"Settings are:({Fields.settings.ToString()})");
 
             /* Read the ClientID from a location that is persistent across installs. 
                Everything under /mods is wiped out during RT installs. Instead we write 

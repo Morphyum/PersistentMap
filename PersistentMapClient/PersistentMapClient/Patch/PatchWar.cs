@@ -186,8 +186,14 @@ namespace PersistentMapClient {
 
         static void Postfix(Starmap __instance, SimGameState simGame) {
             try {
+                PersistentMapClient.Logger.LogIfDebug($"methodSetOwner is:({methodSetOwner})");
+                PersistentMapClient.Logger.LogIfDebug($"methodSetContractEmployers is:({methodSetContractEmployers})");
+                PersistentMapClient.Logger.LogIfDebug($"methodSetContractTargets is:({methodSetContractTargets})");
+                PersistentMapClient.Logger.LogIfDebug($"methodSetDescription is:({methodSetDescription})");
+                PersistentMapClient.Logger.LogIfDebug($"fieldSimGameInterruptManager is:({fieldSimGameInterruptManager})");
                 Fields.currentMap = Web.GetStarMap();
                 if (Fields.currentMap == null) {
+                    PersistentMapClient.Logger.LogIfDebug("Map not found");
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)fieldSimGameInterruptManager.GetValue(simGame);
                     interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Map could not be downloaded", true);
                     return;
@@ -196,12 +202,18 @@ namespace PersistentMapClient {
                 List<string> changeNotifications = new List<string>();
                 List<StarSystem> transitiveContractUpdateTargets = new List<StarSystem>();
                 foreach (PersistentMapAPI.System system in Fields.currentMap.systems) {
+                    if (system == null) {
+                        PersistentMapClient.Logger.Log("System in map null");
+                    }
                     if (system.activePlayers > 0) {
                         AddActivePlayersBadgeToSystem(system);
                     }
 
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
                     if (system2 != null) {
+                        if (system2.Tags == null) {
+                            PersistentMapClient.Logger.Log(system2.Name + ": Has no Tags");
+                        }
                         Faction newOwner = system.controlList.OrderByDescending(x => x.percentage).First().faction;
                         Faction oldOwner = system2.Owner;
                         // Update control to the new faction
