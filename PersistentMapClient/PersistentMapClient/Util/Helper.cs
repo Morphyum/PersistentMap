@@ -434,8 +434,8 @@ namespace PersistentMapClient {
                 Dictionary<ContractType, List<ContractOverride>> potentialOverrides = new Dictionary<ContractType, List<ContractOverride>>();
                 AccessTools.Field(typeof(SimGameState), "singlePlayerTypes");
                 ContractType[] singlePlayerTypes = (ContractType[])AccessTools.Field(typeof(SimGameState), "singlePlayerTypes").GetValue(Sim);
-                using (MetadataDatabase metadataDatabase = new MetadataDatabase()) {
-                    foreach (Contract_MDD contract_MDD in metadataDatabase.GetContractsByDifficultyRangeAndScopeAndOwnership(Difficulty - 1, Difficulty + 1, Sim.ContractScope, true)) {
+       
+                    foreach (Contract_MDD contract_MDD in MetadataDatabase.Instance.GetContractsByDifficultyRangeAndScopeAndOwnership(Difficulty - 1, Difficulty + 1, Sim.ContractScope, true)) {
                         ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
                         if (singlePlayerTypes.Contains(contractType)) {
                             if (!contractTypes.Contains(contractType)) {
@@ -448,12 +448,12 @@ namespace PersistentMapClient {
                             potentialOverrides[contractType].Add(item);
                         }
                     }
-                    foreach (MapAndEncounters element in metadataDatabase.GetReleasedMapsAndEncountersByContractTypeAndTags(singlePlayerTypes, system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes)) {
+                    foreach (MapAndEncounters element in MetadataDatabase.Instance.GetReleasedMapsAndEncountersByContractTypeAndTags(singlePlayerTypes, system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes)) {
                         if (!contractMaps.Contains(element)) {
                             contractMaps.Add(element, 0);
                         }
                     }
-                }
+                
                 if (contractMaps.Count == 0) {
                     PersistentMapClient.Logger.Log("Maps0 break");
                     break;
@@ -558,11 +558,10 @@ namespace PersistentMapClient {
                                             if (scope != EventScope.Map) {
                                                 throw new Exception("Contracts cannot use the scope of: " + requirementDef.Scope);
                                             }
-                                            using (MetadataDatabase metadataDatabase2 = new MetadataDatabase()) {
-                                                curTags = metadataDatabase2.GetTagSetForTagSetEntry(level.Map.TagSetID);
+                                                curTags = MetadataDatabase.Instance.GetTagSetForTagSetEntry(level.Map.TagSetID);
                                                 stats = new StatCollection();
                                                 goto IL_803;
-                                            }
+                                            
                                             IL_8E9:
                                             curTags = Sim.CommanderTags;
                                             stats = Sim.CommanderStats;
