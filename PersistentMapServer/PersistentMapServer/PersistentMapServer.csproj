@@ -81,6 +81,7 @@
     <Compile Include="GZip\GZipMessageEncoderFactory.cs" />
     <Compile Include="GZip\GZipMessageEncodingBindingElement.cs" />
     <Compile Include="MessageInspector\GZipInspector.cs" />
+    <Compile Include="Util\OldToNewStarMapJsonConverter.cs" />
     <Compile Include="Worker\HeartBeatMonitor.cs" />
     <Compile Include="Behavior\CorsWildcardForAllResponsesBehavior.cs" />
     <Compile Include="Behavior\RequestLoggingBehavior.cs" />

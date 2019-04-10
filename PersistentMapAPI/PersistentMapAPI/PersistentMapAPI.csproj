@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Objects\Company.cs" />
     <Compile Include="Objects\FactionControl.cs" />
     <Compile Include="Objects\MissionResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

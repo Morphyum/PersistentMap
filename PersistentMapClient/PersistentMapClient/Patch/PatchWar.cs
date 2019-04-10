@@ -5,6 +5,7 @@ using BattleTech.UI;
 using Harmony;
 using HBS;
 using PersistentMapAPI;
+using PersistentMapAPI.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,7 +131,7 @@ namespace PersistentMapClient {
 
     [HarmonyPatch(typeof(SGSystemViewPopulator), "UpdateRoutedSystem")]
     public static class SGSystemViewPopulator_UpdateRoutedSystem_Patch {
-        static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem) {
+        static void Postfix(SGSystemViewPopulator __instance, StarSystem ___starSystem, SimGameState ___simState) {
             try {
                 if (GameObject.Find("COMPANYNAMES") == null) {
                     GameObject old = GameObject.Find("uixPrfPanl_NAV_systemStats-Element-MANAGED");
@@ -162,7 +163,11 @@ namespace PersistentMapClient {
                     TextMeshProUGUI companietext = companyObject.transform.FindRecursive("txt-owner").GetComponent<TextMeshProUGUI>();
                     PersistentMapAPI.System system = Fields.currentMap.systems.FirstOrDefault(x => x.name.Equals(___starSystem.Name));
                     if (system != null && companietext != null) {
-                        companietext.SetText(string.Join(Environment.NewLine, system.companies.ToArray()));
+                        List<string> companyNames = new List<string>();
+                        foreach (Company company in system.companies) {
+                            companyNames.Add("(" + Helper.GetFactionShortName(company.Faction, ___simState.DataManager) + ")" + company.Name);
+                        }
+                        companietext.SetText(string.Join(Environment.NewLine, companyNames.ToArray()));
                     }
                     else {
                         companietext.SetText("");
@@ -301,28 +306,29 @@ namespace PersistentMapClient {
         static void Postfix(Contract __instance, BattleTech.MissionResult result) {
             try {
                 if (!__instance.IsFlashpointContract) {
-                    bool updated = false;
                     GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
-                    StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
-                    foreach (StarSystem potential in game.Simulation.StarSystems) {
-                        if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) && potential.Owner == __instance.Override.employerTeam.faction && Helper.GetDistanceInLY(potential.Position.x, potential.Position.y, system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
-                            int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
-                            PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
-                            if (!game.Simulation.IsFactionAlly(mresult.employer)) {
-                                mresult.awardedRep /= 2;
+                    if (game.Simulation.IsFactionAlly(__instance.Override.employerTeam.faction)) {
+                        bool updated = false;
+                        StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
+                        foreach (StarSystem potential in game.Simulation.StarSystems) {
+                            if (Helper.IsCapital(system, __instance.Override.employerTeam.faction) || (!potential.Name.Equals(system.Name) &&
+                                potential.Owner == __instance.Override.employerTeam.faction &&
+                                Helper.GetDistanceInLY(potential.Position.x, potential.Position.y, system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
+                                int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
+                                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
+                                bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
+                                if (!postSuccessfull) {
+                                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                                    interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
+                                }
+                                updated = true;
+                                break;
                             }
-                            bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
-                            if (!postSuccessfull) {
-                                SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
-                                interruptQueue.QueueGenericPopup_NonImmediate("Connection Failure", "Result could not be transfered", true);
-                            }
-                            updated = true;
-                            break;
                         }
-                    }
-                    if (!updated) {
-                        SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
-                        interruptQueue.QueueGenericPopup_NonImmediate("You are surrounded!", "There is no more neighbor system in your factions control, so you didnt earn any influence here.", true);
+                        if (!updated) {
+                            SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                            interruptQueue.QueueGenericPopup_NonImmediate("You are surrounded!", "There is no more neighbor system in your factions control, so you didnt earn any influence here.", true);
+                        }
                     }
                 }
                 return;
