@@ -2,6 +2,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PersistentMapAPI;
+using PersistentMapAPI.Objects;
+using PersistentMapServer.Util;
 using PersistentMapServer.Worker;
 using System;
 using System.Collections.Generic;
@@ -35,12 +37,18 @@ namespace PersistentMapServer.Objects {
                     if (activePlayers.ContainsKey(system.name)) {
                         List<UserInfo> systemUsers = activePlayers[system.name];
                         system.activePlayers = systemUsers.Count;
-                        system.companies = systemUsers.Select(p => p.companyName).ToList();
+                        system.companies = new List<Company>();
+                        foreach (UserInfo user in systemUsers) {
+                            Company company = new Company();
+                            company.Name = user.companyName;
+                            company.Faction = user.lastFactionFoughtForInWar;
+                            system.companies.Add(company);
+                        }
                         logger.Trace($"Mapping {systemUsers.Count} activePlayers to {system} system.");
                     } else {
                         // Remove any expired records
                         system.activePlayers = 0;
-                        system.companies = new List<string>();
+                        system.companies = new List<Company>();
                     }
                 }
             }

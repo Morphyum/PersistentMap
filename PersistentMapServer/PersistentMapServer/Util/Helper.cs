@@ -66,6 +66,7 @@ namespace PersistentMapAPI {
             // For backwards compatibility, record this in the connectionStore for now.
             Holder.connectionStore[clientId].companyName = companyName;
             Holder.connectionStore[clientId].lastSystemFoughtAt = mresult.systemName;
+            Holder.connectionStore[clientId].lastFactionFoughtForInWar = mresult.employer;
 
             // For now, the player Id is their hashed IP address
             var companyActivity = new CompanyActivity {
@@ -197,8 +198,11 @@ namespace PersistentMapAPI {
 
                 int systemId = random.Next(0, systems.Count - 1);
                 randomUser.lastSystemFoughtAt = systems[systemId];
+                Array values = Enum.GetValues(typeof(Faction));
+                Faction randomFaction = (Faction)values.GetValue(random.Next(values.Length));
+                randomUser.lastFactionFoughtForInWar = randomFaction;
                 randos.Add(randomUser);
-                logger.Info($"Adding randomUser - Company {randomUser.companyName} at system {randomUser.lastSystemFoughtAt}");
+                logger.Info($"Adding randomUser - Company {randomUser.companyName} at system {randomUser.lastSystemFoughtAt} working for {randomUser.lastFactionFoughtForInWar}");
             }
             return randos;
         }

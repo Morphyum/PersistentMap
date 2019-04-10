@@ -1,4 +1,5 @@
 ﻿using BattleTech;
+using PersistentMapAPI.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace PersistentMapAPI {
         public List<FactionControl> controlList;
         public string name;
         public int activePlayers;
-        public List<string> companies;
+        public List<Company> companies;
 
         public FactionControl FindFactionControlByFaction(Faction faction) {
             if(controlList == null) {

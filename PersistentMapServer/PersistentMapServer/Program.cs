@@ -13,7 +13,7 @@ namespace PersistentMapServer {
 
     class Program {
 
-        public static string ServiceUrl = "http://localhost:8000/warServices";
+        public static string ServiceUrl = "http://localhost:8001/warServices";
 
         /*
          *Application that uses Windows Communications Foundation (WCF) to provide a RESTful API that allows persistence of Morphyum's WarTech.
