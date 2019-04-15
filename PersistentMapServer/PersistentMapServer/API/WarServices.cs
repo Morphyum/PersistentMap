@@ -30,11 +30,11 @@ namespace PersistentMapAPI {
 
         // Thread-safe; returns copy of starmap. We clone to prevent modification during serialization (due to heavy nesting).
         public override System GetSystem(string name) {
-            StarMap builtMap = StarMapStateManager.Build();            
+            StarMap builtMap = StarMapStateManager.Build();
             return builtMap.FindSystemByName(name);
         }
 
-        [UserQuota(enforcement : UserQuotaAttribute.EnforcementEnum.Block)]
+        [UserQuota(enforcement: UserQuotaAttribute.EnforcementEnum.Block)]
         public override System PostMissionResult(MissionResult mresult, string companyName) {
             lock (_missionResultLock) {
                 try {
@@ -64,10 +64,10 @@ namespace PersistentMapAPI {
                     logger.Info($"New Mission Result for ({companyName}) on ({mresult.systemName})");
                     logger.Debug($"New MissionResult - ({companyName}) fought for ({mresult.employer}) against ({mresult.target})" +
                         $" on ({mresult.systemName}) and achieved ({mresult.result})");
-                  
+
                     StarMap builtMap = StarMapStateManager.Build();
                     System system = builtMap.FindSystemByName(mresult.systemName);
-                    
+
                     FactionControl oldOwnerControl = system.FindHighestControl();
                     Faction oldOwner = Faction.INVALID_UNSET;
                     if (oldOwnerControl != null) {
@@ -77,24 +77,35 @@ namespace PersistentMapAPI {
                     FactionControl targetControl = system.FindFactionControlByFaction(mresult.target);
 
                     if (mresult.result == BattleTech.MissionResult.Victory) {
-                        int realChange = Math.Min(
-                            Math.Abs(employerControl.percentage - 100), 
-                            Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets)
+                        int gain = (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets;
+                        int realChange = 0;
+                        if (employerControl.percentage >= Helper.LoadSettings().LowerFortBorder && 
+                            employerControl.percentage <= Helper.LoadSettings().UpperFortBorder) {
+                            logger.Debug("Fort Rules");
+                            realChange = Math.Min(
+                            Math.Abs(employerControl.percentage - Helper.LoadSettings().UpperFortBorder),
+                            Math.Max(1, (int)Math.Round(gain * Helper.LoadSettings().FortPercentage))
                             );
+                        } else {
+                            realChange = Math.Min(
+                            Math.Abs(employerControl.percentage - Helper.LoadSettings().LowerFortBorder),
+                            Math.Max(1, gain)
+                            );
+                        }
                         hresult.winner = employerControl.faction;
                         hresult.loser = targetControl.faction;
                         hresult.pointsTraded = realChange;
                         employerControl.percentage += realChange;
                         targetControl.percentage -= realChange;
-                        logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser}) - {realChange} points were traded.");                        
+                        logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser}) - {realChange} points were traded.");
                         if (targetControl.percentage < 0) {
                             int leftoverChange = Math.Abs(targetControl.percentage);
-                            logger.Debug($"{leftoverChange} points could not be removed from ({hresult.loser}) - distributing them to other factions.");                            
+                            logger.Debug($"{leftoverChange} points could not be removed from ({hresult.loser}) - distributing them to other factions.");
                             targetControl.percentage = 0;
                             int debugcounter = leftoverChange;
                             while (leftoverChange > 0 && debugcounter != 0) {
                                 foreach (FactionControl leftOverFaction in system.controlList) {
-                                    if (leftOverFaction.faction != mresult.employer && leftOverFaction.faction != mresult.target && 
+                                    if (leftOverFaction.faction != mresult.employer && leftOverFaction.faction != mresult.target &&
                                         leftOverFaction.percentage > 0 && leftoverChange > 0) {
                                         leftOverFaction.percentage--;
                                         leftoverChange--;
@@ -104,7 +115,8 @@ namespace PersistentMapAPI {
                                 debugcounter--;
                             }
                         }
-                    } else {
+                    }
+                    else {
                         int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
                         hresult.winner = targetControl.faction;
                         hresult.loser = employerControl.faction;
@@ -117,13 +129,15 @@ namespace PersistentMapAPI {
                     Faction newOwner = afterBattleOwnerControl.faction;
                     if (oldOwner != newOwner) {
                         hresult.planetSwitched = true;
-                    } else {
+                    }
+                    else {
                         hresult.planetSwitched = false;
                     }
                     hresult.system = mresult.systemName;
                     Holder.resultHistory.Add(hresult);
                     return system;
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     logger.Warn(e, "Failed to process mission result!");
                     return null;
                 }
@@ -155,7 +169,8 @@ namespace PersistentMapAPI {
                 foreach (string companyName in history.CompanyNames()) {
                     if (playerCompanies.ContainsKey(companyName)) {
                         playerCompanies[companyName].Add(history.Id);
-                    } else {
+                    }
+                    else {
                         playerCompanies[companyName] = new HashSet<string> { history.Id };
                     }
                 }
@@ -166,8 +181,8 @@ namespace PersistentMapAPI {
 
         public override List<CompanyActivity> GetPlayerActivity(string PlayerId) {
             var playerHistory = Holder.playerHistory.SingleOrDefault(x => x.Id.Equals(PlayerId));
-            return playerHistory != null ? 
-                playerHistory.activities.ToList() 
+            return playerHistory != null ?
+                playerHistory.activities.ToList()
                 : new List<CompanyActivity>();
         }
 
@@ -188,7 +203,7 @@ namespace PersistentMapAPI {
                     logger.Info($"Shop for faction ({Faction}) was not found!");
                 }
                 if (Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).lastUpdate.AddMinutes(Helper.LoadSettings().MinutesTillShopUpdate) < DateTime.UtcNow) {
-                    logger.Info($"Shop for faction ({Faction}) was refreshed.");                    
+                    logger.Info($"Shop for faction ({Faction}) was refreshed.");
                     List<ShopDefItem> newShop = Helper.GenerateNewShop(realFaction);
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems.Clear();
                     Holder.factionShops.FirstOrDefault(x => x.shopOwner == realFaction).currentSoldItems = newShop;
@@ -203,7 +218,7 @@ namespace PersistentMapAPI {
         }
 
         public override string PostSalvageForFaction(List<ShopDefItem> salvage, string Faction) {
-            lock(_salvageLock) {
+            lock (_salvageLock) {
                 Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
                 if (Holder.factionInventories == null) {
                     Holder.factionInventories = FactionInventoryStateManager.Build();
@@ -214,7 +229,8 @@ namespace PersistentMapAPI {
                 foreach (ShopDefItem item in salvage) {
                     if (Holder.factionInventories[realFaction].FirstOrDefault(x => x.ID.Equals(item.ID)) == null) {
                         Holder.factionInventories[realFaction].Add(item);
-                    } else {
+                    }
+                    else {
                         int index = Holder.factionInventories[realFaction].FindIndex(x => x.ID.Equals(item.ID));
                         Holder.factionInventories[realFaction][index].Count++;
                         Holder.factionInventories[realFaction][index].DiscountModifier = Math.Max(Holder.factionInventories[realFaction][index].DiscountModifier - Helper.LoadSettings().DiscountPerItem, Helper.LoadSettings().DiscountFloor);
@@ -226,7 +242,7 @@ namespace PersistentMapAPI {
         }
 
         public override string PostPurchaseForFaction(List<string> ids, string Faction) {
-            lock(_purchaseLock) {
+            lock (_purchaseLock) {
                 try {
                     Faction realFaction = (Faction)Enum.Parse(typeof(Faction), Faction);
                     if (Holder.factionShops != null) {
@@ -243,7 +259,8 @@ namespace PersistentMapAPI {
                     }
                     logger.Info($"INV: {ids.Count} items were removed from the shop for faction ({Faction})");
                     return ids.Count + " items removed from shop for " + Faction;
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     logger.Warn(e, "Failed to process purchase!");
                     return "Error";
                 }

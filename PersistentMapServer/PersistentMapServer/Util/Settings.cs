@@ -24,5 +24,9 @@
         public bool Debug = false;
 
         public string AdminKey = null;
+
+        public int LowerFortBorder = 100;
+        public int UpperFortBorder = 300;
+        public float FortPercentage = 0.1f;
     }
 }
