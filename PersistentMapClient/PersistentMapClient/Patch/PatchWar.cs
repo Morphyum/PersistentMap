@@ -165,7 +165,7 @@ namespace PersistentMapClient {
                     if (system != null && companietext != null) {
                         List<string> companyNames = new List<string>();
                         foreach (Company company in system.companies) {
-                            companyNames.Add("(" + Helper.GetFactionShortName(company.Faction, ___simState.DataManager) + ")" + company.Name);
+                            companyNames.Add("(" + Helper.GetFactionShortName(company.Faction, ___simState.DataManager) + ") " + company.Name);
                         }
                         companietext.SetText(string.Join(Environment.NewLine, companyNames.ToArray()));
                     }

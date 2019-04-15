@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using PersistentMapClient;
-using System;
 
 namespace PersistentMapClientTests {
 

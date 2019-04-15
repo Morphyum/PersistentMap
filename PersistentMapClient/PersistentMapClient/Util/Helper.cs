@@ -180,6 +180,9 @@ namespace PersistentMapClient {
                         }
                     }
                 }
+                if(!result && capitalsBySystemName.Contains(system.Name) && !IsCapital(system,system.Owner)) {
+                    result = true;
+                }
                 return result;
             }
             catch (Exception ex) {
