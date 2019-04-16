@@ -51,7 +51,7 @@ namespace PersistentMapAPI {
                     int realRep = Math.Min(Helper.LoadSettings().MaxRep, mresult.awardedRep);
                     if ((Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets > 50) {
                         logger.Info("Suspicious result reported. See console.log for details.");
-                        logger.Debug($"Suspicous result for IP:({ip})" +
+                        logger.Debug($"Suspicous result for IP:({ip}) company:({companyName})" +
                             $" normalized difficulty:({realDifficulty}) planetSupport:({realPlanets}) reptuation:({realRep})" +
                             $" for employer:({mresult.employer}) vs target:({mresult.target}) on system: ({mresult.systemName})" +
                             $" with result:({mresult.result})"
