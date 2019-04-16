@@ -86,17 +86,21 @@ namespace PersistentMapAPI {
                             Math.Abs(employerControl.percentage - Helper.LoadSettings().UpperFortBorder),
                             Math.Max(1, (int)Math.Round(gain * Helper.LoadSettings().FortPercentage))
                             );
+                            employerControl.percentage += realChange;
+                        }
+                        else if(targetControl.percentage >= Helper.LoadSettings().LowerFortBorder) {
+                            realChange = Math.Max(1, gain);
                         } else {
                             realChange = Math.Min(
                             Math.Abs(employerControl.percentage - Helper.LoadSettings().LowerFortBorder),
                             Math.Max(1, gain)
                             );
+                            employerControl.percentage += realChange;
                         }
+                        targetControl.percentage -= realChange;
                         hresult.winner = employerControl.faction;
                         hresult.loser = targetControl.faction;
                         hresult.pointsTraded = realChange;
-                        employerControl.percentage += realChange;
-                        targetControl.percentage -= realChange;
                         logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser}) - {realChange} points were traded.");
                         if (targetControl.percentage < 0) {
                             int leftoverChange = Math.Abs(targetControl.percentage);
@@ -115,15 +119,6 @@ namespace PersistentMapAPI {
                                 debugcounter--;
                             }
                         }
-                    }
-                    else {
-                        int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
-                        hresult.winner = targetControl.faction;
-                        hresult.loser = employerControl.faction;
-                        hresult.pointsTraded = realChange;
-                        employerControl.percentage -= realChange;
-                        targetControl.percentage += realChange;
-                        logger.Debug($"Loss for ({hresult.loser}) against ({hresult.winner}) - {realChange} points were traded.");
                     }
                     FactionControl afterBattleOwnerControl = system.FindHighestControl();
                     Faction newOwner = afterBattleOwnerControl.faction;
