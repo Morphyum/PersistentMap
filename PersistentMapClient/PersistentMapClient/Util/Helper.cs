@@ -333,7 +333,7 @@ namespace PersistentMapClient {
             { Faction.Castile, "Asturias" },
             { Faction.Chainelane, "Far Reach" },
             { Faction.ClanBurrock, "Albion (Clan)" },
-            { Faction.ClanCloudCobra, " Zara(Homer 2850 +)" },
+            { Faction.ClanCloudCobra, "Zara (Homer 2850+)" },
             { Faction.ClanCoyote, "Tamaron" },
             { Faction.ClanDiamondShark, "Strato Domingo" },
             { Faction.ClanFireMandrill, "Shadow" },
