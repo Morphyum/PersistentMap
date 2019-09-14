@@ -11,6 +11,8 @@ namespace PersistentMapAPI.API {
 
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        public abstract List<string> GetActiveCompaniesPerFaction(string Faction, string MinutesBack);
+        public abstract Dictionary<string, int> GetActiveFactions(string MinutesBack);
         public abstract int GetActivePlayers(string MinutesBack);
         public abstract List<HistoryResult> GetMissionResults(string MinutesBack, string MaxResults);
         public abstract Dictionary<string, List<string>> GetPlayerCompanies();

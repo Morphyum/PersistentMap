@@ -10,69 +10,63 @@ using System.Linq;
 using UnityEngine;
 
 namespace PersistentMapClient {
-    /*
-    [HarmonyPatch(typeof(SGTravelManager), "DisplayEnteredOrbitPopup")]
-    public static class SGTravelManager_DisplayEnteredOrbitPopup_Patch {
-        static bool Prefix(SGTravelManager __instance, SimGameState ___simState) {
+
+    [HarmonyPatch(typeof(SG_Shop_Screen), "ChangeToStoreTypeState")]
+    public static class SG_Shop_Screen_ChangeToStoreTypeState_Patch {
+        static void Prefix(SG_Shop_Screen __instance, SG_Shop_Screen.StoreType newType, Shop.ShopType ___shopType, StarSystem ___theSystem, SimGameState ___simState) {
             try {
-                bool flag = true;
-                Faction owner = ___simState.CurSystem.Owner;
-                SimGameReputation reputation = ___simState.GetReputation(owner);
-                if (reputation <= SimGameReputation.LOATHED) {
-                    flag = false;
+                if (newType == SG_Shop_Screen.StoreType.FactionStore && ___simState.IsFactionAlly(___theSystem.Owner, null)) {
+                    ___theSystem.FactionShop.RefreshShop();
                 }
-                if (flag) {
-                    Action actionArrive = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "OnArrivedAtPlanet");
-                    Action actionSave = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "SaveNow");
-                    ___simState.GetInterruptQueue().QueueTravelPauseNotification("Arrived", Strings.T("We've arrived at {0}.", new object[]
-                    {
-                    ___simState.Starmap.CurPlanet.System.Def.Description.Name
-                    }), ___simState.GetCrewPortrait(SimGameCrew.Crew_Sumire), "notification_travelcomplete", actionArrive, "Visit Store", actionSave, "Continue");
-                }
-                else {
-                    Action actionSave = (Action)Delegate.CreateDelegate(typeof(Action), __instance, "SaveNow");
-                    ___simState.GetInterruptQueue().QueueTravelPauseNotification("Arrived", Strings.T("We've arrived at {0}.", new object[]
-                    {
-                    ___simState.Starmap.CurPlanet.System.Def.Description.Name
-                    }), ___simState.GetCrewPortrait(SimGameCrew.Crew_Sumire), "notification_travelcomplete", actionSave, "Continue", null, null);
-                }
-                if (!___simState.TimeMoving) {
-                    ___simState.GetInterruptQueue().DisplayIfAvailable();
-                }
-                return false;
             }
             catch (Exception e) {
                PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Shop), "Initialize")]
+    public static class Shop_Initialize_Patch {
+        static bool Prefix(Shop __instance, Shop.ShopType shopType) {
+            try {
+                if (shopType == Shop.ShopType.Faction) {
+                    Traverse.Create(__instance).Property("ThisShopType").SetValue(shopType);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
                 return true;
             }
         }
-
     }
 
-    [HarmonyPatch(typeof(SimGameState), "SetSimRoomState")]
-    public static class SimGameState_SetSimRoomState_Patch {
-        static void Prefix(SimGameState __instance, DropshipLocation state) {
+    [HarmonyPatch(typeof(StarSystem), "RefreshShops")]
+    public static class StarSystem_RefreshShops_Patch {
+        static bool Prefix(StarSystem __instance) {
             try {
-                if (state == DropshipLocation.SHOP) {
-                    if (__instance.CurSystem.Shop == null) {
-                        __instance.CurSystem.InitializeShop();
-                    }
-                    else {
-                        __instance.CurSystem.Shop.UpdateShop(true);
-                    }
-                }
+                __instance.RefreshShop(__instance.SystemShop);
+                __instance.RefreshShop(__instance.BlackMarketShop);
+                return false;
             }
             catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
+                return true;
             }
         }
     }
 
+    
     [HarmonyPatch(typeof(Contract), "FinalizeSalvage")]
     public static class Contract_FinalizeSalvage_Patch {
         static void Postfix(Contract __instance, List<SalvageDef> ___finalPotentialSalvage) {
             try {
-                Web.PostUnusedSalvage(___finalPotentialSalvage, __instance.Override.employerTeam.faction);
+                SimGameState simulation = __instance.BattleTechGame.Simulation;
+                if (simulation.IsFactionAlly(__instance.Override.employerTeam.faction, null)) {
+                    Web.PostUnusedSalvage(___finalPotentialSalvage, __instance.Override.employerTeam.faction);
+                }
             }
             catch (Exception e) {
                PersistentMapClient.Logger.LogError(e);
@@ -80,135 +74,89 @@ namespace PersistentMapClient {
         }
     }
 
-    [HarmonyPatch(typeof(Shop), "UpdateShop")]
-    public static class Shop_UpdateShop_Patch {
-        static void Postfix(Shop __instance, StarSystem ___system, SimGameState ___Sim) {
+    [HarmonyPatch(typeof(Shop), "RefreshShop")]
+    public static class Shop_RefreshShop_Patch {
+        static bool Prefix(Shop __instance, StarSystem ___system, SimGameState ___Sim) {
             try {
-                if (!Fields.LastUpdate.ContainsKey(___system.Owner)) {
-                    Fields.LastUpdate.Add(___system.Owner, DateTime.MinValue);
-                }
-                if (!Fields.currentShops.ContainsKey(___system.Owner)) {
-                    Fields.currentShops.Add(___system.Owner, new List<ShopDefItem>());
-                }
-                if (Fields.LastUpdate[___system.Owner].AddMinutes(Fields.UpdateTimer) < DateTime.UtcNow) {
-                    Fields.currentShops[___system.Owner] = Web.GetShopForFaction(___system.Owner);
-                }
-                foreach (ShopDefItem item in Fields.currentShops[___system.Owner]) {
-                    DataManager dataManager = ___Sim.DataManager;
-                    switch (item.Type) {
-                        case ShopItemType.Weapon: {
-                                if (dataManager.WeaponDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-                            }
-                        case ShopItemType.AmmunitionBox: {
-                                if (dataManager.AmmoBoxDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-                            }
-                        case ShopItemType.HeatSink: {
-
-                                if (dataManager.HeatSinkDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-                            }
-                        case ShopItemType.JumpJet: {
-                                if (dataManager.JumpJetDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-
-                            }
-                        case ShopItemType.MechPart: {
-                                if (dataManager.MechDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-                            }
-                        case ShopItemType.Upgrade: {
-                                if (dataManager.UpgradeDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-                            }
-                        case ShopItemType.Mech: {
-                                if (dataManager.MechDefs.Exists(item.ID)) {
-                                    __instance.ActiveSpecials.Add(item);
-                                }
-                                break;
-                            }
+                if (__instance.ThisShopType == Shop.ShopType.Faction && ___Sim.IsFactionAlly(___system.Owner, null)) {
+                    __instance.Clear();
+                    if (!Fields.LastUpdate.ContainsKey(___system.Owner)) {
+                        Fields.LastUpdate.Add(___system.Owner, DateTime.MinValue);
                     }
-                }
-                Fields.LastUpdate[___system.Owner] = DateTime.UtcNow;
-            }
-            catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
-            }
-        }
-    }
+                    if (!Fields.currentShops.ContainsKey(___system.Owner)) {
+                        Fields.currentShops.Add(___system.Owner, new List<ShopDefItem>());
+                    }
+                    if (Fields.LastUpdate[___system.Owner].AddMinutes(Fields.UpdateTimer) < DateTime.UtcNow) {
+                        Fields.currentShops[___system.Owner] = Web.GetShopForFaction(___system.Owner);
+                    }
+                    foreach (ShopDefItem item in Fields.currentShops[___system.Owner]) {
+                        DataManager dataManager = ___Sim.DataManager;
+                        if (item.Count > 0) {
+                            switch (item.Type) {
+                                case ShopItemType.Weapon: {
+                                        if (dataManager.WeaponDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+                                    }
+                                case ShopItemType.AmmunitionBox: {
+                                        if (dataManager.AmmoBoxDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+                                    }
+                                case ShopItemType.HeatSink: {
 
-    [HarmonyPatch(typeof(StarSystem), "OnSystemChange")]
-    public static class StarSystem_OnSystemChange_Patch {
-        static bool Prefix() {
-            try {
-                return false;
+                                        if (dataManager.HeatSinkDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+                                    }
+                                case ShopItemType.JumpJet: {
+                                        if (dataManager.JumpJetDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+
+                                    }
+                                case ShopItemType.MechPart: {
+                                        if (dataManager.MechDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+                                    }
+                                case ShopItemType.Upgrade: {
+                                        if (dataManager.UpgradeDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+                                    }
+                                case ShopItemType.Mech: {
+                                        if (dataManager.MechDefs.Exists(item.ID)) {
+                                            __instance.ActiveInventory.Add(item);
+                                        }
+                                        break;
+                                    }
+                            }
+                        }
+                    }
+                    Fields.LastUpdate[___system.Owner] = DateTime.UtcNow;
+                    return false;
+                }
+                return true;
             }
             catch (Exception e) {
                PersistentMapClient.Logger.LogError(e);
                 return true;
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(StarSystem), "SetNewStarSystemDef")]
-    public static class StarSystem_SetNewStarSystemDef_Patch {
-        static void Prefix(ref bool resetShops) {
-            try {
-                resetShops = false;
-            }
-            catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
-            }
-        }
-    }
-
-
-    [HarmonyPatch(typeof(StarSystem), "InitializeShop")]
-    public static class StarSystem_InitializeShop {
-        static bool Prefix(StarSystem __instance) {
-            try {
-                List<ShopDef> list = new List<ShopDef>();
-                foreach (string id in __instance.Sim.DataManager.Shops.Keys) {
-                    ShopDef shopDef = __instance.Sim.DataManager.Shops.Get(id);
-                    if (shopDef.RequirementTags.Contains(Fields.ShopFileTag)) {
-                        TagSet filteredRequirements = new TagSet(shopDef.RequirementTags);
-                        filteredRequirements.Remove(Fields.ShopFileTag);
-                        if (SimGameState.MeetsTagRequirements(filteredRequirements, shopDef.ExclusionTags, __instance.Tags, null)) {
-                            list.Add(shopDef);
-                        }
-                        else if (Helper.meetsNewReqs(__instance, filteredRequirements, shopDef.ExclusionTags, __instance.Tags)) {
-                            list.Add(shopDef);
-                        }
-                    }
-                }
-                AccessTools.Method(typeof(StarSystem), "set_Shop").Invoke(__instance, new object[] { new Shop(__instance, list) });
-                return false;
-            }
-            catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
-                return false;
             }
         }
     }
 
     [HarmonyPatch(typeof(Shop), "SellInventoryItem", new Type[] { typeof(ShopDefItem) })]
     public static class Shop_SellInventoryItem_Patch {
-        static void Postfix(ShopDefItem item, bool __result, StarSystem ___system) {
+        static void Postfix(Shop __instance, ShopDefItem item, bool __result, StarSystem ___system, SimGameState ___Sim) {
             try {
-                if (__result) {
+                if (__result && __instance.ThisShopType == Shop.ShopType.Faction && ___Sim.IsFactionAlly(___system.Owner, null)) {
                     if (Fields.currentShopSold.Key == Faction.INVALID_UNSET) {
                         Fields.currentShopSold = new KeyValuePair<Faction, List<ShopDefItem>>(___system.Owner, new List<ShopDefItem>());
                     }
@@ -220,6 +168,39 @@ namespace PersistentMapClient {
             }
         }
     }
+
+    [HarmonyPatch(typeof(SG_Shop_Screen), "RefreshStoreTypeButtons")]
+    public static class StarSystem_RefreshStoreTypeButtons_Patch {
+        static void Postfix(SG_Shop_Screen __instance, StarSystem ___theSystem, SimGameState ___simState, HBSDOTweenStoreTypeToggle ___FactionStoreButton, GameObject ___LowRepFactionOverlay, GameObject ___SystemStoreButtonHoldingObject, GameObject ___FactionStoreButtonHoldingObject) {
+            try {
+                if (___simState.IsFactionAlly(___theSystem.Owner, null)) {
+                    ___FactionStoreButton.FillInByFaction(___simState, ___theSystem.Owner);
+                    ___SystemStoreButtonHoldingObject.SetActive(true);
+                    ___FactionStoreButtonHoldingObject.SetActive(true);
+                    ___FactionStoreButton.SetState(ButtonState.Enabled, false);
+                    ___LowRepFactionOverlay.SetActive(false);
+                }
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SG_Shop_Screen), "FillInFactionData")]
+    public static class StarSystem_FillInFactionData_Patch {
+        static bool Prefix(SG_Shop_Screen __instance, SG_Stores_StoreImagePanel ___StoreImagePanel, StarSystem ___theSystem) {
+            try {
+                ___StoreImagePanel.FillInData(SG_Shop_Screen.StoreType.FactionStore, ___theSystem.Owner);
+                return false;
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+                return true;
+            }
+        }
+    }
+    
 
     [HarmonyPatch(typeof(SG_Shop_Screen), "OnCompleted")]
     public static class SG_Shop_Screen_OnCompleted_Patch {
@@ -250,9 +231,9 @@ namespace PersistentMapClient {
 
     [HarmonyPatch(typeof(Shop), "Purchase")]
     public static class Shop_Purchase_Patch {
-        static void Postfix(string id, bool __result, StarSystem ___system) {
+        static void Postfix(Shop __instance, string id, bool __result, StarSystem ___system, SimGameState ___Sim) {
             try {
-                if (__result) {
+                    if (__result && __instance.ThisShopType == Shop.ShopType.Faction && ___Sim.IsFactionAlly(___system.Owner, null)) {
                     if (Fields.currentShopBought.Key == Faction.INVALID_UNSET) {
                         Fields.currentShopBought = new KeyValuePair<Faction, List<string>>(___system.Owner, new List<string>());
                     }
@@ -265,80 +246,18 @@ namespace PersistentMapClient {
         }
     }
 
-    [HarmonyPatch(typeof(StarSystem), "RefreshSystem")]
-    public static class StarSystem_RefreshSystem_Patch {
-        static bool Prefix(StarSystem __instance) {
-            try {
-                __instance.GeneratePilots(__instance.Sim.Constants.Story.DefaultPilotsPerSystem);
-                __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMechTechsPerSystem, true);
-                __instance.GenerateTechs(__instance.Sim.Constants.Story.DefaultMedTechsPerSystem, false);
-                __instance.RefreshBreadcrumbs();
-                return false;
-            }
-            catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
-                return true;
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(Shop), "GetPrice")]
     public static class Shop_GetPrice_Patch {
-        static void Prefix(ref Shop.PurchaseType purchaseType) {
+        static void Postfix(Shop __instance, ShopDefItem item, Shop.ShopType shopType, ref int __result) {
             try {
-                purchaseType = Shop.PurchaseType.Special;
+                if (shopType == Shop.ShopType.Faction) {
+                    DescriptionDef itemDescription = __instance.GetItemDescription(item);
+                    __result = Mathf.CeilToInt(itemDescription.Cost * item.DiscountModifier);
+                }
             }
             catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
+                PersistentMapClient.Logger.LogError(e);
             }
         }
     }
-
-    [HarmonyPatch(typeof(SGLocationWidget), "ManageShopButtonState")]
-    public static class SGLocationWidget_ManageShopButtonState_Patch {
-        static bool Prefix(SGLocationWidget __instance, SimGameState ___simState, HBSDOTweenButton ___storeButton, StarSystem currSystem, GameObject ___NothingToBuyStoreOverlay, GameObject ___LowRepStoreOverlay) {
-            try {
-                Faction owner = currSystem.Owner;
-                SimGameReputation reputation = ___simState.GetReputation(owner);
-                if (reputation <= SimGameReputation.LOATHED) {
-                    ___LowRepStoreOverlay.SetActive(true);
-                    ___NothingToBuyStoreOverlay.SetActive(false);
-                    ___storeButton.SetState(ButtonState.Disabled, false);
-                }
-                else {
-                    ___LowRepStoreOverlay.SetActive(false);
-                    ___NothingToBuyStoreOverlay.SetActive(false);
-                    ___storeButton.SetState(ButtonState.Enabled, false);
-                }
-                return false;
-            }
-            catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
-                return true;
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(SGNavigationButton), "ManageShopFlyout")]
-    public static class SGNavigationButton_ManageShopFlyout_Patch {
-        static bool Prefix(SGNavigationButton __instance, SimGameState ___simState) {
-            try {
-                Faction owner = ___simState.CurSystem.Owner;
-                SimGameReputation reputation = ___simState.GetReputation(owner);
-                bool flag = true;
-                if (reputation <= SimGameReputation.LOATHED) {
-                    flag = false;
-                }
-                if (flag) {
-                    __instance.AddFlyoutButton("Store", DropshipMenuType.Shop);
-                }
-                return false;
-            }
-            catch (Exception e) {
-               PersistentMapClient.Logger.LogError(e);
-                return true;
-            }
-        }
-    }
-    */
 }

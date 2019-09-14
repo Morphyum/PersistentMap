@@ -7,7 +7,7 @@
         public int minMinutesBetweenPost = 10;
 
         public int MinutesForActive = 60;
-        public int MinutesTillShopUpdate = 1;
+        public int MinutesTillShopUpdate = 15;
         public int MaxItemsPerShop = 30;
 
         public float DiscountPerItem = 0.01f;
@@ -28,5 +28,6 @@
         public int LowerFortBorder = 100;
         public int UpperFortBorder = 300;
         public float FortPercentage = 0.1f;
+        public int HardCodedDifficulty = 5;
     }
 }

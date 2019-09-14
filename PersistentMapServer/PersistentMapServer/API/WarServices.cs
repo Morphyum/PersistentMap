@@ -44,9 +44,14 @@ namespace PersistentMapAPI {
                     DateTime reportTime = DateTime.UtcNow;
                     // TODO: For now, use the IP as the playerId. In the future, GUID
                     Helper.RecordPlayerActivity(mresult, ip, companyName, reportTime);
-
+                    int realDifficulty = 0;
                     // Check to see if the post is suspicious
-                    int realDifficulty = Math.Min(10, mresult.difficulty);
+                    if (Helper.LoadSettings().HardCodedDifficulty != 0) {
+                        realDifficulty = Helper.LoadSettings().HardCodedDifficulty;
+                    }
+                    else {
+                        realDifficulty = Math.Min(10, mresult.difficulty);
+                    }
                     int realPlanets = Math.Min(Helper.LoadSettings().MaxPlanetSupport, mresult.planetSupport);
                     int realRep = Math.Min(Helper.LoadSettings().MaxRep, mresult.awardedRep);
                     if ((Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets > 50) {
@@ -75,18 +80,21 @@ namespace PersistentMapAPI {
                     }
                     FactionControl employerControl = system.FindFactionControlByFaction(mresult.employer);
                     FactionControl targetControl = system.FindFactionControlByFaction(mresult.target);
+                    logger.Debug($"Real rep - ({realRep}) and real planets ({realPlanets})");
 
                     if (mresult.result == BattleTech.MissionResult.Victory) {
+
                         int gain = (Helper.LoadSettings().HalfSkullPercentageForWin * realDifficulty) + realRep + realPlanets;
                         int realChange = 0;
-                        if (employerControl.percentage >= Helper.LoadSettings().LowerFortBorder && 
+                        if (employerControl.percentage >= Helper.LoadSettings().LowerFortBorder &&
                             employerControl.percentage <= Helper.LoadSettings().UpperFortBorder) {
                             logger.Debug("Fort Rules");
                             realChange = Math.Min(
                             Math.Abs(employerControl.percentage - Helper.LoadSettings().UpperFortBorder),
                             Math.Max(1, (int)Math.Round(gain * Helper.LoadSettings().FortPercentage))
                             );
-                        } else {
+                        }
+                        else {
                             realChange = Math.Min(
                             Math.Abs(employerControl.percentage - Helper.LoadSettings().LowerFortBorder),
                             Math.Max(1, gain)
@@ -95,35 +103,39 @@ namespace PersistentMapAPI {
                         hresult.winner = employerControl.faction;
                         hresult.loser = targetControl.faction;
                         hresult.pointsTraded = realChange;
-                        employerControl.percentage += realChange;
-                        targetControl.percentage -= realChange;
-                        logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser}) - {realChange} points were traded.");
-                        if (targetControl.percentage < 0) {
-                            int leftoverChange = Math.Abs(targetControl.percentage);
-                            logger.Debug($"{leftoverChange} points could not be removed from ({hresult.loser}) - distributing them to other factions.");
-                            targetControl.percentage = 0;
-                            int debugcounter = leftoverChange;
-                            while (leftoverChange > 0 && debugcounter != 0) {
-                                foreach (FactionControl leftOverFaction in system.controlList) {
-                                    if (leftOverFaction.faction != mresult.employer && leftOverFaction.faction != mresult.target &&
-                                        leftOverFaction.percentage > 0 && leftoverChange > 0) {
-                                        leftOverFaction.percentage--;
-                                        leftoverChange--;
-                                        logger.Debug($"Removed {leftoverChange} points {leftOverFaction.faction.ToString()}.");
+                        logger.Debug($"Victory for ({hresult.winner}) over ({hresult.loser})");
+                        int fortLoss = 0;
+                        while (targetControl.percentage > Helper.LoadSettings().LowerFortBorder && realChange > 0) {
+                            targetControl.percentage--;
+                            realChange--;
+                            fortLoss++;
+                        }
+                        if (fortLoss > 0) {
+                            logger.Debug($"Fortification of ({hresult.loser}) lost {fortLoss} points.");
+                        }
+                        if (realChange > 0) {
+                            targetControl.percentage -= realChange;
+                            if (targetControl.percentage < 0) {
+                                int leftover = Math.Abs(targetControl.percentage);
+                                logger.Debug($"{leftover} points could not be removed from ({hresult.loser}) because its below 0.");
+                                targetControl.percentage = 0;
+
+                                int totalEnemyControl = 0;
+                                foreach (FactionControl control in system.controlList) {
+                                    if (control.faction != employerControl.faction) {
+                                        totalEnemyControl += control.percentage;
                                     }
                                 }
-                                debugcounter--;
+                                if (totalEnemyControl != 0) {
+                                    realChange -= leftover;
+                                }
+                                else {
+                                    logger.Debug($"No other Factions on Planet.");
+                                }
                             }
+                            employerControl.percentage += realChange;
+                            logger.Debug($"{realChange} points were traded.");
                         }
-                    }
-                    else {
-                        int realChange = Math.Min(employerControl.percentage, Math.Max(1, (Helper.LoadSettings().HalfSkullPercentageForLoss * realDifficulty) + realRep / 2 + realPlanets / 2));
-                        hresult.winner = targetControl.faction;
-                        hresult.loser = employerControl.faction;
-                        hresult.pointsTraded = realChange;
-                        employerControl.percentage -= realChange;
-                        targetControl.percentage += realChange;
-                        logger.Debug($"Loss for ({hresult.loser}) against ({hresult.winner}) - {realChange} points were traded.");
                     }
                     FactionControl afterBattleOwnerControl = system.FindHighestControl();
                     Faction newOwner = afterBattleOwnerControl.faction;
@@ -159,6 +171,32 @@ namespace PersistentMapAPI {
             return Holder.connectionStore
                 .Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow)
                 .Count();
+        }
+
+        public override Dictionary<string, int> GetActiveFactions(string MinutesBack) {
+            var connections = Holder.connectionStore
+                 .Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow);
+            var FactionList = new Dictionary<string, int>();
+            foreach (KeyValuePair<string, UserInfo> pair in connections) {
+                var lastFaction = pair.Value.lastFactionFoughtForInWar.ToString();
+                if (!FactionList.ContainsKey(lastFaction)) {
+                    FactionList.Add(lastFaction, 0);
+                }
+                FactionList[lastFaction]++;
+            }
+            return FactionList;
+        }
+
+        public override List<string> GetActiveCompaniesPerFaction(string Faction, string MinutesBack) {
+            var connections = Holder.connectionStore
+                 .Where(x => x.Value.LastDataSend.AddMinutes(int.Parse(MinutesBack)) > DateTime.UtcNow);
+            var CompanyList = new List<string>();
+            foreach (KeyValuePair<string, UserInfo> pair in connections) {
+                if (pair.Value.lastFactionFoughtForInWar.ToString().ToLower().Equals(Faction.ToLower())) {
+                    CompanyList.Add(pair.Value.companyName);
+                        }
+            }
+            return CompanyList;
         }
 
         // Returns all the companies that are known. Values are the playerIds that have used that company name.

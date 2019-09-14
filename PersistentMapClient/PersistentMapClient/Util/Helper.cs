@@ -115,7 +115,7 @@ namespace PersistentMapClient {
             // We want to write to Battletech/ModSaves/PersistentMapClient directory
             DirectoryInfo modSavesDir = battletechDir.CreateSubdirectory("ModSaves");
             DirectoryInfo clientDir = modSavesDir.CreateSubdirectory("PersistentMapClient");
-            
+
             // Finally see if the file exists
             FileInfo GeneratedSettingsFile = new FileInfo(Path.Combine(clientDir.FullName, Helper.GeneratedSettingsFile));
             if (GeneratedSettingsFile.Exists) {
@@ -125,20 +125,22 @@ namespace PersistentMapClient {
                     using (StreamReader r = new StreamReader(GeneratedSettingsFile.FullName)) {
                         string json = r.ReadToEnd();
                         generatedSettings = JsonConvert.DeserializeObject<GeneratedSettings>(json);
-                    }                    
+                    }
                     Fields.settings.ClientID = generatedSettings.ClientID;
                     PersistentMapClient.Logger.Log($"Fetched clientID:({Fields.settings.ClientID}).");
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     PersistentMapClient.Logger.Log($"Failed to read clientID from {GeneratedSettingsFile}, will overwrite!");
                     PersistentMapClient.Logger.LogError(e);
                 }
-            } else {
+            }
+            else {
                 PersistentMapClient.Logger.Log($"GeneratedSettings file at path:{GeneratedSettingsFile.FullName} does not exist, will be created.");
             }
 
             // If the clientID hasn't been written at this point, something went wrong. Generate a new one.
             if (Fields.settings.ClientID == null || Fields.settings.ClientID.Equals("")) {
-                Guid clientID = Guid.NewGuid();                
+                Guid clientID = Guid.NewGuid();
                 try {
                     GeneratedSettings newSettings = new GeneratedSettings {
                         ClientID = clientID.ToString()
@@ -149,7 +151,8 @@ namespace PersistentMapClient {
                     }
                     Fields.settings.ClientID = clientID.ToString();
                     PersistentMapClient.Logger.Log($"Wrote new clientID ({Fields.settings.ClientID}) to generatedSettings at:{GeneratedSettingsFile.FullName}.");
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     PersistentMapClient.Logger.Log("FATAL ERROR: Failed to write clientID, cannot continue!");
                     PersistentMapClient.Logger.LogError(e);
                     // TODO: Figure out a failure strategy...
@@ -180,7 +183,7 @@ namespace PersistentMapClient {
                         }
                     }
                 }
-                if(!result && capitalsBySystemName.Contains(system.Name) && !IsCapital(system,system.Owner)) {
+                if (!result && capitalsBySystemName.Contains(system.Name) && !IsCapital(system, system.Owner)) {
                     result = true;
                 }
                 return result;
@@ -256,7 +259,9 @@ namespace PersistentMapClient {
                     // If a faction owns the planet, add the owning faction and local government
                     if (system.Owner != Faction.NoFaction) {
                         employees.Add(Faction.Locals);
-                        employees.Add(system.Owner);
+                        if (system.Owner != Faction.Locals) {
+                            employees.Add(system.Owner);
+                        }
                     }
 
                     // Look across neighboring systems, and add employees of factions that border this system
@@ -289,7 +294,9 @@ namespace PersistentMapClient {
                 if (Sim.Starmap != null) {
                     targets.Add(Faction.AuriganPirates);
                     if (system.Owner != Faction.NoFaction) {
-                        targets.Add(system.Owner);
+                        if (system.Owner != Faction.Locals) {
+                            targets.Add(system.Owner);
+                        }
                         targets.Add(Faction.Locals);
                     }
                     foreach (StarSystem neigbourSystem in Sim.Starmap.GetAvailableNeighborSystem(system)) {
@@ -355,17 +362,20 @@ namespace PersistentMapClient {
             { Faction.JarnFolk, "Trondheim (JF)" },
             { Faction.Tortuga, "Tortuga Prime" },
             { Faction.Valkyrate, "Gotterdammerung" },
-            { Faction.Axumite, "Thala" },
+            { Faction.Axumite, "Thala" }
+            //,{ Faction.WordOfBlake, "Hope (Randis 2988+)" }
         };
+
         private static ILookup<string, Faction> capitalsBySystemName = capitalsByFaction.ToLookup(pair => pair.Value, pair => pair.Key);
         public static bool IsCapital(StarSystem system, Faction faction) {
             bool isCapital = false;
-            try {                
+            try {
                 if (capitalsBySystemName.Contains(system.Name)) {
                     Faction systemFaction = capitalsBySystemName[system.Name].First();
                     isCapital = (systemFaction == faction);
-                }                
-            } catch (Exception ex) {
+                }
+            }
+            catch (Exception ex) {
                 PersistentMapClient.Logger.LogError(ex);
             }
             return isCapital;
@@ -418,7 +428,27 @@ namespace PersistentMapClient {
             return support;
         }
 
-        public static Contract GetNewWarContract(SimGameState Sim, int Difficulty, Faction emp, Faction targ, StarSystem system) {
+        private static readonly ContractType[] prioTypes = new ContractType[]
+        {
+            ContractType.AmbushConvoy,
+            ContractType.Assassinate,
+            ContractType.CaptureBase,
+            ContractType.CaptureEscort,
+            ContractType.DefendBase,
+            ContractType.DestroyBase,
+            ContractType.Rescue,
+            ContractType.SimpleBattle,
+            ContractType.FireMission,
+            ContractType.AttackDefend,
+            ContractType.ThreeWayBattle
+        };
+
+        public static Contract GetNewWarContract(SimGameState Sim, int Difficulty, Faction emp, Faction targ, Faction third, StarSystem system) {
+            Fields.prioGen = true;
+            Fields.prioEmployer = emp;
+            Fields.prioTarget = targ;
+            Fields.prioThird = third;
+
             if (Difficulty <= 1) {
                 Difficulty = 2;
             }
@@ -426,226 +456,47 @@ namespace PersistentMapClient {
                 Difficulty = 9;
             }
 
-            ContractDifficulty minDiffClamped = (ContractDifficulty)AccessTools.Method(typeof(SimGameState), "GetDifficultyEnumFromValue").Invoke(Sim, new object[] { Difficulty });
-            ContractDifficulty maxDiffClamped = (ContractDifficulty)AccessTools.Method(typeof(SimGameState), "GetDifficultyEnumFromValue").Invoke(Sim, new object[] { Difficulty });
-            List<Contract> contractList = new List<Contract>();
-            int maxContracts = 1;
-            int debugCount = 0;
-            while (contractList.Count < maxContracts && debugCount < 1000) {
-                WeightedList<MapAndEncounters> contractMaps = new WeightedList<MapAndEncounters>(WeightedListType.SimpleRandom, null, null, 0);
-                List<ContractType> contractTypes = new List<ContractType>();
-                Dictionary<ContractType, List<ContractOverride>> potentialOverrides = new Dictionary<ContractType, List<ContractOverride>>();
-                AccessTools.Field(typeof(SimGameState), "singlePlayerTypes");
-                ContractType[] singlePlayerTypes = (ContractType[])AccessTools.Field(typeof(SimGameState), "singlePlayerTypes").GetValue(Sim);
-       
-                    foreach (Contract_MDD contract_MDD in MetadataDatabase.Instance.GetContractsByDifficultyRangeAndScopeAndOwnership(Difficulty - 1, Difficulty + 1, Sim.ContractScope, true)) {
-                        ContractType contractType = contract_MDD.ContractTypeEntry.ContractType;
-                        if (singlePlayerTypes.Contains(contractType)) {
-                            if (!contractTypes.Contains(contractType)) {
-                                contractTypes.Add(contractType);
-                            }
-                            if (!potentialOverrides.ContainsKey(contractType)) {
-                                potentialOverrides.Add(contractType, new List<ContractOverride>());
-                            }
-                            ContractOverride item = Sim.DataManager.ContractOverrides.Get(contract_MDD.ContractID);
-                            potentialOverrides[contractType].Add(item);
-                        }
-                    }
-                    foreach (MapAndEncounters element in MetadataDatabase.Instance.GetReleasedMapsAndEncountersByContractTypeAndTags(singlePlayerTypes, system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes)) {
-                        if (!contractMaps.Contains(element)) {
-                            contractMaps.Add(element, 0);
-                        }
-                    }
-                
-                if (contractMaps.Count == 0) {
-                    PersistentMapClient.Logger.Log("Maps0 break");
-                    break;
-                }
-                if (potentialOverrides.Count == 0) {
-                    PersistentMapClient.Logger.Log("Overrides0 break");
-                    break;
-                }
-                contractMaps.Reset(false);
-                WeightedList<Faction> validEmployers = new WeightedList<Faction>(WeightedListType.SimpleRandom, null, null, 0);
-                Dictionary<Faction, WeightedList<Faction>> validTargets = new Dictionary<Faction, WeightedList<Faction>>();
+            var difficultyRange = AccessTools.Method(typeof(SimGameState), "GetContractRangeDifficultyRange").Invoke(Sim, new object[] { system, Sim.SimGameMode, Sim.GlobalDifficulty });
+            Dictionary<ContractType, List<ContractOverride>> potentialContracts = (Dictionary<ContractType, List<ContractOverride>>)AccessTools.Method(typeof(SimGameState), "GetContractOverrides").Invoke(Sim, new object[] { difficultyRange, prioTypes });
+            WeightedList<MapAndEncounters> playableMaps = MetadataDatabase.Instance.GetReleasedMapsAndEncountersByContractTypeAndTagsAndOwnership(potentialContracts.Keys.ToArray<ContractType>(), system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes).ToWeightedList(WeightedListType.SimpleRandom);
+            var validParticipants = AccessTools.Method(typeof(SimGameState), "GetValidParticipants").Invoke(Sim, new object[] { system });
+            if (!(bool)AccessTools.Method(typeof(SimGameState), "HasValidMaps").Invoke(Sim, new object[] { system, playableMaps })
+                || !(bool)AccessTools.Method(typeof(SimGameState), "HasValidContracts").Invoke(Sim, new object[] { difficultyRange, potentialContracts })
+                || !(bool)AccessTools.Method(typeof(SimGameState), "HasValidParticipants").Invoke(Sim, new object[] { system, validParticipants })) {
+                return null;
+            }
+            AccessTools.Method(typeof(SimGameState), "ClearUsedBiomeFromDiscardPile").Invoke(Sim, new object[] { playableMaps });
+            IEnumerable<int> mapWeights = from map in playableMaps
+                                          select map.Map.Weight;
+            WeightedList<MapAndEncounters> activeMaps = new WeightedList<MapAndEncounters>(WeightedListType.WeightedRandom, playableMaps.ToList(), mapWeights.ToList<int>(), 0);
+            AccessTools.Method(typeof(SimGameState), "FilterActiveMaps").Invoke(Sim, new object[] { activeMaps, Sim.GlobalContracts });
+            activeMaps.Reset(false);
+            MapAndEncounters level = activeMaps.GetNext(false);
+            var MapEncounterContractData = AccessTools.Method(typeof(SimGameState), "FillMapEncounterContractData").Invoke(Sim, new object[] { system, difficultyRange, potentialContracts, validParticipants, level });
+            bool HasContracts = Traverse.Create(MapEncounterContractData).Property("HasContracts").GetValue<bool>();
+            while (!HasContracts && activeMaps.ActiveListCount > 0) {
+                level = activeMaps.GetNext(false);
+                MapEncounterContractData = AccessTools.Method(typeof(SimGameState), "FillMapEncounterContractData").Invoke(Sim, new object[] { system, difficultyRange, potentialContracts, validParticipants, level });
+            }
+            system.SetCurrentContractFactions(Faction.INVALID_UNSET, Faction.INVALID_UNSET);
+            HashSet<ContractType> Contracts = Traverse.Create(MapEncounterContractData).Field("Contracts").GetValue<HashSet<ContractType>>();
 
-                int i = debugCount;
-                debugCount = i + 1;
-                WeightedList<MapAndEncounters> activeMaps = new WeightedList<MapAndEncounters>(WeightedListType.SimpleRandom, contractMaps.ToList(), null, 0);
-                List<MapAndEncounters> discardedMaps = new List<MapAndEncounters>();
-
-
-                List<string> mapDiscardPile = (List<string>)AccessTools.Field(typeof(SimGameState), "mapDiscardPile").GetValue(Sim);
-
-                for (int j = activeMaps.Count - 1; j >= 0; j--) {
-                    if (mapDiscardPile.Contains(activeMaps[j].Map.MapID)) {
-                        discardedMaps.Add(activeMaps[j]);
-                        activeMaps.RemoveAt(j);
-                    }
-                }
-                if (activeMaps.Count == 0) {
+            if (MapEncounterContractData == null || Contracts.Count == 0) {
+                List<string> mapDiscardPile = Traverse.Create(Sim).Field("mapDiscardPile").GetValue<List<string>>();
+                if (mapDiscardPile.Count > 0) {
                     mapDiscardPile.Clear();
-                    foreach (MapAndEncounters element2 in discardedMaps) {
-                        activeMaps.Add(element2, 0);
-                    }
-                }
-                activeMaps.Reset(false);
-                MapAndEncounters level = null;
-                List<EncounterLayer_MDD> validEncounters = new List<EncounterLayer_MDD>();
-
-
-                Dictionary<ContractType, WeightedList<PotentialContract>> validContracts = new Dictionary<ContractType, WeightedList<PotentialContract>>();
-                WeightedList<PotentialContract> flatValidContracts = null;
-                do {
-                    level = activeMaps.GetNext(false);
-                    if (level == null) {
-                        break;
-                    }
-                    validEncounters.Clear();
-                    validContracts.Clear();
-                    flatValidContracts = new WeightedList<PotentialContract>(WeightedListType.WeightedRandom, null, null, 0);
-                    foreach (EncounterLayer_MDD encounterLayer_MDD in level.Encounters) {
-                        ContractType contractType2 = encounterLayer_MDD.ContractTypeEntry.ContractType;
-                        if (contractTypes.Contains(contractType2)) {
-                            if (validContracts.ContainsKey(contractType2)) {
-                                validEncounters.Add(encounterLayer_MDD);
-                            }
-                            else {
-                                foreach (ContractOverride contractOverride2 in potentialOverrides[contractType2]) {
-                                    bool flag = true;
-                                    ContractDifficulty difficultyEnumFromValue = (ContractDifficulty)AccessTools.Method(typeof(SimGameState), "GetDifficultyEnumFromValue").Invoke(Sim, new object[] { contractOverride2.difficulty });
-                                    Faction employer2 = Faction.INVALID_UNSET;
-                                    Faction target2 = Faction.INVALID_UNSET;
-                                    if (difficultyEnumFromValue >= minDiffClamped && difficultyEnumFromValue <= maxDiffClamped) {
-                                        employer2 = emp;
-                                        target2 = targ;
-                                        int difficulty = Sim.NetworkRandom.Int(Difficulty, Difficulty + 1);
-                                        system.SetCurrentContractFactions(employer2, target2);
-                                        int k = 0;
-                                        while (k < contractOverride2.requirementList.Count) {
-                                            RequirementDef requirementDef = new RequirementDef(contractOverride2.requirementList[k]);
-                                            EventScope scope = requirementDef.Scope;
-                                            TagSet curTags;
-                                            StatCollection stats;
-                                            switch (scope) {
-                                                case EventScope.Company:
-                                                    curTags = Sim.CompanyTags;
-                                                    stats = Sim.CompanyStats;
-                                                    break;
-                                                case EventScope.MechWarrior:
-                                                case EventScope.Mech:
-                                                    goto IL_88B;
-                                                case EventScope.Commander:
-                                                    goto IL_8E9;
-                                                case EventScope.StarSystem:
-                                                    curTags = system.Tags;
-                                                    stats = system.Stats;
-                                                    break;
-                                                default:
-                                                    goto IL_88B;
-                                            }
-                                            IL_803:
-                                            for (int l = requirementDef.RequirementComparisons.Count - 1; l >= 0; l--) {
-                                                ComparisonDef item2 = requirementDef.RequirementComparisons[l];
-                                                if (item2.obj.StartsWith("Target") || item2.obj.StartsWith("Employer")) {
-                                                    requirementDef.RequirementComparisons.Remove(item2);
-                                                }
-                                            }
-                                            if (!SimGameState.MeetsRequirements(requirementDef, curTags, stats, null)) {
-                                                flag = false;
-                                                break;
-                                            }
-                                            k++;
-                                            continue;
-                                            IL_88B:
-                                            if (scope != EventScope.Map) {
-                                                throw new Exception("Contracts cannot use the scope of: " + requirementDef.Scope);
-                                            }
-                                                curTags = MetadataDatabase.Instance.GetTagSetForTagSetEntry(level.Map.TagSetID);
-                                                stats = new StatCollection();
-                                                goto IL_803;
-                                            
-                                            IL_8E9:
-                                            curTags = Sim.CommanderTags;
-                                            stats = Sim.CommanderStats;
-                                            goto IL_803;
-                                        }
-                                        if (flag) {
-                                            PotentialContract element3 = default(PotentialContract);
-                                            element3.contractOverride = contractOverride2;
-                                            element3.difficulty = difficulty;
-                                            element3.employer = employer2;
-                                            element3.target = target2;
-                                            validEncounters.Add(encounterLayer_MDD);
-                                            if (!validContracts.ContainsKey(contractType2)) {
-                                                validContracts.Add(contractType2, new WeightedList<PotentialContract>(WeightedListType.WeightedRandom, null, null, 0));
-                                            }
-                                            validContracts[contractType2].Add(element3, contractOverride2.weight);
-                                            flatValidContracts.Add(element3, contractOverride2.weight);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                while (validContracts.Count == 0 && level != null);
-                system.SetCurrentContractFactions(Faction.INVALID_UNSET, Faction.INVALID_UNSET);
-                if (validContracts.Count == 0) {
-                    if (mapDiscardPile.Count > 0) {
-                        mapDiscardPile.Clear();
-                    }
-                    else {
-                        debugCount = 1000;
-                        PersistentMapClient.Logger.Log(string.Format("[CONTRACT] Unable to find any valid contracts for available map pool. Alert designers.", new object[0]));
-                    }
                 }
                 else {
-                    GameContext gameContext = new GameContext(Sim.Context);
-                    gameContext.SetObject(GameContextObjectTagEnum.TargetStarSystem, system);
-                    Dictionary<ContractType, List<EncounterLayer_MDD>> finalEncounters = new Dictionary<ContractType, List<EncounterLayer_MDD>>();
-                    foreach (EncounterLayer_MDD encounterLayer_MDD2 in validEncounters) {
-                        ContractType contractType3 = encounterLayer_MDD2.ContractTypeEntry.ContractType;
-                        if (!finalEncounters.ContainsKey(contractType3)) {
-                            finalEncounters.Add(contractType3, new List<EncounterLayer_MDD>());
-                        }
-                        finalEncounters[contractType3].Add(encounterLayer_MDD2);
-                    }
-                    List<PotentialContract> discardedContracts = new List<PotentialContract>();
-
-                    List<string> contractDiscardPile = (List<string>)AccessTools.Field(typeof(SimGameState), "contractDiscardPile").GetValue(Sim);
-                    for (int m = flatValidContracts.Count - 1; m >= 0; m--) {
-                        if (contractDiscardPile.Contains(flatValidContracts[m].contractOverride.ID)) {
-                            discardedContracts.Add(flatValidContracts[m]);
-                            flatValidContracts.RemoveAt(m);
-                        }
-                    }
-                    if ((float)discardedContracts.Count >= (float)flatValidContracts.Count * Sim.Constants.Story.DiscardPileToActiveRatio || flatValidContracts.Count == 0) {
-                        contractDiscardPile.Clear();
-                        foreach (PotentialContract element4 in discardedContracts) {
-                            flatValidContracts.Add(element4, 0);
-                        }
-                    }
-                    PotentialContract next = flatValidContracts.GetNext(true);
-                    ContractType finalContractType = next.contractOverride.contractType;
-                    finalEncounters[finalContractType].Shuffle<EncounterLayer_MDD>();
-                    string encounterGuid = finalEncounters[finalContractType][0].EncounterLayerGUID;
-                    ContractOverride contractOverride3 = next.contractOverride;
-                    Faction employer3 = next.employer;
-                    Faction target3 = next.target;
-                    int targetDifficulty = next.difficulty;
-
-                    Contract con = (Contract)AccessTools.Method(typeof(SimGameState), "CreateTravelContract").Invoke(Sim, new object[] { level.Map.MapName, level.Map.MapPath, encounterGuid, finalContractType, contractOverride3, gameContext, employer3, target3, employer3, false, targetDifficulty });
-                    mapDiscardPile.Add(level.Map.MapID);
-                    contractDiscardPile.Add(contractOverride3.ID);
-                    Sim.PrepContract(con, employer3, target3, target3, level.Map.BiomeSkinEntry.BiomeSkin, con.Override.travelSeed, system);
-                    contractList.Add(con);
+                    PersistentMapClient.Logger.Log(string.Format("[CONTRACT] Unable to find any valid contracts for available map pool. Alert designers.", new object[0]));
                 }
             }
-            if (debugCount >= 1000) {
-                PersistentMapClient.Logger.Log("Unable to fill contract list. Please inform AJ Immediately");
-            }
-            return contractList[0];
+            GameContext gameContext = new GameContext(Sim.Context);
+            gameContext.SetObject(GameContextObjectTagEnum.TargetStarSystem, system);
+
+
+            Contract contract = (Contract)AccessTools.Method(typeof(SimGameState), "CreateProceduralContract").Invoke(Sim, new object[] { system, true, level, MapEncounterContractData, gameContext });
+            Fields.prioGen = false;
+            return contract;
         }
     }
 }

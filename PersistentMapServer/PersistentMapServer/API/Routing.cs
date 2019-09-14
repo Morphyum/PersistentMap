@@ -5,6 +5,9 @@
 
         public const string GetMissionResults = "/Mission/Results/?MinutesBack={MinutesBack}&MaxResults={MaxResults}";
         public const string GetActivePlayers = "/Users/Active/?MinutesBack={MinutesBack}";
+        public const string GetActiveFactions = "/Factions/Active/?MinutesBack={MinutesBack}";
+        public const string GetActiveCompaniesPerFaction = "/Factions/{Faction}/Companies/?MinutesBack={MinutesBack}";
+
         public const string GetShopForFaction = "/Shop/{Faction}";
 
         public const string PostMissionResult = "/Mission/?CompanyName={CompanyName}";

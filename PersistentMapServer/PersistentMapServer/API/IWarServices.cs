@@ -37,6 +37,14 @@ namespace PersistentMapAPI {
         int GetActivePlayers(string MinutesBack);
 
         [OperationContract]
+        [WebGet(UriTemplate = Routing.GetActiveFactions, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        Dictionary<string, int> GetActiveFactions(string MinutesBack);
+
+        [OperationContract]
+        [WebGet(UriTemplate = Routing.GetActiveCompaniesPerFaction, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
+        List<string> GetActiveCompaniesPerFaction(string Faction, string MinutesBack);
+
+        [OperationContract]
         [WebGet(UriTemplate = Routing.GetStartupTime, BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json)]
         string GetStartupTime();
 

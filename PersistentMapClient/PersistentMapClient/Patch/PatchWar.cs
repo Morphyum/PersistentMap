@@ -4,6 +4,7 @@ using BattleTech.Save;
 using BattleTech.UI;
 using Harmony;
 using HBS;
+using Localize;
 using PersistentMapAPI;
 using PersistentMapAPI.Objects;
 using System;
@@ -21,11 +22,38 @@ namespace PersistentMapClient {
     public static class SimGameState_Rehydrate_Patch {
         static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
             try {
+                if (__instance.HasTravelContract && Fields.warmission) {
+                    __instance.GlobalContracts.Add(__instance.ActiveTravelContract);
+                }
                 foreach (Contract contract in __instance.GlobalContracts) {
                     contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
                     int maxPriority = Mathf.FloorToInt(7 / __instance.Constants.Salvage.PrioritySalvageModifier);
                     contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.SalvagePotential * Fields.settings.priorityContactPayPercentage));
                     contract.Override.negotiatedSalvage = 1f;
+                }
+                //tags:
+                /* FundsAddedAction = 'BtSaveEdit.FundsAdded'
+    InventoryAddedAction = 'BtSaveEdit.InventoryAdded'
+    InventoryDeletedAction = 'BtSaveEdit.InventoryDeleted'
+    PilotChangedAction = 'BtSaveEdit.PilotChanged'
+    ReputationChangedAction = 'BtSaveEdit.ReputationChanged'
+    SaveCleanedAction = 'BtSaveEdit.SaveCleaned'
+    StarSystemsDeletedAction = 'BtSaveEdit.StarSystemsDeleted'
+    ContractsDeletedAction = 'BtSaveEdit.ContractsDeleted'
+    MechsRemovedAction = 'BtSaveEdit.MechsRemoved'
+    MechsAddedAction = 'BtSaveEdit.MechsAdded'
+    BlackMarketChangedAction = 'BtSaveEdit.BlackMarketAccessChanged'
+    CompanyTagsChangedAction = 'BtSaveEdit.CompanyTagsChanged'
+    StarSystemWarpAction = 'BtSaveEdit.ChangedCurrentStarSystem'*/
+                List<string> saveedits = new List<string>() { "BtSaveEdit.FundsAdded", "BtSaveEdit.InventoryAdded", "BtSaveEdit.ReputationChanged",
+                    "BtSaveEdit.MechsAdded" };
+                foreach (string cheat in saveedits) {
+                    if (__instance.CompanyStats.ContainsStatistic(cheat)) {
+                        Fields.cheater = true;
+                        SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
+                        interruptQueue.QueueGenericPopup_NonImmediate("Save Edited!", "You have edited your save file in a way that disqualifies you from the war game, your missions wont be influenceing the war. All other fucntions work as normally.", true);
+                        break;
+                    }
                 }
             }
             catch (Exception e) {
@@ -59,6 +87,53 @@ namespace PersistentMapClient {
         }
     }
 
+    [HarmonyPatch(typeof(SGDebugEventWidget), "Submit")]
+    public static class SGDebugEventWidget_Submit_Patch {
+        static void Postfix(SGDebugEventWidget __instance, SGDebugEventWidget.DebugType ___curType, SimGameState ___Sim) {
+            try {
+                /*public enum DebugType
+		{
+			All = -1,
+			Insert_Event,
+			Update_Tags,
+			Update_Stats,
+			Add_Mech,
+			Add_Funds,
+			Add_Pilot_Exp
+		}*/
+                if (___curType == SGDebugEventWidget.DebugType.Add_Funds) {
+                    ___Sim.CompanyStats.AddStatistic<int>("BtSaveEdit.FundsAdded", 1);
+                    Fields.cheater = true;
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
+                    interruptQueue.QueueGenericPopup_NonImmediate("Save Edited!", "You have edited your save file in a way that disqualifies you from the war game, your missions wont be influenceing the war. All other fucntions work as normally.", true);
+
+                }
+                if (___curType == SGDebugEventWidget.DebugType.Add_Mech) {
+                    ___Sim.CompanyStats.AddStatistic<int>("BtSaveEdit.MechsAdded", 1);
+                    Fields.cheater = true;
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
+                    interruptQueue.QueueGenericPopup_NonImmediate("Save Edited!", "You have edited your save file in a way that disqualifies you from the war game, your missions wont be influenceing the war. All other fucntions work as normally.", true);
+
+                }
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(CombatDebugHUD), "DEBUG_CompleteAllContractObjectives")]
+    public static class CombatDebugHUD_DEBUG_CompleteAllContractObjectives_Patch {
+        static void Postfix() {
+            try {
+                Fields.skipmission = true;
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(StarSystem), "ResetContracts")]
     public static class StarSystem_ResetContracts_Patch {
         static void Postfix(StarSystem __instance) {
@@ -86,7 +161,7 @@ namespace PersistentMapClient {
         }
     }
 
-    [HarmonyPatch(typeof(SimGameState), "AddPredefinedContract")]
+    [HarmonyPatch(typeof(SimGameState), "AddPredefinedContract2")]
     public static class SimGameState_AddPredefinedContract_Patch {
         static void Postfix(SimGameState __instance, Contract __result) {
             try {
@@ -181,9 +256,10 @@ namespace PersistentMapClient {
         }
     }
 
+    [HarmonyBefore(new string[] { "de.morphyum.GlobalDifficulty" })]
     [HarmonyPatch(typeof(Starmap), "PopulateMap", new Type[] { typeof(SimGameState) })]
     public static class Starmap_PopulateMap_Patch {
-
+       
         private static MethodInfo methodSetOwner = AccessTools.Method(typeof(StarSystemDef), "set_Owner");
         private static MethodInfo methodSetContractEmployers = AccessTools.Method(typeof(StarSystemDef), "set_ContractEmployers");
         private static MethodInfo methodSetContractTargets = AccessTools.Method(typeof(StarSystemDef), "set_ContractTargets");
@@ -207,6 +283,7 @@ namespace PersistentMapClient {
 
                 List<string> changeNotifications = new List<string>();
                 List<StarSystem> transitiveContractUpdateTargets = new List<StarSystem>();
+
                 foreach (PersistentMapAPI.System system in Fields.currentMap.systems) {
                     if (system == null) {
                         PersistentMapClient.Logger.Log("System in map null");
@@ -308,6 +385,16 @@ namespace PersistentMapClient {
                 if (!__instance.IsFlashpointContract) {
                     GameInstance game = LazySingletonBehavior<UnityGameInstance>.Instance.Game;
                     if (game.Simulation.IsFactionAlly(__instance.Override.employerTeam.faction)) {
+                        if (Fields.cheater) {
+                            PersistentMapClient.Logger.Log("cheated save, skipping war upload");
+                            return;
+                        }
+                        if (Fields.skipmission) {
+                            Fields.skipmission = false;
+                            SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
+                            interruptQueue.QueueGenericPopup_NonImmediate("Invalid Mission!", "Something went wrong with your mission, result not uploaded.", true);
+                            return;
+                        }
                         bool updated = false;
                         StarSystem system = game.Simulation.StarSystems.Find(x => x.ID == __instance.TargetSystem);
                         foreach (StarSystem potential in game.Simulation.StarSystems) {
@@ -315,7 +402,12 @@ namespace PersistentMapClient {
                                 potential.Owner == __instance.Override.employerTeam.faction &&
                                 Helper.GetDistanceInLY(potential.Position.x, potential.Position.y, system.Position.x, system.Position.y) <= game.Simulation.Constants.Travel.MaxJumpDistance)) {
                                 int planetSupport = Helper.CalculatePlanetSupport(game.Simulation, system, __instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction);
-                                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, Mathf.RoundToInt(__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation), planetSupport);
+                                float num8 = (float)__instance.GetNegotiableReputationBaseValue(game.Simulation.Constants) * __instance.PercentageContractReputation;
+                                float num9 = Convert.ToSingle(__instance.GameContext.GetObject(GameContextObjectTagEnum.ContractBonusEmployerReputation));
+                                float num10 = (float)__instance.GetBaseReputationValue(game.Simulation.Constants);
+                                float num11 = num8 + num9 + num10;
+                                int repchange = Mathf.RoundToInt(num11);
+                                PersistentMapAPI.MissionResult mresult = new PersistentMapAPI.MissionResult(__instance.Override.employerTeam.faction, __instance.Override.targetTeam.faction, result, system.Name, __instance.Difficulty, repchange, planetSupport);
                                 bool postSuccessfull = Web.PostMissionResult(mresult, game.Simulation.Player1sMercUnitHeraldryDef.Description.Name);
                                 if (!postSuccessfull) {
                                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(game.Simulation);
@@ -344,6 +436,10 @@ namespace PersistentMapClient {
         static void Postfix(StarSystem __instance) {
             try {
                 __instance.Sim.GlobalContracts.Clear();
+                if (__instance.Sim.HasTravelContract && Fields.warmission) {
+                    __instance.Sim.GlobalContracts.Add(__instance.Sim.ActiveTravelContract);
+                }
+
                 foreach (KeyValuePair<Faction, FactionDef> pair in __instance.Sim.FactionsDict) {
                     if (!Fields.excludedFactions.Contains(pair.Key)) {
                         int numberOfContracts = 0;
@@ -378,13 +474,25 @@ namespace PersistentMapClient {
                                                     target = Faction.AuriganPirates;
                                                 }
                                             }
-                                            Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.GetDifficulty(__instance.Sim.SimGameMode), pair.Key, target, realSystem);
-                                            contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
-                                            contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
-                                            int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
-                                            contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
-                                            contract.Override.negotiatedSalvage = 1f;
-                                            __instance.Sim.GlobalContracts.Add(contract);
+                                            Faction possibleThird = Faction.AuriganPirates;
+                                            foreach (FactionControl control in targets[i].controlList.OrderByDescending(x => x.percentage)) {
+                                                if (control.faction != pair.Key && control.faction != target) {
+                                                    possibleThird = control.faction;
+                                                    break;
+                                                }
+                                            }
+                                            Contract contract = Helper.GetNewWarContract(__instance.Sim, realSystem.Def.GetDifficulty(__instance.Sim.SimGameMode), pair.Key, target, possibleThird, realSystem);
+                                            if (contract != null) {
+                                                contract.Override.contractDisplayStyle = ContractDisplayStyle.BaseCampaignStory;
+                                                contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * Fields.settings.priorityContactPayPercentage));
+                                                int maxPriority = Mathf.FloorToInt(7 / __instance.Sim.Constants.Salvage.PrioritySalvageModifier);
+                                                contract.Override.salvagePotential = Mathf.Min(maxPriority, Mathf.RoundToInt(contract.Override.salvagePotential * Fields.settings.priorityContactPayPercentage));
+                                                contract.Override.negotiatedSalvage = 1f;
+                                                __instance.Sim.GlobalContracts.Add(contract);
+                                            }
+                                            else {
+                                                PersistentMapClient.Logger.Log("Prio contract is null");
+                                            }
                                         }
                                     }
                                 }
@@ -395,6 +503,65 @@ namespace PersistentMapClient {
             }
             catch (Exception e) {
                 PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGameState), "CreateTravelContract")]
+    public static class SimGameState_CreateTravelContract_Patch {
+        static void Prefix(ref Faction employer, ref Faction target, ref Faction targetsAlly, ref Faction employersAlly, ref Faction neutralToAll, ref Faction hostileToAll) {
+            try {
+                if (Fields.prioGen) {
+                    employer = Fields.prioEmployer;
+                    employersAlly = Fields.prioEmployer;
+                    target = Fields.prioTarget;
+                    targetsAlly = Fields.prioTarget;
+                    if(hostileToAll != Faction.INVALID_UNSET) {
+                        hostileToAll = Fields.prioThird;
+                    }
+                }
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGameState), "PrepContract")]
+    public static class SimGameState_PrepContract_Patch {
+        static void Prefix(ref Faction employer, ref Faction employersAlly, ref Faction target, ref Faction targetsAlly, ref Faction NeutralToAll, ref Faction HostileToAll) {
+            try {
+                if (Fields.prioGen) {
+                    employer = Fields.prioEmployer;
+                    employersAlly = Fields.prioEmployer;
+                    target = Fields.prioTarget;
+                    targetsAlly = Fields.prioTarget;
+                    if (HostileToAll != Faction.INVALID_UNSET) {
+                        HostileToAll = Fields.prioThird;
+                    }
+                }
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGameState), "CreateBreakContractWarning")]
+    public static class SimGameState_CreateBreakContractWarning_Patch {
+        static bool Prefix(SimGameState __instance, Action continueAction, Action cancelAction) {
+            try {
+                if (__instance.ActiveTravelContract == null) {
+                    return false;
+                }
+                string primaryButtonText = Strings.T("Confirm");
+                string message = Strings.T("Commander, we're locked into our existing contract already. We can't take another one without seeing this one through first. We've got enough problems with people shooting us already, let's not add lawyers to the mix.");
+                PauseNotification.Show("CONTRACT VIOLATION", message, __instance.GetCrewPortrait(SimGameCrew.Crew_Darius), string.Empty, true, cancelAction, primaryButtonText, null, null);
+                return false;
+            }
+            catch (Exception e) {
+                PersistentMapClient.Logger.LogError(e);
+                return false;
             }
         }
     }
