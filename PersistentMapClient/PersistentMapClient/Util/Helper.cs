@@ -458,7 +458,13 @@ namespace PersistentMapClient {
 
             var difficultyRange = AccessTools.Method(typeof(SimGameState), "GetContractRangeDifficultyRange").Invoke(Sim, new object[] { system, Sim.SimGameMode, Sim.GlobalDifficulty });
             Dictionary<ContractType, List<ContractOverride>> potentialContracts = (Dictionary<ContractType, List<ContractOverride>>)AccessTools.Method(typeof(SimGameState), "GetContractOverrides").Invoke(Sim, new object[] { difficultyRange, prioTypes });
-            WeightedList<MapAndEncounters> playableMaps = MetadataDatabase.Instance.GetReleasedMapsAndEncountersByContractTypeAndTagsAndOwnership(potentialContracts.Keys.ToArray<ContractType>(), system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes).ToWeightedList(WeightedListType.SimpleRandom);
+            WeightedList<MapAndEncounters> playableMaps =
+                //MetadataDatabase.Instance.GetReleasedMapsAndEncountersByContractTypeAndTagsAndOwnership(potentialContracts.Keys.ToArray<ContractType>(), 
+                //      system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes).ToWeightedList(WeightedListType.SimpleRandom);
+                // TODO: MORPH - please review!
+                MetadataDatabase.Instance.GetReleasedMapsAndEncountersBySinglePlayerProceduralContractTypeAndTags(
+                    system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes, false)
+                    .ToWeightedList(WeightedListType.SimpleRandom);
             var validParticipants = AccessTools.Method(typeof(SimGameState), "GetValidParticipants").Invoke(Sim, new object[] { system });
             if (!(bool)AccessTools.Method(typeof(SimGameState), "HasValidMaps").Invoke(Sim, new object[] { system, playableMaps })
                 || !(bool)AccessTools.Method(typeof(SimGameState), "HasValidContracts").Invoke(Sim, new object[] { difficultyRange, potentialContracts })
