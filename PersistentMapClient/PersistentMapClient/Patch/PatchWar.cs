@@ -172,7 +172,7 @@ namespace PersistentMapClient {
                     if (__result.Override == null) {
                         PersistentMapClient.Logger.Log(__result.Name + " Does not have an ovveride");
                     }
-                    if (__result.InitialContractValue == null) {
+                    if (__result.InitialContractValue == 0) {
                         PersistentMapClient.Logger.Log(__result.Name + " Does not have an InitialContractValue");
                     }
                     if (__instance.Constants == null) {
@@ -181,13 +181,13 @@ namespace PersistentMapClient {
                     if (__instance.Constants.Salvage == null) {
                         PersistentMapClient.Logger.Log("No Salvage Constants");
                     }
-                    if (__instance.Constants.Salvage.PrioritySalvageModifier == null) {
+                    if (__instance.Constants.Salvage.PrioritySalvageModifier == 0f) {
                         PersistentMapClient.Logger.Log("No PrioritySalvageModifier");
                     }
                     if (Fields.settings == null) {
                         PersistentMapClient.Logger.Log("No Settings");
                     }
-                    if (Fields.settings.priorityContactPayPercentage == null) {
+                    if (Fields.settings.priorityContactPayPercentage == 0f) {
                         PersistentMapClient.Logger.Log("No priorityContactPayPercentage");
                     }
                     __result.SetInitialReward(Mathf.RoundToInt(__result.InitialContractValue * Fields.settings.priorityContactPayPercentage));
@@ -215,13 +215,13 @@ namespace PersistentMapClient {
                         newwidget.transform.SetParent(old.transform.parent, false);
                         newwidget.name = "COMPANYNAMES";
                         old.transform.position = new Vector3(old.transform.position.x, 311, old.transform.position.z);
-                        old.transform.FindRecursive("dotgrid").gameObject.active = false;
-                        old.transform.FindRecursive("crossLL").gameObject.active = false;
+                        old.transform.FindRecursive("dotgrid").gameObject.SetActive(false);
+                        old.transform.FindRecursive("crossLL").gameObject.SetActive(false);
                         newwidget.transform.position = new Vector3(old.transform.position.x, 106, old.transform.position.z);
-                        newwidget.transform.FindRecursive("stats_factionsAndClimate").gameObject.active = false;
-                        newwidget.transform.FindRecursive("owner_icon").gameObject.active = false;
-                        newwidget.transform.FindRecursive("uixPrfIndc_SIM_Reputation-MANAGED").gameObject.active = false;
-                        newwidget.transform.FindRecursive("crossUL").gameObject.active = false;
+                        newwidget.transform.FindRecursive("stats_factionsAndClimate").gameObject.SetActive(false);
+                        newwidget.transform.FindRecursive("owner_icon").gameObject.SetActive(false);
+                        newwidget.transform.FindRecursive("uixPrfIndc_SIM_Reputation-MANAGED").gameObject.SetActive(false);
+                        newwidget.transform.FindRecursive("crossUL").gameObject.SetActive(false);
                         GameObject ownerPanel = newwidget.transform.FindRecursive("owner_detailsPanel").gameObject;
                         ownerPanel.transform.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
                         RectTransform ownerRect = ownerPanel.GetComponent<RectTransform>();
