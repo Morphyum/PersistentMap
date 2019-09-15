@@ -463,7 +463,7 @@ namespace PersistentMapClient {
                 //      system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes).ToWeightedList(WeightedListType.SimpleRandom);
                 // TODO: MORPH - please review!
                 MetadataDatabase.Instance.GetReleasedMapsAndEncountersBySinglePlayerProceduralContractTypeAndTags(
-                    system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes, false)
+                    system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes, true)
                     .ToWeightedList(WeightedListType.SimpleRandom);
             var validParticipants = AccessTools.Method(typeof(SimGameState), "GetValidParticipants").Invoke(Sim, new object[] { system });
             if (!(bool)AccessTools.Method(typeof(SimGameState), "HasValidMaps").Invoke(Sim, new object[] { system, playableMaps })
