@@ -360,7 +360,15 @@ namespace PersistentMapClient {
         // Creates the argo marker for player activity
         private static void AddActivePlayersBadgeToSystem(PersistentMapAPI.System system) {
             GameObject starObject = GameObject.Find(system.name);
-            Transform argoMarker = starObject.transform.Find("ArgoMarker");
+            Transform argoMarker = starObject.transform.Find("StarInner");
+            if (!argoMarker.gameObject.activeSelf)
+            {
+                argoMarker = starObject.transform.Find("StarInnerUnvisited");
+            }
+            if (argoMarker == null)
+            {
+                PersistentMapClient.Logger.Log("Argo Marker Null!");
+            }
             argoMarker.gameObject.SetActive(true);
             argoMarker.localScale = new Vector3(4f, 4f, 4f);
             argoMarker.GetComponent<MeshRenderer>().material.color = Color.grey;
