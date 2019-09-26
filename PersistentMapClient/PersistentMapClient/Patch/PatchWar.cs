@@ -289,8 +289,7 @@ namespace PersistentMapClient {
                         PersistentMapClient.Logger.Log("System in map null");
                     }
                     if (system.activePlayers > 0) {
-                        //DISABLED BECAUSE MARKER BROKE
-                       // AddActivePlayersBadgeToSystem(system);
+                       AddActivePlayersBadgeToSystem(system);
                     }
 
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
