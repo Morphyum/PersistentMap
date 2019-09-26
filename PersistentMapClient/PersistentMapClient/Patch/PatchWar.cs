@@ -289,8 +289,7 @@ namespace PersistentMapClient {
                         PersistentMapClient.Logger.Log("System in map null");
                     }
                     if (system.activePlayers > 0) {
-                        //DISABLED BECAUSE MARKER BROKE
-                       // AddActivePlayersBadgeToSystem(system);
+                       AddActivePlayersBadgeToSystem(system);
                     }
 
                     StarSystem system2 = simGame.StarSystems.Find(x => x.Name.Equals(system.name));
@@ -361,21 +360,11 @@ namespace PersistentMapClient {
         // Creates the argo marker for player activity
         private static void AddActivePlayersBadgeToSystem(PersistentMapAPI.System system) {
             GameObject starObject = GameObject.Find(system.name);
-            Transform argoMarker = starObject.transform.Find("ArgoMarker");
-            argoMarker.gameObject.SetActive(true);
-            argoMarker.localScale = new Vector3(4f, 4f, 4f);
-            argoMarker.GetComponent<MeshRenderer>().material.color = Color.grey;
-            GameObject playerNumber = new GameObject();
-            playerNumber.transform.parent = argoMarker;
-            playerNumber.name = "PlayerNumberText";
-            playerNumber.layer = 25;
-            TextMeshPro textComponent = playerNumber.AddComponent<TextMeshPro>();
-            textComponent.SetText(system.activePlayers.ToString());
-            textComponent.transform.localPosition = new Vector3(0, -0.35f, -0.05f);
-            textComponent.fontSize = 6;
-            textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.faceColor = Color.black;
-            textComponent.fontStyle = FontStyles.Bold;
+            Transform playerMarker = starObject.transform.Find("StarInner");
+            Transform playerMarkerUnvisited = starObject.transform.Find("StarInnerUnvisited");
+            // Only one of these will actually be active for a star system at any given time
+            playerMarker.localScale = new Vector3(Fields.settings.activePlayerMarkerSize, Fields.settings.activePlayerMarkerSize, Fields.settings.activePlayerMarkerSize);
+            playerMarkerUnvisited.localScale = new Vector3(Fields.settings.activePlayerMarkerSize, Fields.settings.activePlayerMarkerSize, Fields.settings.activePlayerMarkerSize);
         }
     }
 

@@ -11,9 +11,10 @@ namespace PersistentMapClient {
         public float priorityContactPayPercentage = 2f;
         public int priorityContractsPerAlly = 2;
         public string ClientID = "";
+        public float activePlayerMarkerSize = 3.5f;
 
         public override string ToString() {
-            return $"ServerURL:({ServerURL}) ClientID:({ClientID}) Debug:({debug}) PriorityContractPay%:({priorityContactPayPercentage}) PriorityContractsPerAlly:{priorityContractsPerAlly}";
+            return $"ServerURL:({ServerURL}) ClientID:({ClientID}) Debug:({debug}) PriorityContractPay%:({priorityContactPayPercentage}) PriorityContractsPerAlly:{priorityContractsPerAlly} ActivePlayerMarkerSize:({activePlayerMarkerSize})";
         }
     }
 
