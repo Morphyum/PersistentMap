@@ -457,7 +457,7 @@ namespace PersistentMapClient {
             }
 
             var difficultyRange = AccessTools.Method(typeof(SimGameState), "GetContractRangeDifficultyRange").Invoke(Sim, new object[] { system, Sim.SimGameMode, Sim.GlobalDifficulty });
-            Dictionary<ContractType, List<ContractOverride>> potentialContracts = (Dictionary<ContractType, List<ContractOverride>>)AccessTools.Method(typeof(SimGameState), "GetContractOverrides").Invoke(Sim, new object[] { difficultyRange, prioTypes });
+            Dictionary<int, List<ContractOverride>> potentialContracts = (Dictionary<int, List<ContractOverride>>)AccessTools.Method(typeof(SimGameState), "GetContractOverrides").Invoke(Sim, new object[] { difficultyRange, prioTypes });
             WeightedList<MapAndEncounters> playableMaps =
                 //MetadataDatabase.Instance.GetReleasedMapsAndEncountersByContractTypeAndTagsAndOwnership(potentialContracts.Keys.ToArray<ContractType>(), 
                 //      system.Def.MapRequiredTags, system.Def.MapExcludedTags, system.Def.SupportedBiomes).ToWeightedList(WeightedListType.SimpleRandom);
@@ -485,7 +485,7 @@ namespace PersistentMapClient {
                 MapEncounterContractData = AccessTools.Method(typeof(SimGameState), "FillMapEncounterContractData").Invoke(Sim, new object[] { system, difficultyRange, potentialContracts, validParticipants, level });
             }
             system.SetCurrentContractFactions(Faction.INVALID_UNSET, Faction.INVALID_UNSET);
-            HashSet<ContractType> Contracts = Traverse.Create(MapEncounterContractData).Field("Contracts").GetValue<HashSet<ContractType>>();
+            HashSet<int> Contracts = Traverse.Create(MapEncounterContractData).Field("Contracts").GetValue<HashSet<int>>();
 
             if (MapEncounterContractData == null || Contracts.Count == 0) {
                 List<string> mapDiscardPile = Traverse.Create(Sim).Field("mapDiscardPile").GetValue<List<string>>();
